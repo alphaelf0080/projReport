@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專案報告總覽 - Project Report Index</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            background: white;
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .file-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .file-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .file-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .file-item a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .file-item a:hover {
+            color: #1976d2;
+        }
+        
+        .file-item a::before {
+            content: "📄 ";
+            margin-right: 8px;
+        }
+        
+        .stats {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stats h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        .stats p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>專案報告總覽</h1>
+        <p>Project Report Index - 所有 HTML 檔案索引</p>
+    </div>
+
+    <div class="stats">
+        <h3>專案統計</h3>
+        <p>總共 5 個主要類別</p>
+        <p>包含 11 個詳細報告與分析文件</p>
+        <p>最後更新：2025年9月30日</p>
+    </div>
+
+    <div class="section">
+        <h2>🎰 老虎機機器人 (slotRobot)</h2>
+        <ul class="file-list">
+            <li class="file-item">
+                <a href="slotRobot/index.html" target="_blank">主頁</a>
+            </li>
+            <li class="file-item">
+                <a href="slotRobot/config-generator.html" target="_blank">配置生成器</a>
+            </li>
+            <li class="file-item">
+                <a href="slotRobot/documentation.html" target="_blank">文檔說明</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🎨 素材資源整合工具</h2>
+        <ul class="file-list">
+            <li class="file-item">
+                <a href="素材資源整合工具/assetExport 架構與工具說明.html" target="_blank">AssetExport 架構與工具說明</a>
+            </li>
+            <li class="file-item">
+                <a href="素材資源整合工具/assetExpport 與 cocos creator 整合關係.html" target="_blank">AssetExport 與 Cocos Creator 整合關係</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🌐 網頁資源查詢</h2>
+        <ul class="file-list">
+            <li class="file-item">
+                <a href="網頁資源查詢/架構說明.html" target="_blank">架構說明</a>
+            </li>
+            <li class="file-item">
+                <a href="網頁資源查詢/網頁擷取分析工具說明.html" target="_blank">網頁擷取分析工具說明</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🎮 遊戲側錄工具</h2>
+        <ul class="file-list">
+            <li class="file-item">
+                <a href="遊戲側錄工具/架構說明網頁.html" target="_blank">架構說明網頁</a>
+            </li>
+            <li class="file-item">
+                <a href="遊戲側錄工具/wild_bounty_enhanced_report_tb_pg_wild_bounty_v1_002.html" target="_blank">Wild Bounty 增強報告</a>
+            </li>
+            <li class="file-item">
+                <a href="遊戲側錄工具/wild_bounty_math_report_tb_pg_wild_bounty_v1_002.html" target="_blank">Wild Bounty 數學報告</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>⚡ 遊戲效能影響分析</h2>
+        <ul class="file-list">
+            <li class="file-item">
+                <a href="遊戲效能分析/遊戲引擎重構效能分析報告.html" target="_blank">遊戲引擎重構效能分析報告</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 專案報告系統 | 生成時間: 2025年9月30日</p>
+        <p>點擊任何連結以查看詳細報告內容</p>
+        <p>服務器運行於 http://127.0.0.1:3000</p>
+    </div>
+
+    <script>
+        // 添加一些互動效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 為所有連結添加點擊追蹤
+            const links = document.querySelectorAll('a[href$=".html"]');
+            links.forEach(link => {
+                link.addEventListener('click', function() {
+                    console.log('訪問頁面:', this.href);
+                });
+            });
+
+            // 添加載入動畫
+            const sections = document.querySelectorAll('.section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.6s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // 添加統計計數器動畫
+            const stats = document.querySelector('.stats');
+            if (stats) {
+                stats.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.02)';
+                });
+                stats.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Robot - 工具箱</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: slideInDown 1s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.4em;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: slideInUp 1s ease-out 0.3s both;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            padding: 50px 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .tool-card:hover::before {
+            left: 100%;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+            border-color: #4CAF50;
+        }
+
+        .tool-icon {
+            font-size: 4em;
+            color: #4CAF50;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-card:hover .tool-icon {
+            transform: scale(1.1);
+            color: #45a049;
+        }
+
+        .tool-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-features li {
+            color: #555;
+            margin-bottom: 8px;
+            text-align: left;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .tool-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .tool-button {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-badge.beta {
+            background: #ff9800;
+        }
+
+        .status-badge.new {
+            background: #e91e63;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(233, 30, 99, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0); }
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer h3 {
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .quick-links a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .quick-links a:hover {
+            color: #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+            }
+            
+            .hero p {
+                font-size: 1.1em;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+                padding: 30px 20px;
+            }
+            
+            .tool-card {
+                padding: 30px 20px;
+            }
+            
+            .quick-links {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="hero-content">
+                <h1><i class="fas fa-robot"></i> Slot Robot</h1>
+                <p>專業的老虎機遊戲自動化測試工具套件<br>提供完整的測試、監控和分析解決方案</p>
+            </div>
+        </div>
+
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="status-badge">已完成</div>
+                <div class="tool-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3 class="tool-title">系統文檔</h3>
+                <p class="tool-description">
+                    完整的系統架構說明、使用手冊和故障排除指南
+                </p>
+                <ul class="tool-features">
+                    <li>視覺化系統架構圖</li>
+                    <li>詳細配置說明</li>
+                    <li>工作流程圖解</li>
+                    <li>互動式監控面板</li>
+                    <li>故障排除指南</li>
+                </ul>
+                <a href="documentation.html" class="tool-button">
+                    <i class="fas fa-external-link-alt"></i> 查看文檔
+                </a>
+            </div>
+
+            <div class="tool-card">
+                <div class="status-badge new">全新</div>
+                <div class="tool-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3 class="tool-title">配置生成器</h3>
+                <p class="tool-description">
+                    視覺化的配置文件生成器，輕鬆建立和管理測試配置
+                </p>
+                <ul class="tool-features">
+                    <li>拖拽式配置介面</li>
+                    <li>即時配置預覽</li>
+                    <li>配置檔案匯入/匯出</li>
+                    <li>多機器人管理</li>
+                    <li>範本和範例</li>
+                </ul>
+                <a href="config-generator.html" class="tool-button">
+                    <i class="fas fa-magic"></i> 開始配置
+                </a>
+            </div>
+
+            <div class="tool-card">
+                <div class="status-badge">核心工具</div>
+                <div class="tool-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <h3 class="tool-title">測試執行器</h3>
+                <p class="tool-description">
+                    命令列測試執行器，支援多種測試模式和自動化選項
+                </p>
+                <ul class="tool-features">
+                    <li>循序/平行測試模式</li>
+                    <li>自動斷線重連測試</li>
+                    <li>即時日誌記錄</li>
+                    <li>互動式控制</li>
+                    <li>錯誤處理機制</li>
+                </ul>
+                <div class="tool-button" style="background: #6c757d; cursor: not-allowed;">
+                    <i class="fas fa-terminal"></i> 命令列工具
+                </div>
+                <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                    執行: <code>node slot-robot.js</code>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="status-badge">分析工具</div>
+                <div class="tool-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="tool-title">數據分析器</h3>
+                <p class="tool-description">
+                    驗證測試結果的數據一致性，生成詳細的分析報告
+                </p>
+                <ul class="tool-features">
+                    <li>數據一致性驗證</li>
+                    <li>斷線前後狀態比對</li>
+                    <li>自動報告生成</li>
+                    <li>Free Game 智能檢測</li>
+                    <li>批次分析支援</li>
+                </ul>
+                <div class="tool-button" style="background: #6c757d; cursor: not-allowed;">
+                    <i class="fas fa-search"></i> 命令列工具
+                </div>
+                <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                    執行: <code>node checkConnectionData.js</code>
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="status-badge beta">開發中</div>
+                <div class="tool-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3 class="tool-title">監控儀表板</h3>
+                <p class="tool-description">
+                    即時監控測試進度，視覺化顯示系統狀態和統計數據
+                </p>
+                <ul class="tool-features">
+                    <li>即時狀態監控</li>
+                    <li>性能統計圖表</li>
+                    <li>警報通知系統</li>
+                    <li>歷史數據查詢</li>
+                    <li>自定義報表</li>
+                </ul>
+                <div class="tool-button" style="background: #ff9800;">
+                    <i class="fas fa-wrench"></i> 敬請期待
+                </div>
+            </div>
+
+            <div class="tool-card">
+                <div class="status-badge beta">開發中</div>
+                <div class="tool-icon">
+                    <i class="fas fa-bug"></i>
+                </div>
+                <h3 class="tool-title">除錯助手</h3>
+                <p class="tool-description">
+                    智能化的問題診斷工具，快速定位和解決常見問題
+                </p>
+                <ul class="tool-features">
+                    <li>自動問題檢測</li>
+                    <li>診斷建議提供</li>
+                    <li>日誌智能分析</li>
+                    <li>修復方案推薦</li>
+                    <li>問題預防提醒</li>
+                </ul>
+                <div class="tool-button" style="background: #ff9800;">
+                    <i class="fas fa-wrench"></i> 敬請期待
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <h3><i class="fas fa-link"></i> 快速連結</h3>
+                <div class="quick-links">
+                    <a href="documentation.html"><i class="fas fa-book"></i> 使用文檔</a>
+                    <a href="config-generator.html"><i class="fas fa-cogs"></i> 配置生成器</a>
+                    <a href="#" onclick="showCommandHelp()"><i class="fas fa-terminal"></i> 命令幫助</a>
+                    <a href="#" onclick="showTroubleshooting()"><i class="fas fa-question-circle"></i> 常見問題</a>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #34495e;">
+                    <p><i class="fas fa-code"></i> Slot Robot</p>
+                    <p style="font-size: 14px; color: #95a5a6; margin-top: 10px;">
+                        專業老虎機遊戲測試工具 - 為開發者和測試工程師提供完整的自動化測試解決方案
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showCommandHelp() {
+            alert(`常用命令：
+
+基本執行：
+• node slot-robot.js - 啟動測試程序
+• node checkConnectionData.js all - 檢查所有結果
+• node checkConnectionData.js gameLog_*.json - 檢查特定遊戲
+
+互動按鍵：
+• P - 手動恢復客戶端
+• A - 啟動自動恢復
+• S - 停止自動恢復
+• Ctrl+C - 結束程序
+
+配置文件：
+• slot-robot.json - 主要配置
+• slot-user-list.json - 測試帳號
+• slot-game-list.json - 遊戲列表`);
+        }
+
+        function showTroubleshooting() {
+            alert(`常見問題快速解決：
+
+1. 連接失敗
+   → 檢查網路連接和伺服器地址
+   → 確認防火牆設定
+
+2. 登入失敗 (status_code: 1)
+   → 驗證帳號密碼正確性
+   → 檢查 host_prefix 設定
+
+3. 反覆斷線重連
+   → 增加重連延遲時間
+   → 檢查帳號狀態
+
+4. 數據不一致
+   → 運行 checkConnectionData.js
+   → 檢查遊戲邏輯
+
+詳細說明請查看完整文檔！`);
+        }
+
+        // 添加頁面載入動畫
+        window.addEventListener('load', () => {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>
