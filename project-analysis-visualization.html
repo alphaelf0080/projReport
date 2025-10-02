@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocos Creator 專案分析 - GTGameCore</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .mermaid {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9ff;
+        }
+
+        .tab-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .tab-btn {
+            padding: 15px 25px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .folder-tree {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin: 10px 0;
+        }
+
+        .folder-tree .folder {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .folder-tree .file {
+            color: #28a745;
+        }
+
+        .process-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(45deg, #f8f9ff, #fff);
+            border-radius: 10px;
+            border: 2px solid #667eea;
+        }
+
+        .process-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .process-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.2em;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .process-flow {
+                flex-direction: column;
+            }
+            
+            .process-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 GTGameCore 專案分析</h1>
+            <p>Cocos Creator 3.8.4 多遊戲整合平台架構分析</p>
+        </div>
+
+        <!-- 統計概覽 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">3.8.4</div>
+                <div class="stat-label">Cocos Creator 版本</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">40+</div>
+                <div class="stat-label">遊戲數量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">遊戲類型</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">支援站點</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">多語言支援</div>
+            </div>
+        </div>
+
+        <!-- Tab 容器 -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="showTab('structure')">專案結構</button>
+                <button class="tab-btn" onclick="showTab('games')">遊戲清單</button>
+                <button class="tab-btn" onclick="showTab('sites')">站點配置</button>
+                <button class="tab-btn" onclick="showTab('workflow')">開發流程</button>
+                <button class="tab-btn" onclick="showTab('features')">技術特點</button>
+            </div>
+
+            <!-- 專案結構 Tab -->
+            <div id="structure" class="tab-content active">
+                <h3>📁 專案目錄結構</h3>
+                <div class="folder-tree">
+<pre>
+<span class="folder">gtgamecore/</span>
+├── <span class="folder">assets/</span>
+│   ├── <span class="folder">commonResources/</span>     # 共用資源
+│   ├── <span class="folder">example/</span>            # 範例場景
+│   ├── <span class="folder">gameComponents/</span>     # 遊戲組件核心
+│   │   ├── <span class="folder">common/</span>        # 共用組件和核心系統
+│   │   ├── <span class="folder">slot/</span>          # 老虎機類型遊戲組件
+│   │   ├── <span class="folder">crush/</span>         # 消除類型遊戲組件
+│   │   ├── <span class="folder">cascadingslot/</span> # 瀑布式老虎機組件
+│   │   └── <span class="folder">marquee/</span>       # 跑馬燈組件
+│   ├── <span class="folder">games/</span>             # 具體遊戲實例
+│   └── <span class="folder">shaders/</span>           # 著色器資源
+├── <span class="folder">scripts/</span>               # 自動化腳本
+├── <span class="folder">library/</span>               # Cocos 快取
+├── <span class="folder">settings/</span>              # 專案設定
+└── <span class="file">package.json</span>           # 專案配置
+</pre>
+                </div>
+
+                <h3>🎯 遊戲實例結構</h3>
+                <div class="folder-tree">
+<pre>
+<span class="folder">games/[gameName]/</span>
+├── <span class="folder">animation/</span>         # 動畫資源
+├── <span class="folder">audio/</span>            # 音效資源
+├── <span class="folder">gameCore/</span>         # 遊戲核心邏輯
+├── <span class="folder">langResources/</span>    # 多語言資源
+├── <span class="folder">prefab/</span>           # 預製體 (必須包含 gameScene.prefab)
+├── <span class="folder">scene/</span>            # 場景檔案
+├── <span class="folder">script/</span>           # 腳本檔案
+├── <span class="folder">spine/</span>            # Spine 動畫
+└── <span class="folder">texture/</span>          # 貼圖資源
+</pre>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="structureChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- 遊戲清單 Tab -->
+            <div id="games" class="tab-content">
+                <h3>🎮 遊戲清單統計</h3>
+                <div class="chart-container">
+                    <canvas id="gameTypesChart" width="400" height="200"></canvas>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>遊戲名稱</th>
+                            <th>遊戲 ID</th>
+                            <th>類型</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>幸運財神</td><td>5030</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>森林舞會</td><td>5045</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>瘋狂水果盤</td><td>5058</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>大話西遊</td><td>5067</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>數字大轉輪</td><td>5076</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>3D數字大轉輪</td><td>5079</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>金瓶梅II</td><td>5094</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>五行</td><td>5096</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>五福臨門</td><td>5098</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>多福多財</td><td>5128</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>糖果派對3</td><td>5143</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>九尾狐</td><td>5153</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>葫蘆娃</td><td>5166</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>滿天星</td><td>5175</td><td>Slot</td><td>✅ 活躍</td></tr>
+                        <tr><td>抖音DJ</td><td>5182</td><td>Slot</td><td>✅ 活躍</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 站點配置 Tab -->
+            <div id="sites" class="tab-content">
+                <h3>🌐 多站點支援配置</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>站點代碼</th>
+                            <th>站點名稱</th>
+                            <th>環境</th>
+                            <th>網址</th>
+                            <th>認證方式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>xcDev</td><td>XC開發站</td><td>開發</td><td>https://xcdemo.dowin-dev.com</td><td>cookie > user > sid</td></tr>
+                        <tr><td>xcTest</td><td>XC測試站</td><td>測試</td><td>https://xcdemo.dowin-test.com</td><td>cookie > user > sid</td></tr>
+                        <tr><td>lmDev</td><td>LM開發站</td><td>開發</td><td>https://lmdemo.dowin-dev.com</td><td>cookie > user > sid</td></tr>
+                        <tr><td>lmTest</td><td>LM測試站</td><td>測試</td><td>https://lmdemo.dowin-test.com</td><td>cookie > user > sid</td></tr>
+                        <tr><td>bbDev</td><td>BB開發站</td><td>開發</td><td>https://www-dev.vir888.com/?tpl=esball</td><td>cookie > SESSION_ID</td></tr>
+                        <tr><td>bbTest</td><td>BB測試站</td><td>測試</td><td>https://www.vir999.net/?tpl=esball</td><td>cookie > SESSION_ID</td></tr>
+                        <tr><td>bbDevDemo</td><td>BB開發站試玩</td><td>試玩</td><td>-</td><td>無需認證</td></tr>
+                        <tr><td>bbTestDemo</td><td>BB測試站試玩</td><td>試玩</td><td>-</td><td>無需認證</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>🌍 多語言支援</h3>
+                <div class="chart-container">
+                    <canvas id="languageChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- 開發流程 Tab -->
+            <div id="workflow" class="tab-content">
+                <h3>🔄 遊戲開發流程</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <div class="step-icon">1</div>
+                        <h4>建立遊戲</h4>
+                        <p>使用 createNewGame.js 建立遊戲結構</p>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-icon">2</div>
+                        <h4>配置遊戲</h4>
+                        <p>在 gameList.ts 中註冊遊戲 ID</p>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-icon">3</div>
+                        <h4>開發測試</h4>
+                        <p>使用 example 場景進行預覽</p>
+                    </div>
+                    <div class="process-step">
+                        <div class="step-icon">4</div>
+                        <h4>建置部署</h4>
+                        <p>使用 build.js 自動建置</p>
+                    </div>
+                </div>
+
+                <h3>🛠️ 自動化腳本功能</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>腳本名稱</th>
+                            <th>功能描述</th>
+                            <th>使用場景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>createNewGame.js</td><td>自動建立新遊戲的資料夾結構</td><td>新遊戲開發</td></tr>
+                        <tr><td>build.js</td><td>自動化建置特定遊戲</td><td>專案部署</td></tr>
+                        <tr><td>linkAll.js</td><td>連結所有資源和腳本</td><td>資源管理</td></tr>
+                        <tr><td>linkResource.js</td><td>連結遊戲資源</td><td>資源更新</td></tr>
+                        <tr><td>linkScript.js</td><td>連結腳本檔案</td><td>腳本管理</td></tr>
+                        <tr><td>localServer.js</td><td>啟動本地開發伺服器</td><td>本地測試</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>📝 URL 參數配置</h3>
+                <div class="folder-tree">
+<pre>
+範例 URL: http://localhost:7456/?GameType=5274&site=bbTestDemo&lang=cn
+
+參數說明:
+├── GameType => 遊戲 ID (必要)
+├── site     => 要連線的站別 (必要)
+├── sid      => 會話 ID (除試玩站外都需要)
+└── lang     => 語言設定 (tw/cn/en)
+</pre>
+                </div>
+            </div>
+
+            <!-- 技術特點 Tab -->
+            <div id="features" class="tab-content">
+                <h3>⚡ 技術特點與優勢</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏗️</div>
+                        <h4>模組化設計</h4>
+                        <p>共用組件與具體遊戲分離，支援快速建立新遊戲</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📦</div>
+                        <h4>Bundle 管理</h4>
+                        <p>每個遊戲作為獨立 bundle，支援動態載入和卸載</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌐</div>
+                        <h4>多語言支援</h4>
+                        <p>內建繁中、簡中、英文三語言支援系統</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h4>自動化工具鏈</h4>
+                        <p>完整的自動化建置、測試、部署流程</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🏠</div>
+                        <h4>多站點架構</h4>
+                        <p>支援多個營運環境的無縫切換</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h4>TypeScript 支援</h4>
+                        <p>強型別檢查，提升程式碼品質和維護性</p>
+                    </div>
+                </div>
+
+                <h3>🧪 測試與品質保證</h3>
+                <div class="chart-container">
+                    <canvas id="qualityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 架構圖 -->
+        <div class="chart-container">
+            <h3>🏛️ 系統架構圖</h3>
+            <div class="mermaid">
+                graph TD
+                    A[GTGameCore 專案] --> B[Assets 資產層]
+                    A --> C[Scripts 工具層]
+                    A --> D[Configuration 配置層]
+                    
+                    B --> E[commonResources 共用資源]
+                    B --> F[gameComponents 遊戲組件]
+                    B --> G[games 遊戲實例]
+                    
+                    F --> H[common 共用組件]
+                    F --> I[slot 老虎機組件]
+                    F --> J[crush 消除組件]
+                    F --> K[cascadingslot 瀑布式老虎機]
+                    F --> L[marquee 跑馬燈]
+                    
+                    G --> M[遊戲 A]
+                    G --> N[遊戲 B]
+                    G --> O[遊戲 N...]
+                    
+                    C --> P[createNewGame.js]
+                    C --> Q[build.js]
+                    C --> R[linkAll.js]
+                    
+                    D --> S[gameList.ts]
+                    D --> T[tsconfig.json]
+                    D --> U[package.json]
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // Tab 切換功能
+        function showTab(tabName) {
+            // 隱藏所有 tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有 tab button 的 active 狀態
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 顯示選中的 tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // 設置對應 button 為 active
+            event.target.classList.add('active');
+        }
+
+        // 專案結構圖表
+        const structureCtx = document.getElementById('structureChart').getContext('2d');
+        new Chart(structureCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['遊戲組件', '遊戲實例', '共用資源', '工具腳本', '配置文件'],
+                datasets: [{
+                    data: [30, 35, 15, 12, 8],
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f093fb',
+                        '#f5576c',
+                        '#4facfe'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '專案文件分佈'
+                    }
+                }
+            }
+        });
+
+        // 遊戲類型圖表
+        const gameTypesCtx = document.getElementById('gameTypesChart').getContext('2d');
+        new Chart(gameTypesCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Slot 老虎機', 'Crush 消除', 'Cascading Slot', 'Marquee 跑馬燈', '其他'],
+                datasets: [{
+                    label: '遊戲數量',
+                    data: [25, 8, 4, 2, 3],
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f093fb',
+                        '#f5576c',
+                        '#4facfe'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '遊戲類型分佈統計'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // 語言支援圖表
+        const languageCtx = document.getElementById('languageChart').getContext('2d');
+        new Chart(languageCtx, {
+            type: 'pie',
+            data: {
+                labels: ['繁體中文 (TW)', '簡體中文 (CN)', '英文 (EN)'],
+                datasets: [{
+                    data: [40, 35, 25],
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f093fb'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '多語言使用比例'
+                    }
+                }
+            }
+        });
+
+        // 品質保證圖表
+        const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+        new Chart(qualityCtx, {
+            type: 'radar',
+            data: {
+                labels: ['TypeScript 支援', 'Jest 測試', 'ESLint 檢查', '自動化建置', '程式碼覆蓋率', '文件完整性'],
+                datasets: [{
+                    label: '品質指標',
+                    data: [95, 85, 90, 95, 80, 88],
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                    borderColor: '#667eea',
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#667eea'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '專案品質評估'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

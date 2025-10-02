@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛守宮老虎機遊戲</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 50%, #ffd3b6 100%);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c5f2d;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .game-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            max-width: 1200px;
+        }
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 140px;
+        }
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c5f2d;
+        }
+        .slot-machine {
+            background: linear-gradient(135deg, #8b4513 0%, #d2691e 100%);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.3), 0 8px 25px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        /* 背景特效容器 */
+        .slot-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+        .slot-machine.spinning .slot-effects {
+            opacity: 1;
+        }
+        /* 光暈效果 */
+        .glow-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { 
+                opacity: 0.5;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+        /* 閃光效果 */
+        .sparkle-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .sparkle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #ffd700;
+            animation: sparkleFloat 3s linear infinite;
+        }
+        @keyframes sparkleFloat {
+            0% {
+                transform: translateY(100%) translateX(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90%) translateX(10px) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10%) translateX(-10px) scale(0);
+                opacity: 0;
+            }
+        }
+        /* 能量波紋 */
+        .energy-wave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            margin: -100px 0 0 -100px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 50%;
+            animation: energyExpand 2s ease-out infinite;
+        }
+        @keyframes energyExpand {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+        /* 漸變背景動畫 */
+        .gradient-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                rgba(255, 215, 0, 0.15) 0%, 
+                rgba(255, 140, 0, 0.15) 25%,
+                rgba(255, 69, 0, 0.15) 50%,
+                rgba(255, 140, 0, 0.15) 75%,
+                rgba(255, 215, 0, 0.15) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .reels-container {
+            display: grid;
+            grid-template-columns: repeat(5, 120px);
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        .reel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            height: 390px;
+            overflow: hidden;
+            background: transparent;
+        }
+        .reel-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            will-change: transform;
+        }
+        /* 加速階段 */
+        .reel.accelerating .reel-content {
+            animation: verticalSpin 0.15s ease-in infinite;
+            filter: blur(1px);
+            transition: filter 0.3s ease-in;
+        }
+        /* 全速旋轉階段 */
+        .reel.spinning .reel-content {
+            animation: verticalSpin 0.08s linear infinite;
+            filter: blur(3px);
+        }
+        /* 減速階段 */
+        .reel.slowing .reel-content {
+            animation: verticalSpin 0.12s ease-out infinite;
+            filter: blur(2px);
+            transition: filter 0.4s ease-out;
+        }
+        /* 停止階段 */
+        .reel.stopping .reel-content {
+            filter: blur(0);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .symbol-slot {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 3px solid #fff;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .symbol-slot canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .symbol-slot.winning {
+            animation: winPulse 0.5s ease-in-out infinite;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px #ffd700;
+        }
+        .symbol-slot canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        @keyframes winPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes verticalSpin {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(130px); }
+        }
+        @keyframes bounceStop {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+            100% { transform: translateY(0); }
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .bet-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px 25px;
+            border-radius: 15px;
+        }
+        .bet-controls label {
+            font-weight: bold;
+            color: #2c5f2d;
+        }
+        .bet-controls input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #2c5f2d;
+            border-radius: 8px;
+            font-size: 1em;
+            text-align: center;
+        }
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-spin {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+        .btn-auto {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+        }
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+        .message {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c5f2d;
+        }
+        .message.win {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            animation: winMessage 0.5s ease-in-out;
+        }
+        @keyframes winMessage {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .paytable {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .paytable h3 {
+            color: #2c5f2d;
+            margin-top: 0;
+            text-align: center;
+        }
+        .paytable-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .paytable-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+        }
+        .paytable-item canvas {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+        }
+        .paytable-name {
+            font-weight: bold;
+            color: #2c5f2d;
+            margin: 5px 0;
+        }
+        .paytable-pays {
+            font-size: 0.85em;
+            color: #666;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🦎 可愛守宮老虎機遊戲 🦎</h1>
+    
+    <div class="game-container">
+        <div class="info-panel">
+            <div class="info-box">
+                <div class="info-label">餘額</div>
+                <div class="info-value" id="balance">1000</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">下注金額</div>
+                <div class="info-value" id="current-bet">10</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">贏得金額</div>
+                <div class="info-value" id="win-amount">0</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">總轉數</div>
+                <div class="info-value" id="total-spins">0</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">實際 RTP</div>
+                <div class="info-value" id="actual-rtp">98.5%</div>
+            </div>
+        </div>
+
+        <div class="slot-machine" id="slot-machine">
+            <!-- 背景特效層 -->
+            <div class="slot-effects">
+                <div class="gradient-bg"></div>
+                <div class="glow-effect"></div>
+                <div class="energy-wave"></div>
+                <div class="energy-wave" style="animation-delay: 0.5s;"></div>
+                <div class="energy-wave" style="animation-delay: 1s;"></div>
+                <div class="sparkle-effect" id="sparkles"></div>
+            </div>
+            
+            <div class="reels-container" id="reels">
+                <!-- 5 reels x 3 rows -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="bet-controls">
+                <label>下注:</label>
+                <input type="number" id="bet-input" min="1" max="100" value="10" step="1">
+            </div>
+            <button class="btn btn-spin" id="spin-btn">旋轉 🎰</button>
+            <button class="btn btn-auto" id="auto-btn">自動旋轉</button>
+            <button class="btn btn-stop" id="stop-btn" style="display:none;">停止自動</button>
+        </div>
+
+        <div class="message" id="message">歡迎來到守宮老虎機！祝你好運！</div>
+
+        <div class="paytable">
+            <h3>📋 賠付表 (RTP: 98.5%)</h3>
+            <div class="paytable-grid">
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="rainbow"></canvas>
+                    <div class="paytable-name">彩虹守宮 (WILD)</div>
+                    <div class="paytable-pays">5連: x500 | 4連: x100 | 3連: x30</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="baby"></canvas>
+                    <div class="paytable-name">守宮寶寶 (SCATTER)</div>
+                    <div class="paytable-pays">3+: 免費旋轉</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="leopard"></canvas>
+                    <div class="paytable-name">豹紋守宮</div>
+                    <div class="paytable-pays">5連: x200 | 4連: x50 | 3連: x15</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="purple"></canvas>
+                    <div class="paytable-name">紫色守宮</div>
+                    <div class="paytable-pays">5連: x150 | 4連: x40 | 3連: x12</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="blue"></canvas>
+                    <div class="paytable-name">藍色守宮</div>
+                    <div class="paytable-pays">5連: x100 | 4連: x30 | 3連: x10</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="pink"></canvas>
+                    <div class="paytable-name">粉紅守宮</div>
+                    <div class="paytable-pays">5連: x80 | 4連: x25 | 3連: x8</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="orange"></canvas>
+                    <div class="paytable-name">橘色守宮</div>
+                    <div class="paytable-pays">5連: x60 | 4連: x20 | 3連: x6</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="green"></canvas>
+                    <div class="paytable-name">綠色守宮</div>
+                    <div class="paytable-pays">5連: x40 | 4連: x15 | 3連: x5</div>
+                </div>
+                <div class="paytable-item">
+                    <canvas class="paytable-canvas" data-symbol="sleeping"></canvas>
+                    <div class="paytable-name">睡覺守宮</div>
+                    <div class="paytable-pays">5連: x30 | 4連: x10 | 3連: x3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隱藏的 canvas 用於繪製符號 -->
+    <div style="display: none;">
+        <canvas id="template-canvas" width="120" height="120"></canvas>
+    </div>
+
+    <script>
+        // 繪製基本守宮形狀的輔助函數
+        function drawGeckoBase(ctx, bodyColor, spotColor, options = {}) {
+            const {
+                x = 80,
+                y = 80,
+                scale = 1,
+                rotation = 0,
+                expression = 'happy',
+                sleeping = false
+            } = options;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            ctx.scale(scale, scale);
+
+            // 尾巴
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.moveTo(20, 0);
+            ctx.quadraticCurveTo(40, -15, 55, -10);
+            ctx.quadraticCurveTo(60, -8, 58, -5);
+            ctx.quadraticCurveTo(45, -10, 22, 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // 尾巴斑點
+            if (spotColor) {
+                ctx.fillStyle = spotColor;
+                ctx.beginPath();
+                ctx.arc(35, -10, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(48, -8, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 身體
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 25, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 身體斑點
+            if (spotColor) {
+                ctx.fillStyle = spotColor;
+                ctx.beginPath();
+                ctx.arc(-8, -3, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(5, 2, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(-5, 5, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 頭部
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.ellipse(-28, 0, 15, 13, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 眼睛
+            if (sleeping) {
+                // 閉眼
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(-33, -3, 4, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(-23, -3, 4, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            } else {
+                // 眼白
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-33, -2, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(-23, -2, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 瞳孔
+                ctx.fillStyle = '#2c3e50';
+                ctx.beginPath();
+                ctx.arc(-32, -1, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(-24, -1, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 眼睛高光
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-31, -2, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(-23, -2, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 嘴巴
+            if (expression === 'happy') {
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 1.5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(-28, 3, 4, 0.1, Math.PI - 0.1);
+                ctx.stroke();
+            }
+
+            // 前腳（左）
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.ellipse(-18, 12, 4, 8, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            // 腳趾
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(-20 + i * 2, 18, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 前腳（右）
+            ctx.beginPath();
+            ctx.ellipse(-8, 13, 4, 8, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            // 腳趾
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(-10 + i * 2, 19, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 後腳（左）
+            ctx.beginPath();
+            ctx.ellipse(8, 12, 4, 8, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            // 腳趾
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(6 + i * 2, 18, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 後腳（右）
+            ctx.beginPath();
+            ctx.ellipse(18, 13, 4, 8, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            // 腳趾
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(16 + i * 2, 19, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 腮紅
+            if (expression === 'happy') {
+                ctx.fillStyle = 'rgba(255, 182, 193, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(-38, 4, 4, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(-18, 4, 4, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // 1. 綠色守宮
+        function drawGreenGecko(ctx) {
+            // 特寫版本 - 綠色守宮大頭照
+            
+            // 葉子背景裝飾
+            ctx.fillStyle = 'rgba(144, 238, 144, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(30, 30, 25, 35, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(100, 25, 20, 30, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 巨大的頭部
+            ctx.fillStyle = '#7cb342';
+            ctx.beginPath();
+            ctx.ellipse(60, 65, 50, 48, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭部漸層陰影
+            const gradient = ctx.createRadialGradient(60, 55, 20, 60, 65, 50);
+            gradient.addColorStop(0, 'rgba(139, 195, 74, 0.8)');
+            gradient.addColorStop(1, 'rgba(85, 139, 47, 0.3)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 65, 50, 48, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 脖子
+            ctx.fillStyle = '#7cb342';
+            ctx.beginPath();
+            ctx.ellipse(60, 100, 35, 20, 0, 0, Math.PI);
+            ctx.fill();
+            
+            // 超大眼睛
+            // 左眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(45, 60, 18, 22, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#558b2f';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 右眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(75, 60, 18, 22, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#558b2f';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 左眼瞳孔
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.ellipse(47, 62, 10, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼瞳孔
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.ellipse(73, 62, 10, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼睛高光 - 超大
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(45, 58, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(71, 58, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 小高光
+            ctx.beginPath();
+            ctx.arc(50, 66, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(76, 66, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻子
+            ctx.fillStyle = '#558b2f';
+            ctx.beginPath();
+            ctx.ellipse(60, 75, 6, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻孔
+            ctx.fillStyle = '#33691e';
+            ctx.beginPath();
+            ctx.arc(57, 75, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(63, 75, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 可愛的微笑
+            ctx.strokeStyle = '#558b2f';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(60, 82, 15, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 腮紅
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(32, 70, 8, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(88, 70, 8, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭部斑點裝飾
+            ctx.fillStyle = 'rgba(85, 139, 47, 0.4)';
+            ctx.beginPath();
+            ctx.arc(35, 50, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(85, 48, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(60, 45, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 2. 豹紋守宮
+        function drawLeopardGecko(ctx) {
+            drawGeckoBase(ctx, '#ffd54f', '#8d6e63', {
+                x: 80,
+                y: 80,
+                scale: 1.15
+            });
+
+            // 額外的豹紋斑點
+            const ctx2 = ctx;
+            ctx2.fillStyle = '#8d6e63';
+            ctx2.globalAlpha = 0.7;
+            ctx2.beginPath();
+            ctx2.arc(65, 72, 4, 0, Math.PI * 2);
+            ctx2.fill();
+            ctx2.beginPath();
+            ctx2.arc(88, 68, 3, 0, Math.PI * 2);
+            ctx2.fill();
+            ctx2.globalAlpha = 1.0;
+        }
+
+        // 3. 藍色守宮 - 特寫版本
+        function drawBlueGecko(ctx) {
+            // 水滴背景
+            ctx.fillStyle = 'rgba(100, 181, 246, 0.2)';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(20 + i * 25, 20 + (i % 2) * 15, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 大頭部
+            ctx.fillStyle = '#42a5f5';
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 52, 50, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭部光澤
+            const gradient = ctx.createRadialGradient(55, 60, 10, 60, 70, 52);
+            gradient.addColorStop(0, 'rgba(144, 202, 249, 0.8)');
+            gradient.addColorStop(1, 'rgba(21, 101, 192, 0.2)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 52, 50, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 超水汪汪的大眼睛
+            // 左眼外框
+            ctx.strokeStyle = '#1565c0';
+            ctx.lineWidth = 3;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(42, 65, 20, 24, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 右眼外框
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(78, 65, 20, 24, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 左眼瞳孔 - 深藍色
+            ctx.fillStyle = '#0d47a1';
+            ctx.beginPath();
+            ctx.ellipse(44, 68, 11, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼瞳孔
+            ctx.fillStyle = '#0d47a1';
+            ctx.beginPath();
+            ctx.ellipse(76, 68, 11, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 超大高光 - 水汪汪效果
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.ellipse(41, 62, 8, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(75, 62, 8, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 小高光點
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(47, 72, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(79, 72, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻子
+            ctx.fillStyle = '#1565c0';
+            ctx.beginPath();
+            ctx.ellipse(60, 82, 7, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 可愛的O形嘴巴
+            ctx.strokeStyle = '#1565c0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(60, 92, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 內嘴巴
+            ctx.fillStyle = 'rgba(255, 192, 203, 0.6)';
+            ctx.beginPath();
+            ctx.arc(60, 92, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 腮紅
+            ctx.fillStyle = 'rgba(144, 202, 249, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(28, 75, 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(92, 75, 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭頂斑點
+            ctx.fillStyle = 'rgba(21, 101, 192, 0.5)';
+            ctx.beginPath();
+            ctx.arc(60, 45, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(45, 52, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(75, 52, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 4. 粉紅守宮 - 特寫版本
+        function drawPinkGecko(ctx) {
+            // 愛心背景裝飾
+            ctx.fillStyle = 'rgba(255, 192, 203, 0.3)';
+            ctx.save();
+            ctx.translate(25, 25);
+            ctx.scale(0.6, 0.6);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-10, -8, -20, 0, 0, 12);
+            ctx.bezierCurveTo(20, 0, 10, -8, 0, 0);
+            ctx.fill();
+            ctx.restore();
+            
+            ctx.save();
+            ctx.translate(95, 30);
+            ctx.scale(0.5, 0.5);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-10, -8, -20, 0, 0, 12);
+            ctx.bezierCurveTo(20, 0, 10, -8, 0, 0);
+            ctx.fill();
+            ctx.restore();
+            
+            // 大頭部
+            ctx.fillStyle = '#f48fb1';
+            ctx.beginPath();
+            ctx.ellipse(60, 68, 48, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 溝層效果
+            const gradient = ctx.createRadialGradient(58, 60, 15, 60, 68, 48);
+            gradient.addColorStop(0, 'rgba(248, 187, 208, 0.9)');
+            gradient.addColorStop(1, 'rgba(236, 64, 122, 0.3)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 68, 48, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 超大可愛眼睛 - 閉眼害羞樣
+            // 左眼
+            ctx.strokeStyle = '#ec407a';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(43, 65, 12, 0.3, Math.PI - 0.3);
+            ctx.stroke();
+            
+            // 右眼
+            ctx.beginPath();
+            ctx.arc(77, 65, 12, 0.3, Math.PI - 0.3);
+            ctx.stroke();
+            
+            // 眉毛 - 增加表情
+            ctx.strokeStyle = '#ec407a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(43, 60, 8, Math.PI + 0.5, Math.PI * 2 - 0.5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(77, 60, 8, Math.PI + 0.5, Math.PI * 2 - 0.5);
+            ctx.stroke();
+            
+            // 鼻子
+            ctx.fillStyle = '#ec407a';
+            ctx.beginPath();
+            ctx.ellipse(60, 78, 5, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 微笑的嘴巴
+            ctx.strokeStyle = '#ec407a';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(60, 85, 12, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 大大的腮紅
+            ctx.fillStyle = 'rgba(255, 105, 180, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(32, 72, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(88, 72, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭頂小愛心
+            ctx.fillStyle = 'rgba(236, 64, 122, 0.5)';
+            ctx.save();
+            ctx.translate(60, 45);
+            ctx.scale(0.4, 0.4);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-10, -8, -20, 0, 0, 12);
+            ctx.bezierCurveTo(20, 0, 10, -8, 0, 0);
+            ctx.fill();
+            ctx.restore();
+            
+            // 頭部高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(50, 55, 15, 12, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 5. 彩虹守宮 (WILD) - 特寫版本
+        function drawRainbowGecko(ctx) {
+            // 彩虹背景光暈
+            const bgGradient = ctx.createRadialGradient(60, 60, 0, 60, 60, 60);
+            bgGradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+            bgGradient.addColorStop(0.5, 'rgba(255, 105, 180, 0.2)');
+            bgGradient.addColorStop(1, 'rgba(138, 43, 226, 0.1)');
+            ctx.fillStyle = bgGradient;
+            ctx.beginPath();
+            ctx.arc(60, 60, 55, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 星星裝飾
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
+            const stars = [[25, 25], [95, 30], [20, 95], [100, 90], [60, 15]];
+            stars.forEach(([x, y]) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                    const r = i % 2 === 0 ? 4 : 2;
+                    const px = Math.cos(angle) * r;
+                    const py = Math.sin(angle) * r;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+            
+            // 巨大的彩虹頭部
+            const headGradient = ctx.createLinearGradient(30, 50, 90, 90);
+            headGradient.addColorStop(0, '#ff6b6b');
+            headGradient.addColorStop(0.2, '#ffd93d');
+            headGradient.addColorStop(0.4, '#6bcf7f');
+            headGradient.addColorStop(0.6, '#4d96ff');
+            headGradient.addColorStop(0.8, '#9b59b6');
+            headGradient.addColorStop(1, '#ff6b9d');
+            
+            ctx.fillStyle = headGradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 50, 48, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭部外框 - 金色邊框
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 50, 48, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 超級大的眼睛 - 彩虹色
+            // 左眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(43, 66, 19, 23, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左眼彩虹框
+            const leftEyeGradient = ctx.createLinearGradient(35, 60, 51, 72);
+            leftEyeGradient.addColorStop(0, '#ff6b6b');
+            leftEyeGradient.addColorStop(0.5, '#ffd93d');
+            leftEyeGradient.addColorStop(1, '#4d96ff');
+            ctx.strokeStyle = leftEyeGradient;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(43, 66, 19, 23, -0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 右眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(77, 66, 19, 23, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼彩虹框
+            const rightEyeGradient = ctx.createLinearGradient(69, 60, 85, 72);
+            rightEyeGradient.addColorStop(0, '#9b59b6');
+            rightEyeGradient.addColorStop(0.5, '#4d96ff');
+            rightEyeGradient.addColorStop(1, '#6bcf7f');
+            ctx.strokeStyle = rightEyeGradient;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(77, 66, 19, 23, 0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 瞳孔 - 星星形狀
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.ellipse(45, 68, 10, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(75, 68, 10, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 彩虹高光
+            const highlightGradient = ctx.createRadialGradient(43, 63, 0, 43, 63, 8);
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+            highlightGradient.addColorStop(1, 'rgba(255, 215, 0, 0.3)');
+            ctx.fillStyle = highlightGradient;
+            ctx.beginPath();
+            ctx.arc(43, 63, 7, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = highlightGradient;
+            ctx.beginPath();
+            ctx.arc(75, 63, 7, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 小高光
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(48, 71, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(78, 71, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻子
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.ellipse(60, 80, 7, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 微笑
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(60, 88, 16, 0.15, Math.PI - 0.15);
+            ctx.stroke();
+            
+            // 彩虹腮紅
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(28, 75, 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(92, 75, 10, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // WILD 文字
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#ffd700';
+            ctx.strokeStyle = '#8b4513';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.strokeText('WILD', 60, 110);
+            ctx.fillText('WILD', 60, 110);
+        }
+
+        // 6. 橘色守宮
+        function drawOrangeGecko(ctx) {
+            // 太陽背景光芒
+            ctx.fillStyle = 'rgba(255, 183, 77, 0.2)';
+            for (let ring = 0; ring < 3; ring++) {
+                ctx.globalAlpha = 0.3 - ring * 0.08;
+                ctx.beginPath();
+                ctx.arc(110, 30, 20 + ring * 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+            
+            // 太陽光線
+            ctx.strokeStyle = 'rgba(255, 152, 0, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(110 + Math.cos(angle) * 25, 30 + Math.sin(angle) * 25);
+                ctx.lineTo(110 + Math.cos(angle) * 40, 30 + Math.sin(angle) * 40);
+                ctx.stroke();
+            }
+            
+            // 巨大的橘色頭部
+            ctx.fillStyle = '#ff9800';
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 50, 47, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 溝層陰影
+            const gradient = ctx.createRadialGradient(58, 62, 20, 60, 70, 50);
+            gradient.addColorStop(0, 'rgba(255, 183, 77, 0.8)');
+            gradient.addColorStop(1, 'rgba(230, 81, 0, 0.3)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 70, 50, 47, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 燃烏般的眼睛
+            // 左眼 - 外光暈
+            ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(43, 65, 22, 26, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(43, 65, 18, 22, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左眼橘色框
+            ctx.strokeStyle = '#ff6f00';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(43, 65, 18, 22, -0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 右眼光暈
+            ctx.fillStyle = 'rgba(255, 152, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(77, 65, 22, 26, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(77, 65, 18, 22, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼框
+            ctx.strokeStyle = '#ff6f00';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(77, 65, 18, 22, 0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 橘色瞳孔溝層
+            const pupilGradient = ctx.createRadialGradient(45, 67, 2, 45, 67, 12);
+            pupilGradient.addColorStop(0, '#000000');
+            pupilGradient.addColorStop(0.7, '#bf360c');
+            pupilGradient.addColorStop(1, '#ff6f00');
+            ctx.fillStyle = pupilGradient;
+            ctx.beginPath();
+            ctx.ellipse(45, 67, 11, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = pupilGradient;
+            ctx.beginPath();
+            ctx.ellipse(75, 67, 11, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 燃烏高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.ellipse(42, 62, 7, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(74, 62, 7, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 小高光
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(47, 70, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(78, 70, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻子
+            ctx.fillStyle = '#e65100';
+            ctx.beginPath();
+            ctx.ellipse(60, 78, 6, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 微笑
+            ctx.strokeStyle = '#e65100';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(60, 86, 14, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 橘色腮紅
+            ctx.fillStyle = 'rgba(255, 152, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(30, 73, 9, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(90, 73, 9, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭頂班點
+            ctx.fillStyle = 'rgba(230, 81, 0, 0.4)';
+            ctx.beginPath();
+            ctx.arc(60, 48, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(45, 54, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(75, 54, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 7. 紫色守宮 - 特寫版本
+        function drawPurpleGecko(ctx) {
+            // 星空背景
+            ctx.fillStyle = 'rgba(106, 27, 154, 0.15)';
+            ctx.beginPath();
+            ctx.rect(0, 0, 120, 120);
+            ctx.fill();
+            
+            // 星星裝飾
+            ctx.fillStyle = 'rgba(186, 104, 200, 0.5)';
+            const drawStar = (cx, cy, size) => {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                    const r = i % 2 === 0 ? size : size * 0.4;
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            };
+            drawStar(20, 25, 5);
+            drawStar(100, 20, 4);
+            drawStar(110, 100, 5);
+            drawStar(15, 100, 4);
+            drawStar(50, 15, 3);
+            
+            // 巨大的紫色頭部
+            ctx.fillStyle = '#ab47bc';
+            ctx.beginPath();
+            ctx.ellipse(60, 68, 49, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 溝層陰影
+            const gradient = ctx.createRadialGradient(57, 60, 15, 60, 68, 49);
+            gradient.addColorStop(0, 'rgba(186, 104, 200, 0.8)');
+            gradient.addColorStop(1, 'rgba(106, 27, 154, 0.3)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(60, 68, 49, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 神秘的大眼睛
+            // 左眼星空效果
+            const leftEyeGradient = ctx.createRadialGradient(43, 65, 5, 43, 65, 20);
+            leftEyeGradient.addColorStop(0, '#ffffff');
+            leftEyeGradient.addColorStop(0.3, 'rgba(186, 104, 200, 0.3)');
+            leftEyeGradient.addColorStop(1, 'rgba(106, 27, 154, 0.5)');
+            ctx.fillStyle = leftEyeGradient;
+            ctx.beginPath();
+            ctx.ellipse(43, 65, 19, 23, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左眼框
+            ctx.strokeStyle = '#6a1b9a';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(43, 65, 19, 23, -0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 右眼星空效果
+            const rightEyeGradient = ctx.createRadialGradient(77, 65, 5, 77, 65, 20);
+            rightEyeGradient.addColorStop(0, '#ffffff');
+            rightEyeGradient.addColorStop(0.3, 'rgba(186, 104, 200, 0.3)');
+            rightEyeGradient.addColorStop(1, 'rgba(106, 27, 154, 0.5)');
+            ctx.fillStyle = rightEyeGradient;
+            ctx.beginPath();
+            ctx.ellipse(77, 65, 19, 23, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 右眼框
+            ctx.strokeStyle = '#6a1b9a';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(77, 65, 19, 23, 0.1, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 瞳孔 - 深紫色
+            ctx.fillStyle = '#4a148c';
+            ctx.beginPath();
+            ctx.ellipse(45, 68, 10, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(75, 68, 10, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼睛內的星星
+            ctx.fillStyle = 'rgba(186, 104, 200, 0.8)';
+            drawStar(43, 62, 3);
+            drawStar(77, 62, 3);
+            
+            // 高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(42, 64, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(75, 64, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 小高光
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(47, 71, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(78, 71, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 鼻子
+            ctx.fillStyle = '#6a1b9a';
+            ctx.beginPath();
+            ctx.ellipse(60, 80, 6, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 微笑
+            ctx.strokeStyle = '#6a1b9a';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(60, 88, 13, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+            
+            // 紫色腮紅
+            ctx.fillStyle = 'rgba(186, 104, 200, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(30, 74, 9, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(90, 74, 9, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 頭頂星星裝飾
+            ctx.fillStyle = 'rgba(106, 27, 154, 0.6)';
+            drawStar(60, 45, 5);
+        }
+
+        // 8. 守宮寶寶
+        function drawBabyGecko(ctx) {
+            // 蛋殼
+            ctx.fillStyle = '#f5f5dc';
+            ctx.strokeStyle = '#d2b48c';
+            ctx.lineWidth = 2;
+            
+            // 下半蛋殼
+            ctx.beginPath();
+            ctx.ellipse(80, 110, 35, 30, 0, 0, Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            // 上半破碎蛋殼
+            ctx.beginPath();
+            ctx.moveTo(50, 90);
+            ctx.lineTo(45, 80);
+            ctx.lineTo(55, 75);
+            ctx.lineTo(50, 90);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(110, 90);
+            ctx.lineTo(115, 80);
+            ctx.lineTo(105, 75);
+            ctx.lineTo(110, 90);
+            ctx.fill();
+            ctx.stroke();
+
+            // 小守宮
+            drawGeckoBase(ctx, '#81c784', '#4caf50', {
+                x: 80,
+                y: 70,
+                scale: 0.7
+            });
+
+            // 小星星眼睛效果
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(52, 68, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(58, 68, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 9. 睡覺守宮
+        function drawSleepingGecko(ctx) {
+            // 月亮背景
+            ctx.fillStyle = 'rgba(255, 241, 118, 0.4)';
+            ctx.beginPath();
+            ctx.arc(120, 40, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(128, 38, 18, 0, Math.PI * 2);
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 枕頭
+            ctx.fillStyle = '#e3f2fd';
+            ctx.strokeStyle = '#90caf9';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(40, 90, 80, 35, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // 睡覺的守宮（捲曲姿勢）
+            drawGeckoBase(ctx, '#66bb6a', '#2e7d32', {
+                x: 80,
+                y: 85,
+                scale: 1.0,
+                rotation: 0,
+                sleeping: true
+            });
+
+            // ZZZ
+            ctx.fillStyle = '#9e9e9e';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Z', 105, 50);
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('Z', 115, 40);
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('Z', 122, 32);
+        }
+
+        // 符號配置
+        const SYMBOLS = {
+            rainbow: { name: '彩虹守宮', draw: drawRainbowGecko, weight: 1 },
+            baby: { name: '守宮寶寶', draw: drawBabyGecko, weight: 2 },
+            leopard: { name: '豹紋守宮', draw: drawLeopardGecko, weight: 3 },
+            purple: { name: '紫色守宮', draw: drawPurpleGecko, weight: 4 },
+            blue: { name: '藍色守宮', draw: drawBlueGecko, weight: 5 },
+            pink: { name: '粉紅守宮', draw: drawPinkGecko, weight: 6 },
+            orange: { name: '橘色守宮', draw: drawOrangeGecko, weight: 7 },
+            green: { name: '綠色守宮', draw: drawGreenGecko, weight: 8 },
+            sleeping: { name: '睡覺守宮', draw: drawSleepingGecko, weight: 9 }
+        };
+
+        // 賠率表 (針對 RTP 98.5% 調整)
+        const PAYOUTS = {
+            rainbow: { 5: 500, 4: 100, 3: 30 },  // WILD
+            baby: { 5: 250, 4: 75, 3: 20 },      // SCATTER
+            leopard: { 5: 200, 4: 50, 3: 15 },
+            purple: { 5: 150, 4: 40, 3: 12 },
+            blue: { 5: 100, 4: 30, 3: 10 },
+            pink: { 5: 80, 4: 25, 3: 8 },
+            orange: { 5: 60, 4: 20, 3: 6 },
+            green: { 5: 40, 4: 15, 3: 5 },
+            sleeping: { 5: 30, 4: 10, 3: 3 }
+        };
+
+        // 遊戲狀態
+        let gameState = {
+            balance: 1000,
+            bet: 10,
+            winAmount: 0,
+            totalSpins: 0,
+            totalWagered: 0,
+            totalWon: 0,
+            isSpinning: false,
+            autoSpin: false,
+            reels: [],
+            reelElements: [],
+            extraSymbols: [] // 用於滾動動畫的額外符號（頂部和底部）
+        };
+
+        // 創建加權隨機選擇器
+        function getWeightedRandomSymbol() {
+            const symbols = Object.keys(SYMBOLS);
+            const weights = symbols.map(s => SYMBOLS[s].weight);
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (let i = 0; i < symbols.length; i++) {
+                random -= weights[i];
+                if (random <= 0) {
+                    return symbols[i];
+                }
+            }
+            return symbols[symbols.length - 1];
+        }
+
+        // 繪製符號到 canvas
+        function drawSymbol(canvas, symbolKey) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // 縮放調整以適應較小的格子
+            ctx.save();
+            ctx.scale(0.75, 0.75);
+            ctx.translate(0, 5);
+            SYMBOLS[symbolKey].draw(ctx);
+            ctx.restore();
+        }
+
+        // 初始化遊戲盤面
+        function initializeReels() {
+            const reelsContainer = document.getElementById('reels');
+            reelsContainer.innerHTML = '';
+            gameState.reels = [];
+            gameState.reelElements = [];
+            gameState.extraSymbols = [];
+
+            for (let col = 0; col < 5; col++) {
+                const reel = document.createElement('div');
+                reel.className = 'reel';
+                
+                const reelContent = document.createElement('div');
+                reelContent.className = 'reel-content';
+                
+                const reelSymbols = [];
+                const allSymbols = [];
+
+                // 創建多個符號用於連續滾動（總共 15 個符號）
+                for (let i = 0; i < 15; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'symbol-slot';
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 120;
+                    canvas.height = 120;
+                    slot.appendChild(canvas);
+                    reelContent.appendChild(slot);
+
+                    const symbolKey = getWeightedRandomSymbol();
+                    allSymbols.push({ canvas, symbolKey, slot, index: i });
+                    drawSymbol(canvas, symbolKey);
+                    
+                    // 主要可見的 3 個符號（索引 6, 7, 8）
+                    if (i >= 6 && i < 9) {
+                        reelSymbols.push(allSymbols[i]);
+                    }
+                }
+
+                // 初始位置：將內容向上移動，使索引 6-8 的符號在可見區域
+                reelContent.style.transform = 'translateY(-780px)';
+
+                reel.appendChild(reelContent);
+                gameState.reels.push(reelSymbols);
+                gameState.extraSymbols.push(allSymbols);
+                gameState.reelElements.push(reel);
+                reelsContainer.appendChild(reel);
+            }
+        }
+
+        // 檢查獲勝線
+        function checkWins() {
+            const wins = [];
+            
+            // 定義 20 條支付線 (3x5 常見配置)
+            const paylines = [
+                // 水平線
+                [[0,0], [0,1], [0,2], [0,3], [0,4]], // 上
+                [[1,0], [1,1], [1,2], [1,3], [1,4]], // 中
+                [[2,0], [2,1], [2,2], [2,3], [2,4]], // 下
+                // V形
+                [[0,0], [1,1], [2,2], [1,3], [0,4]],
+                [[2,0], [1,1], [0,2], [1,3], [2,4]],
+                // 波浪形
+                [[0,0], [0,1], [1,2], [2,3], [2,4]],
+                [[2,0], [2,1], [1,2], [0,3], [0,4]],
+                [[1,0], [0,1], [0,2], [0,3], [1,4]],
+                [[1,0], [2,1], [2,2], [2,3], [1,4]],
+                // 更多組合
+                [[0,0], [1,1], [1,2], [1,3], [0,4]],
+                [[2,0], [1,1], [1,2], [1,3], [2,4]],
+                [[1,0], [1,1], [0,2], [1,3], [1,4]],
+                [[1,0], [1,1], [2,2], [1,3], [1,4]],
+                [[0,0], [0,1], [0,2], [1,3], [2,4]],
+                [[2,0], [2,1], [2,2], [1,3], [0,4]],
+                [[0,0], [1,1], [2,2], [2,3], [2,4]],
+                [[2,0], [1,1], [0,2], [0,3], [0,4]],
+                [[1,0], [0,1], [1,2], [2,3], [1,4]],
+                [[1,0], [2,1], [1,2], [0,3], [1,4]],
+                [[0,0], [2,1], [0,2], [2,3], [0,4]]
+            ];
+
+            paylines.forEach((line, lineIndex) => {
+                const symbols = line.map(([row, col]) => gameState.reels[col][row].symbolKey);
+                let matchCount = 1;
+                let matchSymbol = symbols[0];
+
+                // WILD 符號可以替代任何符號
+                for (let i = 1; i < symbols.length; i++) {
+                    if (symbols[i] === matchSymbol || symbols[i] === 'rainbow' || matchSymbol === 'rainbow') {
+                        matchCount++;
+                        if (matchSymbol === 'rainbow' && symbols[i] !== 'rainbow') {
+                            matchSymbol = symbols[i];
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                // 檢查是否有賠付
+                if (matchCount >= 3 && PAYOUTS[matchSymbol] && PAYOUTS[matchSymbol][matchCount]) {
+                    wins.push({
+                        symbol: matchSymbol,
+                        count: matchCount,
+                        payout: PAYOUTS[matchSymbol][matchCount],
+                        line: line.slice(0, matchCount)
+                    });
+                }
+            });
+
+            // 檢查 SCATTER (守宮寶寶) - 不需要連線
+            const scatterCount = gameState.reels.flat().filter(s => s.symbolKey === 'baby').length;
+            if (scatterCount >= 3) {
+                wins.push({
+                    symbol: 'baby',
+                    count: scatterCount,
+                    payout: PAYOUTS.baby[scatterCount] || PAYOUTS.baby[5],
+                    isScatter: true
+                });
+            }
+
+            return wins;
+        }
+
+        // Easing 函數
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        const easeInCubic = (t) => t * t * t;
+        const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        // 啟動輪軸旋轉（帶加速效果）
+        async function startReelSpin(reelIndex) {
+            const reel = gameState.reelElements[reelIndex];
+            const reelContent = reel.querySelector('.reel-content');
+            
+            return new Promise(resolve => {
+                // 第一階段：加速啟動（0.3秒）
+                reel.classList.add('accelerating');
+                
+                setTimeout(() => {
+                    // 第二階段：進入全速旋轉
+                    reel.classList.remove('accelerating');
+                    reel.classList.add('spinning');
+                    resolve({ reel, reelContent });
+                }, 300); // 加速持續 0.3 秒
+            });
+        }
+
+        // 停止輪軸旋轉（彈簧回彈效果）
+        async function stopReelSpin(reelIndex, finalSymbols, spinData) {
+            const { reel, reelContent } = spinData;
+            
+            return new Promise(resolve => {
+                // 立即設定最終符號
+                for (let row = 0; row < 3; row++) {
+                    const targetIndex = 6 + row;
+                    gameState.extraSymbols[reelIndex][targetIndex].symbolKey = finalSymbols[row];
+                    drawSymbol(gameState.extraSymbols[reelIndex][targetIndex].canvas, finalSymbols[row]);
+                    
+                    gameState.reels[reelIndex][row].symbolKey = finalSymbols[row];
+                    gameState.reels[reelIndex][row].canvas = gameState.extraSymbols[reelIndex][targetIndex].canvas;
+                }
+                
+                // 階段 1：減速（0.4秒）
+                reel.classList.remove('spinning');
+                reel.classList.add('slowing');
+                
+                setTimeout(() => {
+                    reel.classList.remove('slowing');
+                    reel.classList.add('stopping');
+                    
+                    // 階段 2：過頭（0.18秒）- 更快速的過頭
+                    reelContent.style.transition = 'transform 0.18s cubic-bezier(0.3, 0.9, 0.3, 1)';
+                    reelContent.style.transform = 'translateY(-758px)'; // 過頭 22px
+                    reelContent.style.filter = 'blur(0)';
+                    
+                    setTimeout(() => {
+                        // 階段 3：第一次回彈（0.14秒）- 立即且強力的彈簧效果
+                        reelContent.style.transition = 'transform 0.14s cubic-bezier(0.6, 2.5, 0.5, 0.9)';
+                        reelContent.style.transform = 'translateY(-795px)'; // 強力彈起 15px
+                        
+                        setTimeout(() => {
+                            // 階段 4：第二次下落（0.12秒）- 快速下落
+                            reelContent.style.transition = 'transform 0.12s cubic-bezier(0.5, 0.05, 0.5, 1)';
+                            reelContent.style.transform = 'translateY(-774px)'; // 過頭 6px
+                            
+                            setTimeout(() => {
+                                // 階段 5：第二次回彈（0.1秒）- 快速彈回
+                                reelContent.style.transition = 'transform 0.1s cubic-bezier(0.6, 2.0, 0.5, 0.95)';
+                                reelContent.style.transform = 'translateY(-784px)'; // 彈起 4px
+                                
+                                setTimeout(() => {
+                                    // 階段 6：最終穩定（0.08秒）- 極快歸位
+                                    reelContent.style.transition = 'transform 0.08s cubic-bezier(0.4, 1, 0.6, 1)';
+                                    reelContent.style.transform = 'translateY(-780px)'; // 精確歸位
+                                    
+                                    setTimeout(() => {
+                                        reel.classList.remove('stopping');
+                                        reelContent.style.transition = '';
+                                        reelContent.style.filter = '';
+                                        resolve();
+                                    }, 80);
+                                }, 100);
+                            }, 120);
+                        }, 140);
+                    }, 180);
+                }, 400); // 減速持續時間
+            });
+        }
+
+        // 旋轉動畫
+        async function spin() {
+            if (gameState.isSpinning) return;
+            
+            const bet = parseInt(document.getElementById('bet-input').value);
+            if (bet > gameState.balance) {
+                updateMessage('餘額不足！');
+                return;
+            }
+
+            gameState.isSpinning = true;
+            gameState.bet = bet;
+            gameState.balance -= bet;
+            gameState.totalSpins++;
+            gameState.totalWagered += bet;
+            
+            updateUI();
+            updateMessage('旋轉中...');
+            
+            document.getElementById('spin-btn').disabled = true;
+            document.getElementById('auto-btn').disabled = true;
+            document.getElementById('bet-input').disabled = true;
+
+            // 啟動背景特效
+            const slotMachine = document.getElementById('slot-machine');
+            slotMachine.classList.add('spinning');
+            createSparkles();
+
+            // 清除之前的獲勝高亮
+            document.querySelectorAll('.symbol-slot').forEach(slot => {
+                slot.classList.remove('winning');
+            });
+
+            // 生成最終結果
+            const finalResults = [];
+            for (let i = 0; i < 5; i++) {
+                const reelResult = [];
+                for (let row = 0; row < 3; row++) {
+                    reelResult.push(getWeightedRandomSymbol());
+                }
+                finalResults.push(reelResult);
+            }
+
+            // 啟動所有輪軸旋轉（帶延遲製造波浪效果）
+            const spinDataList = [];
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 80 * i)); // 波浪啟動
+                const spinData = await startReelSpin(i);
+                spinDataList.push(spinData);
+            }
+            
+            // 等待最小旋轉時間（1.5 秒全速旋轉）
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // 依序停止輪軸（帶延遲）
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200 * i)); // 波浪停止
+                await stopReelSpin(i, finalResults[i], spinDataList[i]);
+            }
+
+            // 關閉背景特效
+            slotMachine.classList.remove('spinning');
+
+            // 檢查獲勝
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const wins = checkWins();
+            
+            let totalWin = 0;
+            if (wins.length > 0) {
+                wins.forEach(win => {
+                    totalWin += win.payout * bet;
+                    
+                    // 高亮獲勝符號
+                    if (win.line) {
+                        win.line.forEach(([row, col]) => {
+                            gameState.reels[col][row].slot.classList.add('winning');
+                        });
+                    }
+                });
+
+                gameState.balance += totalWin;
+                gameState.winAmount = totalWin;
+                gameState.totalWon += totalWin;
+                
+                updateMessage(`🎉 恭喜！贏得 ${totalWin} 元！`, true);
+            } else {
+                gameState.winAmount = 0;
+                updateMessage('祝你下次好運！');
+            }
+
+            updateUI();
+            
+            gameState.isSpinning = false;
+            document.getElementById('spin-btn').disabled = false;
+            document.getElementById('auto-btn').disabled = false;
+            document.getElementById('bet-input').disabled = false;
+
+            // 自動旋轉模式
+            if (gameState.autoSpin && gameState.balance >= bet) {
+                setTimeout(() => spin(), 1500);
+            } else if (gameState.autoSpin) {
+                toggleAutoSpin();
+            }
+        }
+
+        // 創建閃光粒子效果
+        function createSparkles() {
+            const sparklesContainer = document.getElementById('sparkles');
+            sparklesContainer.innerHTML = ''; // 清空舊的粒子
+            
+            // 生成 20 個閃光粒子
+            for (let i = 0; i < 20; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                
+                // 隨機位置
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                
+                // 隨機延遲
+                sparkle.style.animationDelay = Math.random() * 3 + 's';
+                
+                // 隨機大小
+                const size = 2 + Math.random() * 3;
+                sparkle.style.width = size + 'px';
+                sparkle.style.height = size + 'px';
+                
+                sparklesContainer.appendChild(sparkle);
+            }
+        }
+
+        // 更新 UI
+        function updateUI() {
+            document.getElementById('balance').textContent = gameState.balance;
+            document.getElementById('current-bet').textContent = gameState.bet;
+            document.getElementById('win-amount').textContent = gameState.winAmount;
+            document.getElementById('total-spins').textContent = gameState.totalSpins;
+            
+            // 計算實際 RTP
+            const actualRTP = gameState.totalWagered > 0 
+                ? ((gameState.totalWon / gameState.totalWagered) * 100).toFixed(2)
+                : '98.5';
+            document.getElementById('actual-rtp').textContent = actualRTP + '%';
+        }
+
+        // 更新訊息
+        function updateMessage(text, isWin = false) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message' + (isWin ? ' win' : '');
+        }
+
+        // 切換自動旋轉
+        function toggleAutoSpin() {
+            gameState.autoSpin = !gameState.autoSpin;
+            document.getElementById('auto-btn').style.display = gameState.autoSpin ? 'none' : 'block';
+            document.getElementById('stop-btn').style.display = gameState.autoSpin ? 'block' : 'none';
+            
+            if (gameState.autoSpin && !gameState.isSpinning) {
+                spin();
+            }
+        }
+
+        // 初始化賠付表
+        function initializePaytable() {
+            const canvases = document.querySelectorAll('.paytable-canvas');
+            canvases.forEach(canvas => {
+                const symbolKey = canvas.dataset.symbol;
+                canvas.width = 60;
+                canvas.height = 60;
+                const ctx = canvas.getContext('2d');
+                ctx.save();
+                ctx.scale(0.375, 0.375);
+                SYMBOLS[symbolKey].draw(ctx);
+                ctx.restore();
+            });
+        }
+
+        // 初始化遊戲
+        function init() {
+            initializeReels();
+            initializePaytable();
+            updateUI();
+
+            // 事件監聽器
+            document.getElementById('spin-btn').addEventListener('click', spin);
+            document.getElementById('auto-btn').addEventListener('click', toggleAutoSpin);
+            document.getElementById('stop-btn').addEventListener('click', toggleAutoSpin);
+            
+            document.getElementById('bet-input').addEventListener('change', (e) => {
+                let value = parseInt(e.target.value);
+                if (value < 1) value = 1;
+                if (value > 100) value = 100;
+                e.target.value = value;
+            });
+
+            // 鍵盤快捷鍵
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !gameState.isSpinning) {
+                    e.preventDefault();
+                    spin();
+                }
+            });
+        }
+
+        // 頁面載入完成後初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
