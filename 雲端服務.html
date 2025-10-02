@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲端遊戲服務平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .form-group select:hover {
+            border-color: #667eea;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .result-section {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .result-item {
+            padding: 15px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-item value {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .icon {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎮 雲端遊戲服務平台</h1>
+            <p>選擇您的遊戲偏好，探索最適合的遊戲體驗</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Form Section -->
+            <div class="form-section">
+                <h2><span class="icon">⚙️</span>遊戲配置選項</h2>
+                
+                <div class="form-grid">
+                    <!-- 遊戲風格 -->
+                    <div class="form-group">
+                        <label for="gameStyle">
+                            <span class="icon">🎨</span>
+                            遊戲風格
+                        </label>
+                        <select id="gameStyle" name="gameStyle">
+                            <option value="">請選擇遊戲風格</option>
+                            <option value="fantasy">奇幻風格</option>
+                            <option value="sci-fi">科幻風格</option>
+                            <option value="ancient">古代風格</option>
+                            <option value="modern">現代風格</option>
+                            <option value="cartoon">卡通風格</option>
+                            <option value="realistic">寫實風格</option>
+                        </select>
+                    </div>
+
+                    <!-- 遊戲類型 -->
+                    <div class="form-group">
+                        <label for="gameType">
+                            <span class="icon">🎯</span>
+                            遊戲類型
+                        </label>
+                        <select id="gameType" name="gameType">
+                            <option value="">請選擇遊戲類型</option>
+                            <option value="slot">老虎機</option>
+                            <option value="card">撲克牌</option>
+                            <option value="dice">骰子遊戲</option>
+                            <option value="roulette">輪盤</option>
+                            <option value="fishing">捕魚遊戲</option>
+                            <option value="arcade">街機遊戲</option>
+                        </select>
+                    </div>
+
+                    <!-- 數學模型 -->
+                    <div class="form-group">
+                        <label for="mathModel">
+                            <span class="icon">📊</span>
+                            數學模型
+                        </label>
+                        <select id="mathModel" name="mathModel">
+                            <option value="">請選擇數學模型</option>
+                            <option value="low-volatility">低波動率</option>
+                            <option value="medium-volatility">中波動率</option>
+                            <option value="high-volatility">高波動率</option>
+                            <option value="progressive">累進式</option>
+                            <option value="fixed">固定式</option>
+                            <option value="balanced">平衡式</option>
+                        </select>
+                    </div>
+
+                    <!-- A 選項 -->
+                    <div class="form-group">
+                        <label for="optionA">
+                            <span class="icon">🅰️</span>
+                            A 選項
+                        </label>
+                        <select id="optionA" name="optionA">
+                            <option value="">請選擇 A 選項</option>
+                            <option value="a1">A1 - 初級難度</option>
+                            <option value="a2">A2 - 中級難度</option>
+                            <option value="a3">A3 - 高級難度</option>
+                            <option value="a4">A4 - 專家難度</option>
+                            <option value="a5">A5 - 大師難度</option>
+                        </select>
+                    </div>
+
+                    <!-- B 選項 -->
+                    <div class="form-group">
+                        <label for="optionB">
+                            <span class="icon">🅱️</span>
+                            B 選項
+                        </label>
+                        <select id="optionB" name="optionB">
+                            <option value="">請選擇 B 選項</option>
+                            <option value="b1">B1 - 快速模式</option>
+                            <option value="b2">B2 - 標準模式</option>
+                            <option value="b3">B3 - 休閒模式</option>
+                            <option value="b4">B4 - 挑戰模式</option>
+                            <option value="b5">B5 - 競技模式</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Button Group -->
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="submitForm()">
+                        <span>✓</span>
+                        確認選擇
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetForm()">
+                        <span>↻</span>
+                        重置選項
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection">
+                <h3>📋 您的選擇結果</h3>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function submitForm() {
+            const gameStyle = document.getElementById('gameStyle');
+            const gameType = document.getElementById('gameType');
+            const mathModel = document.getElementById('mathModel');
+            const optionA = document.getElementById('optionA');
+            const optionB = document.getElementById('optionB');
+
+            // 驗證是否所有選項都已選擇
+            if (!gameStyle.value || !gameType.value || !mathModel.value || !optionA.value || !optionB.value) {
+                alert('請完成所有選項的選擇！');
+                return;
+            }
+
+            // 獲取選中的文字
+            const result = {
+                gameStyle: gameStyle.options[gameStyle.selectedIndex].text,
+                gameType: gameType.options[gameType.selectedIndex].text,
+                mathModel: mathModel.options[mathModel.selectedIndex].text,
+                optionA: optionA.options[optionA.selectedIndex].text,
+                optionB: optionB.options[optionB.selectedIndex].text
+            };
+
+            // 顯示結果
+            displayResult(result);
+        }
+
+        function displayResult(result) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultContent.innerHTML = `
+                <div class="result-item">
+                    <label>🎨 遊戲風格：</label>
+                    <value>${result.gameStyle}</value>
+                </div>
+                <div class="result-item">
+                    <label>🎯 遊戲類型：</label>
+                    <value>${result.gameType}</value>
+                </div>
+                <div class="result-item">
+                    <label>📊 數學模型：</label>
+                    <value>${result.mathModel}</value>
+                </div>
+                <div class="result-item">
+                    <label>🅰️ A 選項：</label>
+                    <value>${result.optionA}</value>
+                </div>
+                <div class="result-item">
+                    <label>🅱️ B 選項：</label>
+                    <value>${result.optionB}</value>
+                </div>
+            `;
+
+            resultSection.classList.add('show');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function resetForm() {
+            document.getElementById('gameStyle').value = '';
+            document.getElementById('gameType').value = '';
+            document.getElementById('mathModel').value = '';
+            document.getElementById('optionA').value = '';
+            document.getElementById('optionB').value = '';
+            
+            const resultSection = document.getElementById('resultSection');
+            resultSection.classList.remove('show');
+        }
+
+        // 頁面載入時的動畫效果
+        window.addEventListener('load', function() {
+            document.querySelector('.container').style.animation = 'fadeIn 0.5s ease';
+        });
+    </script>
+</body>
+</html>

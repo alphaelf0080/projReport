@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Robot - 配置生成器</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 70vh;
+        }
+
+        .config-panel {
+            padding: 30px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .preview-panel {
+            padding: 30px;
+            background: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .range-input {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        .robot-config {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .robot-config.active {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .robot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .robot-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .remove-robot {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-robot {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .add-robot:hover {
+            background: #45a049;
+        }
+
+        .preview-code {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-valid { background: #4CAF50; }
+        .status-invalid { background: #f44336; }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .config-panel {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cogs"></i> Slot Robot 配置生成器</h1>
+            <p>視覺化配置工具 - 輕鬆建立和管理測試配置</p>
+        </div>
+
+        <div class="content">
+            <div class="config-panel">
+                <div class="section">
+                    <h3><i class="fas fa-server"></i> 伺服器設定</h3>
+                    
+                    <div class="form-group">
+                        <label for="server">WebSocket 伺服器 <span class="tooltip"><i class="fas fa-question-circle"></i><span class="tooltiptext">遊戲伺服器的 WebSocket 地址</span></span></label>
+                        <input type="text" id="server" value="wss://dev-gs.iplaystar.net:83/slot" onchange="updateConfig()">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signinUrl">登入 API 端點</label>
+                        <input type="text" id="signinUrl" value="https://dev.iplaystar.net/api/signin" onchange="updateConfig()">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoReconnect" checked onchange="updateConfig()">
+                            <label for="autoReconnect">啟用自動重連</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="gameDelay" onchange="updateConfig()">
+                            <label for="gameDelay">啟用遊戲延遲</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-clock"></i> 時間設定</h3>
+                    
+                    <div class="form-group">
+                        <label>啟動間隔 (毫秒)</label>
+                        <div class="range-input">
+                            <input type="number" id="launchMin" value="5000" min="0" onchange="updateConfig()">
+                            <span>到</span>
+                            <input type="number" id="launchMax" value="10000" min="0" onchange="updateConfig()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>隨機斷線計數</label>
+                        <div class="range-input">
+                            <input type="number" id="disconnectMin" value="5" min="1" onchange="updateConfig()">
+                            <span>到</span>
+                            <input type="number" id="disconnectMax" value="7" min="1" onchange="updateConfig()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numDisconnects">斷線測試次數</label>
+                        <input type="number" id="numDisconnects" value="30" min="1" onchange="updateConfig()">
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-robot"></i> 機器人配置</h3>
+                    
+                    <button class="add-robot" onclick="addRobot()">
+                        <i class="fas fa-plus"></i> 新增機器人
+                    </button>
+
+                    <div id="robotConfigs">
+                        <!-- 機器人配置將在這裡動態生成 -->
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3><i class="fas fa-ban"></i> 停用清單</h3>
+                    
+                    <div class="form-group">
+                        <label for="disabledGames">停用的遊戲 ID (一行一個)</label>
+                        <textarea id="disabledGames" rows="4" placeholder="PSS-ON-00085&#10;PSS-ON-00092" onchange="updateConfig()">PSS-ON-00085
+PSS-ON-00092
+PSS-ON-00087
+PSS-ON-00090</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <h3><i class="fas fa-eye"></i> 配置預覽</h3>
+                <div class="status-indicator status-valid"></div>
+                <span>配置有效</span>
+                
+                <div class="preview-code" id="configPreview">
+                    // 配置將在這裡顯示
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadConfig()">
+                        <i class="fas fa-download"></i> 下載配置
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetConfig()">
+                        <i class="fas fa-undo"></i> 重置
+                    </button>
+                    <button class="btn btn-primary" onclick="loadSampleConfig()">
+                        <i class="fas fa-file-import"></i> 載入範例
+                    </button>
+                </div>
+
+                <div class="section" style="margin-top: 30px;">
+                    <h3><i class="fas fa-upload"></i> 匯入現有配置</h3>
+                    <div class="form-group">
+                        <input type="file" id="configFile" accept=".json" onchange="loadConfig()" style="display: none;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('configFile').click()">
+                            <i class="fas fa-file-upload"></i> 選擇檔案
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let robotCount = 0;
+        let config = {};
+
+        // 初始化
+        window.addEventListener('load', () => {
+            addRobot(); // 添加第一個機器人
+            updateConfig();
+        });
+
+        function addRobot() {
+            robotCount++;
+            const robotsDiv = document.getElementById('robotConfigs');
+            
+            const robotDiv = document.createElement('div');
+            robotDiv.className = 'robot-config';
+            robotDiv.id = `robot-${robotCount}`;
+            robotDiv.innerHTML = `
+                <div class="robot-header">
+                    <div class="robot-title">機器人 #${robotCount}</div>
+                    <button class="remove-robot" onclick="removeRobot(${robotCount})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>遊戲 ID</label>
+                    <input type="text" id="gameId-${robotCount}" value="PSS-ON-00001" onchange="updateConfig()">
+                </div>
+                
+                <div class="form-group">
+                    <label>子遊戲 ID</label>
+                    <input type="number" id="subgameId-${robotCount}" value="0" min="0" onchange="updateConfig()">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>投注索引</label>
+                        <input type="number" id="betIndex-${robotCount}" value="0" min="0" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>線數索引</label>
+                        <input type="number" id="lineIndex-${robotCount}" value="0" min="0" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>面額索引</label>
+                        <input type="number" id="rateIndex-${robotCount}" value="0" min="0" onchange="updateConfig()">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>機器人數量</label>
+                        <input type="number" id="count-${robotCount}" value="1" min="1" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>延遲時間 (毫秒)</label>
+                        <input type="number" id="delayTime-${robotCount}" value="50" min="0" onchange="updateConfig()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="advancedOptions-${robotCount}" onchange="toggleAdvanced(${robotCount})">
+                        <label for="advancedOptions-${robotCount}">進階選項</label>
+                    </div>
+                </div>
+                
+                <div id="advanced-${robotCount}" style="display: none;">
+                    <div class="form-group">
+                        <label>多視窗設定 (逗號分隔)</label>
+                        <input type="text" id="multiWindow-${robotCount}" placeholder="0,0,0,0" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>難度選擇</label>
+                        <input type="number" id="volatility-${robotCount}" min="0" onchange="updateConfig()">
+                    </div>
+                    <div class="form-group">
+                        <label>重轉索引</label>
+                        <input type="number" id="spinIndex-${robotCount}" min="0" onchange="updateConfig()">
+                    </div>
+                </div>
+            `;
+            
+            robotsDiv.appendChild(robotDiv);
+            updateConfig();
+        }
+
+        function removeRobot(id) {
+            const robotDiv = document.getElementById(`robot-${id}`);
+            if (robotDiv) {
+                robotDiv.remove();
+                updateConfig();
+            }
+        }
+
+        function toggleAdvanced(id) {
+            const checkbox = document.getElementById(`advancedOptions-${id}`);
+            const advancedDiv = document.getElementById(`advanced-${id}`);
+            advancedDiv.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        function updateConfig() {
+            // 基本設定
+            config = {
+                robot_options: {
+                    server: document.getElementById('server').value,
+                    signin_url: document.getElementById('signinUrl').value,
+                    auto_reconnect: document.getElementById('autoReconnect').checked,
+                    delay: document.getElementById('gameDelay').checked,
+                    launch_interval: [
+                        parseInt(document.getElementById('launchMin').value),
+                        parseInt(document.getElementById('launchMax').value)
+                    ],
+                    random_disconnect_count: [
+                        parseInt(document.getElementById('disconnectMin').value),
+                        parseInt(document.getElementById('disconnectMax').value)
+                    ],
+                    number_of_disconnects: parseInt(document.getElementById('numDisconnects').value)
+                },
+                robots: [],
+                disable: []
+            };
+
+            // 收集機器人配置
+            const robotDivs = document.querySelectorAll('.robot-config');
+            robotDivs.forEach(div => {
+                const id = div.id.split('-')[1];
+                const robot = {
+                    game_id: document.getElementById(`gameId-${id}`)?.value || '',
+                    subgame_id: parseInt(document.getElementById(`subgameId-${id}`)?.value || 0),
+                    bet_index: parseInt(document.getElementById(`betIndex-${id}`)?.value || 0),
+                    line_index: parseInt(document.getElementById(`lineIndex-${id}`)?.value || 0),
+                    rate_index: parseInt(document.getElementById(`rateIndex-${id}`)?.value || 0),
+                    count: parseInt(document.getElementById(`count-${id}`)?.value || 1),
+                    delayTime: parseInt(document.getElementById(`delayTime-${id}`)?.value || 50)
+                };
+
+                // 進階選項
+                const multiWindow = document.getElementById(`multiWindow-${id}`)?.value;
+                if (multiWindow) {
+                    robot.multi_window = multiWindow.split(',').map(x => parseInt(x.trim()));
+                }
+
+                const volatility = document.getElementById(`volatility-${id}`)?.value;
+                if (volatility) {
+                    robot.select_volatility = parseInt(volatility);
+                }
+
+                const spinIndex = document.getElementById(`spinIndex-${id}`)?.value;
+                if (spinIndex) {
+                    robot.select_spin_index = parseInt(spinIndex);
+                }
+
+                config.robots.push(robot);
+            });
+
+            // 停用清單
+            const disabledText = document.getElementById('disabledGames').value;
+            if (disabledText.trim()) {
+                config.disable = disabledText.split('\n').map(line => line.trim()).filter(line => line);
+            }
+
+            // 更新預覽
+            document.getElementById('configPreview').textContent = JSON.stringify(config, null, 2);
+        }
+
+        function downloadConfig() {
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'slot-robot.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function resetConfig() {
+            // 重置所有表單
+            document.getElementById('server').value = 'wss://dev-gs.iplaystar.net:83/slot';
+            document.getElementById('signinUrl').value = 'https://dev.iplaystar.net/api/signin';
+            document.getElementById('autoReconnect').checked = true;
+            document.getElementById('gameDelay').checked = false;
+            document.getElementById('launchMin').value = 5000;
+            document.getElementById('launchMax').value = 10000;
+            document.getElementById('disconnectMin').value = 5;
+            document.getElementById('disconnectMax').value = 7;
+            document.getElementById('numDisconnects').value = 30;
+            document.getElementById('disabledGames').value = 'PSS-ON-00085\nPSS-ON-00092\nPSS-ON-00087\nPSS-ON-00090';
+
+            // 清除所有機器人
+            document.getElementById('robotConfigs').innerHTML = '';
+            robotCount = 0;
+            
+            // 添加一個預設機器人
+            addRobot();
+        }
+
+        function loadSampleConfig() {
+            resetConfig();
+            
+            // 設定範例數據
+            document.getElementById('gameId-1').value = 'PSS-ON-00001';
+            
+            // 添加更多範例機器人
+            addRobot();
+            document.getElementById('gameId-2').value = 'PSS-ON-00025';
+            document.getElementById('delayTime-2').value = 100;
+            
+            addRobot();
+            document.getElementById('gameId-3').value = 'PSS-ON-00090';
+            document.getElementById('advancedOptions-3').checked = true;
+            toggleAdvanced(3);
+            document.getElementById('multiWindow-3').value = '0,0,0,0';
+            
+            updateConfig();
+        }
+
+        function loadConfig() {
+            const fileInput = document.getElementById('configFile');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const loadedConfig = JSON.parse(e.target.result);
+                        
+                        // 重置當前配置
+                        document.getElementById('robotConfigs').innerHTML = '';
+                        robotCount = 0;
+                        
+                        // 載入基本設定
+                        if (loadedConfig.robot_options) {
+                            const opts = loadedConfig.robot_options;
+                            document.getElementById('server').value = opts.server || '';
+                            document.getElementById('signinUrl').value = opts.signin_url || '';
+                            document.getElementById('autoReconnect').checked = opts.auto_reconnect || false;
+                            document.getElementById('gameDelay').checked = opts.delay || false;
+                            
+                            if (opts.launch_interval) {
+                                document.getElementById('launchMin').value = opts.launch_interval[0] || 5000;
+                                document.getElementById('launchMax').value = opts.launch_interval[1] || 10000;
+                            }
+                            
+                            if (opts.random_disconnect_count) {
+                                document.getElementById('disconnectMin').value = opts.random_disconnect_count[0] || 5;
+                                document.getElementById('disconnectMax').value = opts.random_disconnect_count[1] || 7;
+                            }
+                            
+                            document.getElementById('numDisconnects').value = opts.number_of_disconnects || 30;
+                        }
+                        
+                        // 載入機器人配置
+                        if (loadedConfig.robots) {
+                            loadedConfig.robots.forEach(robot => {
+                                addRobot();
+                                const id = robotCount;
+                                
+                                document.getElementById(`gameId-${id}`).value = robot.game_id || '';
+                                document.getElementById(`subgameId-${id}`).value = robot.subgame_id || 0;
+                                document.getElementById(`betIndex-${id}`).value = robot.bet_index || 0;
+                                document.getElementById(`lineIndex-${id}`).value = robot.line_index || 0;
+                                document.getElementById(`rateIndex-${id}`).value = robot.rate_index || 0;
+                                document.getElementById(`count-${id}`).value = robot.count || 1;
+                                document.getElementById(`delayTime-${id}`).value = robot.delayTime || 50;
+                                
+                                // 進階選項
+                                if (robot.multi_window || robot.select_volatility !== undefined || robot.select_spin_index !== undefined) {
+                                    document.getElementById(`advancedOptions-${id}`).checked = true;
+                                    toggleAdvanced(id);
+                                    
+                                    if (robot.multi_window) {
+                                        document.getElementById(`multiWindow-${id}`).value = robot.multi_window.join(',');
+                                    }
+                                    
+                                    if (robot.select_volatility !== undefined) {
+                                        document.getElementById(`volatility-${id}`).value = robot.select_volatility;
+                                    }
+                                    
+                                    if (robot.select_spin_index !== undefined) {
+                                        document.getElementById(`spinIndex-${id}`).value = robot.select_spin_index;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 載入停用清單
+                        if (loadedConfig.disable) {
+                            document.getElementById('disabledGames').value = loadedConfig.disable.join('\n');
+                        }
+                        
+                        updateConfig();
+                        alert('配置檔案載入成功！');
+                        
+                    } catch (error) {
+                        alert('配置檔案格式錯誤：' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</body>
+</html>
