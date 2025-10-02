@@ -1,0 +1,25 @@
+effects:
+  - id: symbol_win_lion_v1
+    category: symbolWin
+    resolution: 512x512
+    duration_sec: 0.6
+    fps: 30
+    loops: false
+    variant_count: 2
+    qa_rules:
+      max_size_kb: 500
+      max_brightness: 0.95
+      max_loop_error: 0.03
+      max_center_drift_ratio: 0.05
+
+  - id: background_base_loop_v2
+    category: backgroundLoop
+    resolution: 1920x1080
+    duration_sec: 6.0
+    fps: 24
+    loops: true
+    variant_count: 1
+    qa_rules:
+      max_size_kb: 2600
+      max_loop_error: 0.02
+      max_brightness: 0.90

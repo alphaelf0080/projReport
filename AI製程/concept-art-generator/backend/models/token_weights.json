@@ -1,0 +1,75 @@
+{
+  "lighting": {
+    "volumetric light": 1.0,
+    "dramatic rim light": 1.0,
+    "cinematic lighting": 1.0,
+    "god rays": 0.9,
+    "soft ambient": 0.8,
+    "high contrast": 0.95,
+    "backlit": 0.9,
+    "golden hour": 0.85
+  },
+  "material": {
+    "metallic": 1.0,
+    "ornate": 1.0,
+    "intricate": 0.95,
+    "glossy": 0.9,
+    "matte": 0.8,
+    "gold accents": 1.1,
+    "detailed texture": 0.9,
+    "polished": 0.85
+  },
+  "composition": {
+    "cinematic composition": 1.0,
+    "dynamic angle": 0.95,
+    "centered": 0.9,
+    "rule of thirds": 0.9,
+    "close-up": 0.85,
+    "wide angle": 0.85,
+    "aerial view": 0.8,
+    "low angle": 0.8
+  },
+  "atmosphere": {
+    "majestic": 1.0,
+    "mysterious": 0.9,
+    "energetic": 0.95,
+    "serene": 0.85,
+    "epic": 1.0,
+    "dramatic": 0.95,
+    "ethereal": 0.9,
+    "vibrant": 0.9
+  },
+  "detail": {
+    "ultra detailed": 1.0,
+    "high fidelity": 0.95,
+    "8k": 0.9,
+    "sharp focus": 0.95,
+    "crisp": 0.9,
+    "clean": 0.85,
+    "refined": 0.85
+  },
+  "negative_tokens": {
+    "low quality": 1.3,
+    "blurry": 1.3,
+    "watermark": 1.4,
+    "signature": 1.3,
+    "distorted": 1.2,
+    "extra limbs": 1.4,
+    "mutated": 1.3,
+    "noisy": 1.2,
+    "flat lighting": 1.2,
+    "oversaturated": 1.1,
+    "jpeg artifacts": 1.3,
+    "text": 1.4
+  },
+  "slot_game_specific": {
+    "slot game symbol style": 1.1,
+    "premium quality": 1.0,
+    "game asset": 0.95,
+    "vibrant colors": 1.0,
+    "clear composition": 1.05,
+    "centered subject": 1.0,
+    "transparent background": 0.9,
+    "icon style": 0.85
+  }
+}

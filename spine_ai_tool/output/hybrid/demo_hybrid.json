@@ -1,0 +1,181 @@
+{
+  "type": "hybrid",
+  "skeleton": {
+    "skeleton": {
+      "hash": "",
+      "spine": "4.1",
+      "width": 0,
+      "height": 0
+    },
+    "bones": [
+      {
+        "name": "root",
+        "parent": null
+      },
+      {
+        "name": "torso",
+        "parent": "root"
+      },
+      {
+        "name": "head",
+        "parent": "torso"
+      },
+      {
+        "name": "leftArm",
+        "parent": "torso"
+      },
+      {
+        "name": "leftHand",
+        "parent": "leftArm"
+      },
+      {
+        "name": "rightArm",
+        "parent": "torso"
+      },
+      {
+        "name": "rightHand",
+        "parent": "rightArm"
+      }
+    ],
+    "slots": [
+      {
+        "name": "torso_slot",
+        "bone": "torso",
+        "attachment": "torso"
+      },
+      {
+        "name": "head_slot",
+        "bone": "head",
+        "attachment": "head"
+      },
+      {
+        "name": "leftArm_slot",
+        "bone": "leftArm",
+        "attachment": "leftArm"
+      },
+      {
+        "name": "leftHand_slot",
+        "bone": "leftHand",
+        "attachment": "leftHand"
+      },
+      {
+        "name": "rightArm_slot",
+        "bone": "rightArm",
+        "attachment": "rightArm"
+      },
+      {
+        "name": "rightHand_slot",
+        "bone": "rightHand",
+        "attachment": "rightHand"
+      }
+    ],
+    "skins": {
+      "default": {
+        "torso_slot": {
+          "torso": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "head_slot": {
+          "head": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "leftArm_slot": {
+          "leftArm": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "leftHand_slot": {
+          "leftHand": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "rightArm_slot": {
+          "rightArm": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        },
+        "rightHand_slot": {
+          "rightHand": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        }
+      }
+    },
+    "animations": {
+      "idle": {
+        "bones": {
+          "torso": {
+            "scale": [
+              {
+                "time": 0,
+                "x": 1,
+                "y": 1
+              },
+              {
+                "time": 1.0,
+                "x": 1,
+                "y": 1.02
+              },
+              {
+                "time": 2.0,
+                "x": 1,
+                "y": 1
+              }
+            ]
+          },
+          "head": {
+            "rotate": [
+              {
+                "time": 0,
+                "angle": 0
+              },
+              {
+                "time": 0.6,
+                "angle": 3.0
+              },
+              {
+                "time": 1.2,
+                "angle": 0
+              },
+              {
+                "time": 1.7999999999999998,
+                "angle": -3.0
+              },
+              {
+                "time": 2.4,
+                "angle": 0
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "video": "animations/symbol_core.webm",
+  "runtimeSpecMeta": {
+    "layers": 6
+  },
+  "sync": {
+    "offsetMs": 0
+  }
+}

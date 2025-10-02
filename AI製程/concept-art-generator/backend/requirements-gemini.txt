@@ -1,0 +1,33 @@
+# Gemini API 版本 - 使用 Google Gemini 生成 Concept Art
+# 無需本地 GPU，通過 API 調用
+
+# FastAPI 後端
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Google Gemini API
+google-generativeai>=0.3.0
+google-ai-generativelanguage>=0.4.0
+
+# 圖像處理
+Pillow>=10.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0,<2.0.0
+
+# 色彩分析
+scikit-learn>=1.3.0
+colormath>=3.0.0
+
+# HTTP 客戶端（呼叫圖像生成 API）
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# 工具
+python-dotenv>=1.0.0
+loguru>=0.7.0
+pyyaml>=6.0.0
+
+# WebSocket 支援（即時對話）
+websockets>=12.0

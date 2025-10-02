@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Concept Art Generator - Gemini Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .chat-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header h2 {
+            color: #FFD700;
+            font-size: 1.3rem;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            min-height: 400px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 1rem;
+            border-radius: 12px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .message.assistant .message-content {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .prompt-ready-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #fff;
+            font-size: 1rem;
+            resize: none;
+            min-height: 60px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            color: #1a1a2e;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .side-panel {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h3 {
+            color: #FFD700;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .color-swatch {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-swatch::after {
+            content: attr(data-color);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem;
+            text-align: center;
+        }
+
+        .quick-prompts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quick-prompt-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.8rem;
+            color: #e0e0e0;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .quick-prompt-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+        }
+
+        .generate-section {
+            margin-top: 1rem;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 圖像預覽區 */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .gallery-item {
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            border-color: #FFD700;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .side-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 AI Concept Art Generator</h1>
+        <div class="subtitle">Powered by Google Gemini - 對話式遊戲美術創作助手</div>
+    </div>
+
+    <div class="container">
+        <!-- 主對話區 -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h2>💬 與 AI 顧問對話</h2>
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span id="status-text">準備就緒</span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- 歡迎訊息 -->
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <div>您好！我是您的 Slot Game 美術顧問。</div>
+                        <div style="margin-top: 0.5rem;">請告訴我：</div>
+                        <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                            <li>您想創作什麼主題的遊戲？</li>
+                            <li>期望的視覺風格？（寫實、卡通、奇幻等）</li>
+                            <li>主要色調偏好？</li>
+                        </ul>
+                        <div style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+                            💡 也可以上傳參考圖，我會分析並提供建議
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="描述您的創作需求...（例如：我想做一個東方龍主題的遊戲，要華麗金碧輝煌的風格）"
+                    rows="3"
+                ></textarea>
+                <button id="sendBtn" class="send-btn" onclick="sendMessage()">
+                    發送 📤
+                </button>
+            </div>
+        </div>
+
+        <!-- 側邊工具區 -->
+        <div class="side-panel">
+            <!-- 參考圖上傳 -->
+            <div class="card">
+                <h3>📷 參考圖片</h3>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🖼️</div>
+                    <div>點擊或拖曳圖片至此</div>
+                    <div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">
+                        支援 JPG, PNG
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                
+                <!-- 色板顯示 -->
+                <div id="colorPalette" class="color-palette" style="display: none;"></div>
+            </div>
+
+            <!-- 快速提示 -->
+            <div class="card">
+                <h3>⚡ 快速範例</h3>
+                <div class="quick-prompts">
+                    <button class="quick-prompt-btn" onclick="useQuickPrompt(this)">
+                        🐉 東方龍與財富 - 華麗金色
+                    </button>
+                    <button class="quick-prompt-btn" onclick="useQuickPrompt(this)">
+                        ⚔️ 維京戰士 - 史詩冷峻
+                    </button>
+                    <button class="quick-prompt-btn" onclick="useQuickPrompt(this)">
+                        🔮 埃及神秘 - 沙漠神殿
+                    </button>
+                    <button class="quick-prompt-btn" onclick="useQuickPrompt(this)">
+                        🌸 日本櫻花 - 溫柔浪漫
+                    </button>
+                </div>
+            </div>
+
+            <!-- 生成控制 -->
+            <div class="card">
+                <h3>🎨 生成圖像</h3>
+                <div id="promptPreview" style="font-size: 0.85rem; color: #888; margin-bottom: 1rem;">
+                    等待 Prompt 準備就緒...
+                </div>
+                <div class="generate-section">
+                    <button id="generateBtn" class="generate-btn" onclick="generateImages()" disabled>
+                        開始生成
+                    </button>
+                </div>
+                
+                <!-- 生成的圖像 -->
+                <div id="gallery" class="gallery" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app_gemini.js"></script>
+</body>
+</html>

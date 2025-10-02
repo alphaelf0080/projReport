@@ -1,0 +1,29 @@
+# 簡化版依賴 - 不含 AI 生成（測試 API 用）
+# 適用於無法安裝 PyTorch 的環境
+
+# FastAPI 後端
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# 圖像處理（色板提取仍可用）
+Pillow>=10.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0,<2.0.0
+
+# 色彩分析
+scikit-learn>=1.3.0
+colormath>=3.0.0
+
+# 工具
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# 注意：此版本不含 PyTorch/Diffusers，無法實際生成圖像
+# 但可以測試：
+# - API 端點
+# - Brief 創建
+# - 色板提取
+# - Prompt 組合
+# - 反饋系統

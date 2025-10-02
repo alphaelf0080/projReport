@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Game Concept Art Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 標題區 -->
+        <header>
+            <h1>🎨 Slot Game Concept Art Generator</h1>
+            <p>AI 輔助互動式美術工具</p>
+        </header>
+
+        <!-- 主內容區 -->
+        <main>
+            <!-- 步驟 1: 輸入 Brief -->
+            <section id="step1" class="step active">
+                <h2>步驟 1: 創意簡報</h2>
+                <form id="briefForm">
+                    <div class="form-group">
+                        <label for="theme">主題 *</label>
+                        <input type="text" id="theme" name="theme" placeholder="例：東方龍與財富" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="styleKeywords">風格關鍵詞 * (逗號分隔)</label>
+                        <input type="text" id="styleKeywords" name="styleKeywords" 
+                               placeholder="例：cinematic, volumetric light, golden accents" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>色彩偏好</label>
+                        <div class="color-inputs">
+                            <div>
+                                <label for="primaryColors">主色 (HEX, 逗號分隔)</label>
+                                <input type="text" id="primaryColors" name="primaryColors" 
+                                       placeholder="#B30012, #D41F27">
+                            </div>
+                            <div>
+                                <label for="secondaryColors">輔色 (HEX, 逗號分隔)</label>
+                                <input type="text" id="secondaryColors" name="secondaryColors" 
+                                       placeholder="#CFA64D, #F7E09A">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="referenceUrls">參考圖片 URL (每行一個)</label>
+                        <textarea id="referenceUrls" name="referenceUrls" rows="3" 
+                                  placeholder="https://example.com/ref1.jpg&#10;https://example.com/ref2.jpg"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetCount">生成數量</label>
+                        <select id="targetCount" name="targetCount">
+                            <option value="4" selected>4 張</option>
+                            <option value="6">6 張</option>
+                            <option value="8">8 張</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetRatio">圖像比例</label>
+                        <select id="targetRatio" name="targetRatio">
+                            <option value="16:9" selected>16:9 (橫向)</option>
+                            <option value="4:5">4:5 (直向)</option>
+                            <option value="1:1">1:1 (方形)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary">建立 Brief</button>
+                </form>
+            </section>
+
+            <!-- 步驟 2: 生成圖像 -->
+            <section id="step2" class="step">
+                <h2>步驟 2: 生成 Concept Art</h2>
+                <div id="briefSummary"></div>
+                
+                <button id="btnGenerate" class="btn-primary">開始生成</button>
+                
+                <div id="generationProgress" class="progress-container" style="display:none;">
+                    <div class="progress-bar">
+                        <div id="progressBar" class="progress-fill"></div>
+                    </div>
+                    <p id="progressText">處理中...</p>
+                </div>
+            </section>
+
+            <!-- 步驟 3: 查看結果 -->
+            <section id="step3" class="step">
+                <h2>步驟 3: 評估與反饋</h2>
+                <div id="imageGallery" class="gallery"></div>
+                
+                <div id="feedbackPanel" class="feedback-panel" style="display:none;">
+                    <h3>提供反饋</h3>
+                    <p>選擇您喜歡的圖像，並提供調整建議</p>
+                    
+                    <div class="form-group">
+                        <label>調整建議 (每行一個)</label>
+                        <textarea id="adjustments" rows="3" 
+                                  placeholder="例：增強龍鱗立體感&#10;背景雲霧降低飽和度 20%"></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="btnSubmitFeedback" class="btn-primary">提交反饋並重新生成</button>
+                        <button id="btnDownloadAll" class="btn-secondary">下載所有圖片</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 狀態顯示 -->
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
