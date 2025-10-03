@@ -250,12 +250,13 @@ function setAll(collapsed){
 document.getElementById('expandAll').onclick=()=>setAll(false);
  document.getElementById('collapseAll').onclick=()=>setAll(true);
  document.getElementById('clearSearch').onclick=()=>{ searchInput.value=''; performSearch(''); };
- document.getElementById('exportJson').onclick=()=>{
-   const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
-   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pipeline_mindmap.json'; a.click(); URL.revokeObjectURL(a.href);
- };
+document.getElementById('exportJson').onclick=()=>{
+  if(!DATA){ alert('資料尚未載入'); return; }
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pipeline_mindmap.json'; a.click(); URL.revokeObjectURL(a.href);
+};
 
-render();
+// 初始先不 render，等共享 JSON 載入
 
 // ================= PIXI.JS 視圖 =================
 // 將 DATA 轉為可折疊的樹 (加上 collapsed 屬性)
@@ -270,14 +271,18 @@ function cloneData(obj){
     children: obj.children ? obj.children.map(cloneData) : []
   };
 }
-const PIXI_DATA_ROOT = { label: DATA.title, icon:'📌', collapsed:false, children: DATA.children.map(cloneData) };
-// 設定初始收合規則：深度 >=3 收合 (展開到第二層)
-function initCollapsed(n, depth=0){
-  if(depth>=3) n.collapsed = true; else n.collapsed = false;
-  if(n.children) n.children.forEach(c=> initCollapsed(c, depth+1));
+let PIXI_DATA_ROOT = null;
+function initCollapsed(n, depth=0){ if(depth>=3) n.collapsed=true; else n.collapsed=false; if(n.children) n.children.forEach(c=> initCollapsed(c, depth+1)); }
+function assignIds(n, path=[]){ n._id=[...path,n.label].join('>'); if(n.children) n.children.forEach(ch=> assignIds(ch,[...path,n.label])); }
+function setupPixiData(){
+  if(!DATA) return;
+  PIXI_DATA_ROOT = { label: DATA.title, icon:'📌', collapsed:false, children: DATA.children.map(cloneData) };
+  initCollapsed(PIXI_DATA_ROOT,0);
+  assignIds(PIXI_DATA_ROOT,[]);
+  console.log('[PIXI-DEBUG] Data root children =', PIXI_DATA_ROOT.children.length);
+  // 若 PIXI 已初始化則重畫
+  if(pixiInitialized) drawPixi();
 }
-initCollapsed(PIXI_DATA_ROOT, 0);
-console.log('[PIXI-DEBUG] Data root children count =', PIXI_DATA_ROOT.children.length);
 
 // 錯誤訊息覆蓋層
 const pixiErrorOverlay = document.createElement('div');
@@ -302,6 +307,20 @@ let cameraScale = 1; // 不縮放容器，手動計算位置 (文字保持清晰
 let panX = 0, panY = 0;
 const SCALE_MIN = 0.3, SCALE_MAX = 2.8;
 let layoutMode = 'radial'; // 'radial' 全方向心智圖 (可日後加入其他模式)
+let edgesGraphics = null;
+let lastVisibleNodes = [];
+let draggingNode = null; // {node,g,startX,startY,origX,origY}
+let savedPositions = {};
+try { savedPositions = JSON.parse(localStorage.getItem('mindmapNodePositions')||'{}'); } catch(e){ savedPositions = {}; }
+
+function savePositions(){
+  const out = {...savedPositions};
+  // 只儲存被拖曳過 (標記 _manual) 的節點
+  lastVisibleNodes.forEach(n=>{
+    if(n._manual){ out[n._id] = { x: n._rawX, y: n._rawY }; }
+  });
+  localStorage.setItem('mindmapNodePositions', JSON.stringify(out));
+}
 
 function buildLayout(root){
   // 計算每個節點子樹寬度 (以葉子數為單位)
@@ -438,6 +457,7 @@ function drawPixi(){
   if(layoutMode === 'radial'){
     assignAngles(PIXI_DATA_ROOT);
     const visible = collectVisible(PIXI_DATA_ROOT);
+    lastVisibleNodes = visible;
     // 求最大深度 (visible)
     let maxDepth = 1; visible.forEach(n=>{ if(n._radiusDepth && n._radiusDepth>maxDepth) maxDepth = n._radiusDepth; });
     const margin = 110;
@@ -532,29 +552,38 @@ function drawPixi(){
       const r = baseR + (n._ringShift || 0);
       n._rawX = Math.cos(n._angle||0) * r;
       n._rawY = Math.sin(n._angle||0) * r;
-    });
-    // 邊線
-    const gEdges = new PIXI.Graphics(); panContainer.addChild(gEdges);
-    visible.forEach(n=>{
-      if(!n.collapsed && n.children){
-        n.children.forEach(c=>{
-          if(!visible.includes(c)) return;
-          gEdges.lineStyle(2,0x324250,0.9);
-          const sx = n._rawX * cameraScale + panX;
-          const sy = n._rawY * cameraScale + panY;
-          const tx = c._rawX * cameraScale + panX;
-          const ty = c._rawY * cameraScale + panY;
-          // 使用略微外拱的貝氏曲線，使曲線指向外部
-          const midR = Math.hypot(sx-tx, sy-ty)/2;
-          const angleMid = Math.atan2( (sy+ty)/2 - panY, (sx+tx)/2 - panX );
-          const ctrlDist = midR * 0.55;
-            const cx = ( (sx+tx)/2 ) + Math.cos(angleMid)*ctrlDist;
-            const cy = ( (sy+ty)/2 ) + Math.sin(angleMid)*ctrlDist;
-          gEdges.moveTo(sx,sy);
-          gEdges.quadraticCurveTo(cx,cy,tx,ty);
-        });
+      // 套用使用者手動位置覆蓋 (若存在儲存)
+      if(savedPositions[n._id]){
+        n._rawX = savedPositions[n._id].x;
+        n._rawY = savedPositions[n._id].y;
+        n._manual = true;
       }
     });
+    // 邊線 (先建立，之後拖曳可重繪)
+    edgesGraphics = new PIXI.Graphics(); panContainer.addChild(edgesGraphics);
+    function drawEdges(){
+      if(!edgesGraphics) return;
+      edgesGraphics.clear();
+      lastVisibleNodes.forEach(n=>{
+        if(!n.collapsed && n.children){
+          n.children.forEach(c=>{
+            if(!lastVisibleNodes.includes(c)) return;
+            edgesGraphics.lineStyle(2,0x324250,0.9);
+            const sx = (n._rawX * cameraScale + panX);
+            const sy = (n._rawY * cameraScale + panY);
+            const tx = (c._rawX * cameraScale + panX);
+            const ty = (c._rawY * cameraScale + panY);
+            const midR = Math.hypot(sx-tx, sy-ty)/2;
+            const angleMid = Math.atan2( (sy+ty)/2 - panY, (sx+tx)/2 - panX );
+            const ctrlDist = midR * 0.55;
+            const cx = ((sx+tx)/2) + Math.cos(angleMid)*ctrlDist;
+            const cy = ((sy+ty)/2) + Math.sin(angleMid)*ctrlDist;
+            edgesGraphics.moveTo(sx,sy);
+            edgesGraphics.quadraticCurveTo(cx,cy,tx,ty);
+          });
+        }
+      });
+    }
     // 節點繪製
     visible.forEach(n=>{
       const g = new PIXI.Container(); g.eventMode='static'; g.cursor='pointer';
@@ -585,9 +614,66 @@ function drawPixi(){
       g.x = n._rawX * cameraScale + panX;
       g.y = n._rawY * cameraScale + panY;
       g._dims = {boxW, boxH, radius, sectorColor: strokeHex};
-      g.on('pointerdown', e=>{ if(n.children && n.children.length){ n.collapsed=!n.collapsed; drawPixi(); } e.stopPropagation(); });
+      // 點擊 + 拖曳邏輯：按住拖曳，點擊(快速)切換收合
+      let downTime=0, moved=false;
+      g.on('pointerdown', e=>{
+        downTime=Date.now(); moved=false; e.stopPropagation();
+        draggingNode = { node:n, g, startX:e.globalX, startY:e.globalY, origX:n._rawX, origY:n._rawY };
+      });
+      g.on('pointerup', e=>{
+        e.stopPropagation();
+        const dt = Date.now()-downTime;
+        if(!moved && dt < 250){ // 視為點擊切換
+          if(n.children && n.children.length){ n.collapsed=!n.collapsed; drawPixi(); }
+        } else {
+          // 拖曳結束，保存位置
+          n._manual = true; savedPositions[n._id] = {x:n._rawX, y:n._rawY}; savePositions();
+        }
+        draggingNode=null;
+      });
+      g.on('pointerupoutside', ()=>{ if(draggingNode && draggingNode.node===n){ n._manual=true; savedPositions[n._id]={x:n._rawX,y:n._rawY}; savePositions(); draggingNode=null; } });
       panContainer.addChild(g);
       nodeGraphics.push({node:n,g,box});
+    });
+    // 全部節點建立後再畫邊
+    panContainer.setChildIndex(edgesGraphics, 0);
+    (function initialEdge(){ drawEdges(); })();
+
+    // 全域 pointermove for 拖曳
+    pixiApp.stage.eventMode = 'passive';
+    pixiApp.stage.on('pointermove', (e)=>{
+      if(!draggingNode) return;
+      const dx = (e.globalX - draggingNode.startX)/cameraScale;
+      const dy = (e.globalY - draggingNode.startY)/cameraScale;
+      draggingNode.node._rawX = draggingNode.origX + dx;
+      draggingNode.node._rawY = draggingNode.origY + dy;
+      draggingNode.g.x = draggingNode.node._rawX * cameraScale + panX;
+      draggingNode.g.y = draggingNode.node._rawY * cameraScale + panY;
+      draggingNode.node._manual = true;
+      moved = true;
+      // 重繪邊
+      if(edgesGraphics){
+        edgesGraphics.clear();
+        lastVisibleNodes.forEach(n=>{
+          if(!n.collapsed && n.children){
+            n.children.forEach(c=>{
+              if(!lastVisibleNodes.includes(c)) return;
+              edgesGraphics.lineStyle(2,0x324250,0.9);
+              const sx = (n._rawX * cameraScale + panX);
+              const sy = (n._rawY * cameraScale + panY);
+              const tx = (c._rawX * cameraScale + panX);
+              const ty = (c._rawY * cameraScale + panY);
+              const midR = Math.hypot(sx-tx, sy-ty)/2;
+              const angleMid = Math.atan2( (sy+ty)/2 - panY, (sx+tx)/2 - panX );
+              const ctrlDist = midR * 0.55;
+              const cx = ((sx+tx)/2) + Math.cos(angleMid)*ctrlDist;
+              const cy = ((sy+ty)/2) + Math.sin(angleMid)*ctrlDist;
+              edgesGraphics.moveTo(sx,sy);
+              edgesGraphics.quadraticCurveTo(cx,cy,tx,ty);
+            });
+          }
+        });
+      }
     });
   } else {
     // 保留（未來可擴充其他模式）
@@ -685,6 +771,45 @@ setAll = function(collapsed){
 
 // 初始不載入 PIXI，使用者切換時再載入
 console.log('[PIXI] Ready (v7 sync preferred; v8 async guarded).');
+// 動態載入共享 JSON（與 G6 版本共用）
+async function loadSharedData(){
+  // 多重候選路徑：因為使用者可能在不同工作目錄啟動 http server
+  const candidates = [
+    '../../../../data/pipeline_mindmap.json', // 假設站點根在專案根目錄 (正確層級)
+    '../../../data/pipeline_mindmap.json',    // 少一層 (常見誤差)
+    '../../data/pipeline_mindmap.json',
+    '../data/pipeline_mindmap.json',
+    '/data/pipeline_mindmap.json',            // 絕對路徑 (若伺服器 root=專案 root)
+    'data/pipeline_mindmap.json'              // 若於 frontend 下有 data 副本
+  ];
+  let lastError=null;
+  for(const url of candidates){
+    try {
+      const resp = await fetch(url, {cache:'no-cache'});
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const json = await resp.json();
+      DATA = json;
+      console.log('[DATA] loaded from', url);
+      setupPixiData();
+      render();
+      return;
+    } catch(err){
+      lastError = err;
+      console.warn('[DATA] failed', url, err.message);
+    }
+  }
+  const rootEl=document.getElementById('mindmap');
+  if(rootEl){
+    rootEl.innerHTML = `
+      <div style="padding:14px;color:#ff6b6b;font-size:12px;line-height:1.5;">
+        無法載入共享資料：<br>
+        嘗試路徑：<code>${candidates.join('</code>, <code>')}</code><br>
+        最後錯誤：${lastError? lastError.message : '未知'}<br>
+        建議：請從專案根目錄啟動伺服器 (例：<code>python -m http.server 3000</code>) 或在本目錄建立 <code>data/pipeline_mindmap.json</code> 副本。
+      </div>`;
+  }
+}
+loadSharedData();
 </script>
 </body>
 </html>

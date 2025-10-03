@@ -1,0 +1,117 @@
+{
+  "title": "Slot Game AI Agent Pipeline",
+  "children": [
+    {
+      "label": "AI 代理",
+      "icon": "🧩",
+      "children": [
+        { "label": "ConceptArtAgent", "meta": "主視覺 / 風格探索 → concept_batch" },
+        { "label": "DesignParserAgent", "meta": "解析企劃 → game_structure.json" },
+        { "label": "MathModelAgent", "meta": "RTP 模擬 → math_model.json" },
+        { "label": "PSDAnalyzerAgent", "meta": "PSD 圖層 → art_spec.json" },
+        { "label": "AssetGenAgent", "meta": "靜態素材生成 → symbols/*.png" },
+        { "label": "PromptOptimizerAgent", "meta": "失敗樣本學習 → 最佳化 Prompt" },
+        { "label": "VFXSpecAgent", "meta": "動效規格 → vfx_spec.json" },
+        { "label": "VFXGenAgent", "meta": "動效輸出 → frames / spine / Lottie" },
+        { "label": "EngineIntegrationAgent", "meta": "整合 → manifest / slot_config.json" },
+        { "label": "SimulationAgent", "meta": "自動測試 → validation_report" },
+        { "label": "AuditAgent", "meta": "追溯 → decision_log.json" }
+      ]
+    },
+    {
+      "label": "12 階段流程",
+      "icon": "🗂️",
+      "children": [
+        { "label": "1 Concept Art 生成" },
+        { "label": "2 視覺審核" },
+        { "label": "3 企劃解析" },
+        { "label": "4 數學模型模擬" },
+        { "label": "5 PSD 規格 JSON" },
+        { "label": "6 靜態生成 + Prompt" },
+        { "label": "7 靜態審核" },
+        { "label": "8 動效規格" },
+        { "label": "9 動效生成" },
+        { "label": "10 動效審核" },
+        { "label": "11 整合引擎" },
+        { "label": "12 測試驗證" }
+      ]
+    },
+    {
+      "label": "契約檢查點",
+      "icon": "🧪",
+      "children": [
+        { "label": "風格分散度" },
+        { "label": "欄位完整性" },
+        { "label": "RTP 偏差" },
+        { "label": "命名合規" },
+        { "label": "色偏" },
+        { "label": "特效時間重疊" },
+        { "label": "缺資產掃描" }
+      ]
+    },
+    {
+      "label": "KPI 指標",
+      "icon": "📊",
+      "children": [
+        { "label": "風格一致 ≥0.85" },
+        { "label": "RTP 收斂 ≤5" },
+        { "label": "靜態人工審核 <30%" },
+        { "label": "動效異常幀 <1%" },
+        { "label": "Prompt 迭代 ≤3" },
+        { "label": "整合錯誤 ≤1" },
+        { "label": "RTP 偏差 ≤0.5%" },
+        { "label": "週期縮短 ≥50%" }
+      ]
+    },
+    {
+      "label": "風險與緩解",
+      "icon": "⚠️",
+      "children": [
+        { "label": "風格漂移", "meta": "嵌入比對 + 色票鎖定" },
+        { "label": "Prompt 冗長", "meta": "Token 權重分析" },
+        { "label": "PSD 混亂", "meta": "命名正規化" },
+        { "label": "RTP 偏差大", "meta": "再模擬迭代" },
+        { "label": "動效閃爍", "meta": "FrameDiff 檢測" },
+        { "label": "資產缺漏", "meta": "hash 掃描" },
+        { "label": "追溯困難", "meta": "decision_log.json" }
+      ]
+    },
+    {
+      "label": "Prompt 模板",
+      "icon": "💬",
+      "children": [
+        { "label": "靜態符號 Prompt", "meta": "slot symbol of [元素] ..." },
+        { "label": "動態特效時間軸", "meta": "charge/burst/fade JSON" },
+        { "label": "數學模型生成", "meta": "RTP simulate + adjust" }
+      ]
+    },
+    {
+      "label": "導入優先順序",
+      "icon": "🧭",
+      "children": [
+        { "label": "1 數學/企劃解析" },
+        { "label": "2 PSD 規格化" },
+        { "label": "3 靜態生成 + 審核" },
+        { "label": "4 動態特效" },
+        { "label": "5 整合與驗證" }
+      ]
+    },
+    {
+      "label": "Audit 紀錄",
+      "icon": "📑",
+      "children": [
+        { "label": "decision_log.json 範例", "meta": "timestamp/action/調整/核准" }
+      ]
+    },
+    {
+      "label": "未來增強",
+      "icon": "💡",
+      "children": [
+        { "label": "差異視覺化 Diff UI" },
+        { "label": "動效參數 RL 優化" },
+        { "label": "玩家行為回饋迭代" },
+        { "label": "Prompt Ensembling" }
+      ]
+    }
+  ]
+}

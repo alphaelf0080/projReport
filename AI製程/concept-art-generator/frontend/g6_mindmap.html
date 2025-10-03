@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>G6 Mind Map - Slot Game AI Pipeline</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  html,body{margin:0;padding:0;height:100%;font-family:'Inter',system-ui,'Microsoft JhengHei',sans-serif;background:#0f1216;color:#e6e9ed;}
+  header{padding:12px 18px;background:#162029;border-bottom:1px solid #253341;display:flex;align-items:center;gap:1rem;}
+  header h1{margin:0;font-size:1rem;font-weight:600;letter-spacing:.5px;background:linear-gradient(120deg,#4f8bff,#ff3fa4);-webkit-background-clip:text;color:transparent;}
+  header a{color:#8fa4b5;text-decoration:none;font-size:.75rem;padding:.4rem .7rem;border:1px solid #2b3a46;border-radius:6px;background:#1d2731;}
+  header a:hover{color:#fff;border-color:#4f8bff;}
+  #toolbar{display:flex;flex-wrap:wrap;gap:.5rem;padding:10px 16px;background:#141c23;border-bottom:1px solid #253341;}
+  #toolbar button{background:#1d2731;color:#c9d5df;border:1px solid #2f3d49;padding:.45rem .8rem;font-size:.65rem;border-radius:6px;cursor:pointer;letter-spacing:.5px;}
+  #toolbar button:hover{border-color:#4f8bff;color:#fff;}
+  #mount{width:100%;height:calc(100vh - 126px);}
+  #status{font-size:.6rem;padding:6px 16px;color:#8595a4;background:#11181f;border-top:1px solid #253341;display:flex;gap:1rem;flex-wrap:wrap;}
+  .badge{display:inline-block;padding:2px 6px;font-size:.55rem;border:1px solid rgba(255,255,255,.15);border-radius:10px;margin-left:.4rem;background:#1c2732;color:#9cb3c5;}
+</style>
+</head>
+<body>
+<header>
+  <h1>G6 Mind Map</h1>
+  <a href="index.html">返回首頁</a>
+  <a href="AI製程/concept-art-generator/frontend/pipeline_mindmap.html" target="_blank">原 PIXI 版本</a>
+</header>
+<div id="toolbar">
+  <button id="expandAll">展開全部</button>
+  <button id="collapseAll">收合全部</button>
+  <button id="fitView">Fit View</button>
+  <button id="resetLayout">重新套用佈局</button>
+  <button id="exportPNG">匯出 PNG</button>
+  <input id="search" placeholder="搜尋節點..." style="background:#1d2731;color:#dbe5ec;border:1px solid #2f3d49;padding:.45rem .6rem;font-size:.65rem;border-radius:6px;min-width:220px;" />
+</div>
+<div id="mount"></div>
+<div id="status">節點: <span id="nodeCount">--</span> 邊: <span id="edgeCount">--</span> <span id="searchHits"></span></div>
+<script src="https://unpkg.com/@antv/g6/dist/g6.min.js"></script>
+<script>
+// ====== 原資料轉換為 G6 mind map 結構 ======
+const RAW = {
+  title: 'Slot Game AI Agent Pipeline',
+  children: [
+    { label:'AI 代理', icon:'🧩', children:[
+      { label:'ConceptArtAgent', meta:'主視覺 / 風格探索 → concept_batch' },
+      { label:'DesignParserAgent', meta:'解析企劃 → game_structure.json' },
+      { label:'MathModelAgent', meta:'RTP 模擬 → math_model.json' },
+      { label:'PSDAnalyzerAgent', meta:'PSD 圖層 → art_spec.json' },
+      { label:'AssetGenAgent', meta:'靜態素材生成 → symbols/*.png' },
+      { label:'PromptOptimizerAgent', meta:'失敗樣本學習 → 最佳化 Prompt' },
+      { label:'VFXSpecAgent', meta:'動效規格 → vfx_spec.json' },
+      { label:'VFXGenAgent', meta:'動效輸出 → frames / spine / Lottie' },
+      { label:'EngineIntegrationAgent', meta:'整合 → manifest / slot_config.json' },
+      { label:'SimulationAgent', meta:'自動測試 → validation_report' },
+      { label:'AuditAgent', meta:'追溯 → decision_log.json' }
+    ]},
+    { label:'12 階段流程', icon:'🗂️', children:[ '1 Concept Art 生成','2 視覺審核','3 企劃解析','4 數學模型模擬','5 PSD 規格 JSON','6 靜態生成 + Prompt','7 靜態審核','8 動效規格','9 動效生成','10 動效審核','11 整合引擎','12 測試驗證' ].map(x=>({label:x})) },
+    { label:'契約檢查點', icon:'🧪', children:[ '風格分散度','欄位完整性','RTP 偏差','命名合規','色偏','特效時間重疊','缺資產掃描' ].map(x=>({label:x})) },
+    { label:'KPI 指標', icon:'📊', children:[ '風格一致 ≥0.85','RTP 收斂 ≤5','靜態人工審核 <30%','動效異常幀 <1%','Prompt 迭代 ≤3','整合錯誤 ≤1','RTP 偏差 ≤0.5%','週期縮短 ≥50%' ].map(x=>({label:x})) },
+    { label:'風險與緩解', icon:'⚠️', children:[
+      {label:'風格漂移', meta:'嵌入比對 + 色票鎖定'},
+      {label:'Prompt 冗長', meta:'Token 權重分析'},
+      {label:'PSD 混亂', meta:'命名正規化'},
+      {label:'RTP 偏差大', meta:'再模擬迭代'},
+      {label:'動效閃爍', meta:'FrameDiff 檢測'},
+      {label:'資產缺漏', meta:'hash 掃描'},
+      {label:'追溯困難', meta:'decision_log.json'}
+    ]},
+    { label:'Prompt 模板', icon:'💬', children:[
+      {label:'靜態符號 Prompt', meta:'slot symbol of [元素] ...'},
+      {label:'動態特效時間軸', meta:'charge/burst/fade JSON'},
+      {label:'數學模型生成', meta:'RTP simulate + adjust'}
+    ]},
+    { label:'導入優先順序', icon:'🧭', children:[ '1 數學/企劃解析','2 PSD 規格化','3 靜態生成 + 審核','4 動態特效','5 整合與驗證' ].map(x=>({label:x})) },
+    { label:'Audit 紀錄', icon:'📑', children:[ {label:'decision_log.json 範例', meta:'timestamp/action/調整/核准'} ]},
+    { label:'未來增強', icon:'💡', children:[ '差異視覺化 Diff UI','動效參數 RL 優化','玩家行為回饋迭代','Prompt Ensembling' ].map(x=>({label:x})) }
+  ]
+};
+
+function toG6(root){
+  const traverse = (node, path=[]) => {
+    const id = [...path,node.label||node.title].join('>');
+    const name = (node.icon? node.icon+' ':'') + (node.label||node.title);
+    const item = { id, label:name, raw:node, children:[] };
+    if(node.meta) item.meta = node.meta;
+    if(node.children) item.children = node.children.map(ch=> traverse(ch, [...path,node.label||node.title]));
+    return item;
+  };
+  return traverse({label:root.title, children:root.children});
+}
+
+const treeData = toG6(RAW);
+
+// ====== G6 設定 ======
+const graph = new G6.TreeGraph({
+  container: 'mount',
+  width: window.innerWidth,
+  height: document.getElementById('mount').clientHeight,
+  pixelRatio: window.devicePixelRatio || 1,
+  fitView: true,
+  modes: { default: ['drag-canvas','zoom-canvas','collapse-expand','drag-node'] },
+  animate: true,
+  layout: {
+    type: 'compactBox',
+    direction: 'LR', // 左→右，可切換 TB / LR / RL
+    getId: d => d.id,
+    getHeight: () => 28,
+    getWidth: (d) => Math.min(260, (d.label||'').length * 9 + 40),
+    getVGap: () => 12,
+    getHGap: () => 40
+  }
+});
+
+// 顏色策略：根 → 主層調色盤 → 下層漸淡
+const PALETTE = ['#4f8bff','#ff6f4f','#6dd96b','#ffcb3c','#c55bff','#38d5e7','#ff3fa4','#9cc94f','#ff8bd2','#52b3ff'];
+function colorFor(node){
+  if(!node.depth || node.depth===0) return '#4f8bff';
+  if(node.depth===1){
+    const i = node.id.split('>').slice(1,2).join('').length % PALETTE.length;
+    return PALETTE[i];
+  }
+  // 找第一層 ancestor id
+  const parts = node.id.split('>');
+  const top = parts[1] || ''; const idx = top.length % PALETTE.length;
+  const base = PALETTE[idx];
+  // 簡易變亮
+  return base;
+}
+
+graph.node(node => {
+  const fill = '#1d2731';
+  const stroke = colorFor(node);
+  const meta = node.raw && node.raw.meta ? node.raw.meta : '';
+  return {
+    label: node.label + (meta? '\n'+meta : ''),
+    labelCfg:{
+      style:{
+        fontSize:12, lineHeight:15, fill:'#dbe5ec', fontFamily:'Inter, system-ui',
+        textAlign:'left'
+      }
+    },
+    style:{
+      fill, stroke, radius:10, lineWidth:2, cursor:'pointer', shadowColor:'#000', shadowBlur:6
+    }
+  };
+});
+
+graph.on('node:dblclick', e=>{
+  const item = e.item; graph.setItemState(item,'collapsed', !item.getModel().collapsed); graph.layout(); updateStats();
+});
+
+graph.data(treeData);
+graph.render();
+updateStats();
+
+// ====== 功能工具列 ======
+function traverseAll(fn){
+  graph.getNodes().forEach(n=> fn(graph.getNodeData(n))); // G6 v4 標準可能不同版本 API；保留兼容
+}
+
+function expandAll(){
+  graph.getNodes().forEach(n=>{ const m = n.getModel(); if(m.children && m.children.length) graph.updateItem(n,{ collapsed:false }); });
+  graph.layout(); updateStats();
+}
+function collapseAll(){
+  graph.getNodes().forEach(n=>{ const m = n.getModel(); if(m.children && m.children.length) graph.updateItem(n,{ collapsed:true }); });
+  graph.layout(); updateStats();
+}
+function updateStats(){
+  document.getElementById('nodeCount').textContent = graph.getNodes().length;
+  document.getElementById('edgeCount').textContent = graph.getEdges().length;
+}
+
+// 搜尋高亮
+function clearHighlight(){ graph.getNodes().forEach(n=> graph.clearItemStates(n)); }
+function searchNodes(q){
+  clearHighlight(); if(!q){ document.getElementById('searchHits').textContent=''; return; }
+  const lower = q.toLowerCase(); let hits=0;
+  graph.getNodes().forEach(n=>{
+    const m = n.getModel();
+    if((m.label||'').toLowerCase().includes(lower)){
+      graph.setItemState(n,'highlight',true); hits++;
+      // 展開其祖先
+      let parent = n.getModel().parent;
+      while(parent){ parent.collapsed=false; parent = parent.parent; }
+    }
+  });
+  graph.layout(); updateStats();
+  document.getElementById('searchHits').textContent = '搜尋命中: '+hits;
+}
+
+// 自訂狀態樣式
+graph.setItemState('node','highlight',{ style:{ stroke:'#ffcf33', lineWidth:3 } });
+
+// Export PNG
+function exportPNG(){
+  const dataURL = graph.toDataURL('image/png');
+  const a=document.createElement('a'); a.href=dataURL; a.download='mindmap_g6.png'; a.click();
+}
+
+// Resize handler
+window.addEventListener('resize',()=>{ graph.changeSize(window.innerWidth, document.getElementById('mount').clientHeight); });
+
+// Toolbar events
+ document.getElementById('expandAll').onclick=expandAll;
+ document.getElementById('collapseAll').onclick=collapseAll;
+ document.getElementById('fitView').onclick=()=> graph.fitView(20);
+ document.getElementById('resetLayout').onclick=()=> graph.layout();
+ document.getElementById('exportPNG').onclick=exportPNG;
+ document.getElementById('search').addEventListener('input', e=> searchNodes(e.target.value.trim()));
+
+</script>
+</body>
+</html>

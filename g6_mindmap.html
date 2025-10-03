@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>G6 Mind Map - Slot Game AI Pipeline</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  html,body{margin:0;padding:0;height:100%;font-family:'Inter',system-ui,'Microsoft JhengHei',sans-serif;background:#0f1216;color:#e6e9ed;}
+  header{padding:12px 18px;background:#162029;border-bottom:1px solid #253341;display:flex;align-items:center;gap:1rem;}
+  header h1{margin:0;font-size:1rem;font-weight:600;letter-spacing:.5px;background:linear-gradient(120deg,#4f8bff,#ff3fa4);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  header a{color:#8fa4b5;text-decoration:none;font-size:.75rem;padding:.4rem .7rem;border:1px solid #2b3a46;border-radius:6px;background:#1d2731;}
+  header a:hover{color:#fff;border-color:#4f8bff;}
+  #toolbar{display:flex;flex-wrap:wrap;gap:.5rem;padding:10px 16px;background:#141c23;border-bottom:1px solid #253341;}
+  #toolbar button{background:#1d2731;color:#c9d5df;border:1px solid #2f3d49;padding:.45rem .8rem;font-size:.65rem;border-radius:6px;cursor:pointer;letter-spacing:.5px;}
+  #toolbar button:hover{border-color:#4f8bff;color:#fff;}
+  #mount{width:100%;height:calc(100vh - 126px);}
+  #status{font-size:.6rem;padding:6px 16px;color:#8595a4;background:#11181f;border-top:1px solid #253341;display:flex;gap:1rem;flex-wrap:wrap;}
+  .badge{display:inline-block;padding:2px 6px;font-size:.55rem;border:1px solid rgba(255,255,255,.15);border-radius:10px;margin-left:.4rem;background:#1c2732;color:#9cb3c5;}
+</style>
+</head>
+<body>
+<header>
+  <h1>G6 Mind Map</h1>
+  <a href="index.html">返回首頁</a>
+  <a href="AI製程/concept-art-generator/frontend/pipeline_mindmap.html" target="_blank">原 PIXI 版本</a>
+</header>
+<div id="toolbar">
+  <button id="expandAll">展開全部</button>
+  <button id="collapseAll">收合全部</button>
+  <button id="fitView">Fit View</button>
+  <button id="resetLayout">重新套用佈局</button>
+  <button id="exportPNG">匯出 PNG</button>
+  <input id="search" placeholder="搜尋節點..." style="background:#1d2731;color:#dbe5ec;border:1px solid #2f3d49;padding:.45rem .6rem;font-size:.65rem;border-radius:6px;min-width:220px;" />
+</div>
+<div id="mount"></div>
+<div id="status">節點: <span id="nodeCount">--</span> 邊: <span id="edgeCount">--</span> <span id="searchHits"></span></div>
+<script src="https://unpkg.com/@antv/g6/dist/g6.min.js"></script>
+<script>
+let RAW=null, graph=null, treeData=null;
+
+function toG6(root){
+  const traverse=(node,path=[])=>{
+    const id=[...path,node.label||node.title].join('>');
+    const name=(node.icon?node.icon+' ':'')+(node.label||node.title);
+    const item={id,label:name,raw:node,children:[]};
+    if(node.meta) item.meta=node.meta;
+    if(node.children) item.children=node.children.map(ch=>traverse(ch,[...path,node.label||node.title]));
+    return item;
+  };
+  return traverse({label:root.title,children:root.children});
+}
+
+const PALETTE=['#4f8bff','#ff6f4f','#6dd96b','#ffcb3c','#c55bff','#38d5e7','#ff3fa4','#9cc94f','#ff8bd2','#52b3ff'];
+function colorFor(node){
+  if(!node.depth||node.depth===0) return '#4f8bff';
+  if(node.depth===1){ const i=node.id.split('>').slice(1,2).join('').length % PALETTE.length; return PALETTE[i]; }
+  const parts=node.id.split('>'); const top=parts[1]||''; const idx=top.length % PALETTE.length; return PALETTE[idx];
+}
+
+function initGraph(){
+  if(!RAW) return;
+  treeData = toG6(RAW);
+  if(graph){ graph.destroy(); }
+  graph = new G6.TreeGraph({
+    container:'mount',
+    width: window.innerWidth,
+    height: document.getElementById('mount').clientHeight,
+    pixelRatio: window.devicePixelRatio || 1,
+    fitView: true,
+    modes:{ default:['drag-canvas','zoom-canvas','collapse-expand','drag-node'] },
+    animate:true,
+    layout:{
+      type:'compactBox', direction:'LR',
+      getId:d=>d.id,
+      getHeight:()=>28,
+      getWidth:d=> Math.min(260,(d.label||'').length*9+40),
+      getVGap:()=>12,
+      getHGap:()=>40
+    }
+  });
+
+  graph.node(node=>{
+    const fill='#1d2731';
+    const stroke=colorFor(node);
+    const meta=node.raw && node.raw.meta ? node.raw.meta : '';
+    return {
+      label: node.label + (meta?'\n'+meta:''),
+      labelCfg:{ style:{ fontSize:12,lineHeight:15,fill:'#dbe5ec',fontFamily:'Inter, system-ui',textAlign:'left' }},
+      style:{ fill,stroke,radius:10,lineWidth:2,cursor:'pointer',shadowColor:'#000',shadowBlur:6 }
+    };
+  });
+
+  graph.on('node:dblclick', e=>{ const item=e.item; graph.setItemState(item,'collapsed', !item.getModel().collapsed); graph.layout(); updateStats(); });
+
+  graph.data(treeData);
+  graph.render();
+  updateStats();
+}
+
+function expandAll(){ graph.getNodes().forEach(n=>{ const m=n.getModel(); if(m.children&&m.children.length) graph.updateItem(n,{collapsed:false}); }); graph.layout(); updateStats(); }
+function collapseAll(){ graph.getNodes().forEach(n=>{ const m=n.getModel(); if(m.children&&m.children.length) graph.updateItem(n,{collapsed:true}); }); graph.layout(); updateStats(); }
+function updateStats(){ document.getElementById('nodeCount').textContent=graph.getNodes().length; document.getElementById('edgeCount').textContent=graph.getEdges().length; }
+function clearHighlight(){ graph.getNodes().forEach(n=> graph.clearItemStates(n)); }
+function searchNodes(q){ clearHighlight(); if(!q){ document.getElementById('searchHits').textContent=''; return; } const lower=q.toLowerCase(); let hits=0; graph.getNodes().forEach(n=>{ const m=n.getModel(); if((m.label||'').toLowerCase().includes(lower)){ graph.setItemState(n,'highlight',true); hits++; let parent=m.parent; while(parent){ parent.collapsed=false; parent=parent.parent; } } }); graph.layout(); updateStats(); document.getElementById('searchHits').textContent='搜尋命中: '+hits; }
+
+graph && graph.setItemState && graph.setItemState('node','highlight',{ style:{ stroke:'#ffcf33', lineWidth:3 }});
+function exportPNG(){ const dataURL=graph.toDataURL('image/png'); const a=document.createElement('a'); a.href=dataURL; a.download='mindmap_g6.png'; a.click(); }
+
+window.addEventListener('resize',()=>{ if(graph) graph.changeSize(window.innerWidth, document.getElementById('mount').clientHeight); });
+
+document.getElementById('expandAll').onclick=()=> graph && expandAll();
+document.getElementById('collapseAll').onclick=()=> graph && collapseAll();
+document.getElementById('fitView').onclick=()=> graph && graph.fitView(20);
+document.getElementById('resetLayout').onclick=()=> graph && graph.layout();
+document.getElementById('exportPNG').onclick=()=> graph && exportPNG();
+document.getElementById('search').addEventListener('input',e=> graph && searchNodes(e.target.value.trim()));
+
+// 載入共享 JSON
+fetch('data/pipeline_mindmap.json')
+  .then(r=> r.json())
+  .then(json=>{ RAW=json; initGraph(); })
+  .catch(err=>{
+    console.error('載入共享 JSON 失敗', err);
+    document.getElementById('mount').innerHTML='<div style="padding:30px;color:#ff6b6b;font-size:14px;">無法載入資料 (data/pipeline_mindmap.json)</div>';
+  });
+</script>
+</body>
+</html>
