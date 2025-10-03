@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>連結測試頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-link {
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            background: #e3f2fd;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        .test-link:hover {
+            background: #bbdefb;
+        }
+        .status {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>連結有效性測試</h1>
+        <p>點擊以下連結測試是否正常工作：</p>
+        
+        <h3>AI 輔助工具</h3>
+        <a href="../SOP_visualized2.html" target="_blank" class="test-link">
+            SOP 美術規格建立流程 v2 <span class="status" id="link1"></span>
+        </a>
+        <a href="../SOP_動態資產生成_Gemini_Veo_visual.html" target="_blank" class="test-link">
+            Gemini Veo 動態資產生成 <span class="status" id="link2"></span>
+        </a>
+        
+        <h3>素材管理工具</h3>
+        <a href="../../../素材資源整合工具/assetExport 架構與工具說明.html" target="_blank" class="test-link">
+            Asset Export 工具說明 <span class="status" id="link3"></span>
+        </a>
+        <a href="../../../素材資源整合工具/assetExpport 與 cocos creator 整合關係.html" target="_blank" class="test-link">
+            Cocos Creator 整合 <span class="status" id="link4"></span>
+        </a>
+        
+        <h3>網頁監控工具</h3>
+        <a href="../../../網頁資源查詢/網頁擷取分析工具說明.html" target="_blank" class="test-link">
+            網頁擷取分析工具 <span class="status" id="link5"></span>
+        </a>
+        <a href="../../../網頁資源查詢/架構說明.html" target="_blank" class="test-link">
+            架構說明文件 <span class="status" id="link6"></span>
+        </a>
+        
+        <h3>遊戲側錄分析</h3>
+        <a href="../../../遊戲側錄工具/架構說明網頁.html" target="_blank" class="test-link">
+            Game Dump 系統架構 <span class="status" id="link7"></span>
+        </a>
+        <a href="../../../遊戲側錄工具/wild_bounty_enhanced_report_tb_pg_wild_bounty_v1_002.html" target="_blank" class="test-link">
+            Wild Bounty 數學模型分析 <span class="status" id="link8"></span>
+        </a>
+        
+        <h3>效能分析報告</h3>
+        <a href="../../../遊戲效能分析/遊戲引擎重構效能分析報告.html" target="_blank" class="test-link">
+            引擎重構效能分析 <span class="status" id="link9"></span>
+        </a>
+    </div>
+
+    <script>
+        // 檢查連結有效性
+        function checkLink(url, statusId) {
+            fetch(url, {method: 'HEAD'})
+                .then(response => {
+                    const statusEl = document.getElementById(statusId);
+                    if (response.ok) {
+                        statusEl.textContent = '✓ 有效';
+                        statusEl.className = 'status success';
+                    } else {
+                        statusEl.textContent = '✗ 無效';
+                        statusEl.className = 'status error';
+                    }
+                })
+                .catch(error => {
+                    const statusEl = document.getElementById(statusId);
+                    statusEl.textContent = '✗ 錯誤';
+                    statusEl.className = 'status error';
+                });
+        }
+
+        // 在頁面載入時檢查所有連結
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.test-link');
+            links.forEach((link, index) => {
+                const url = link.href;
+                const statusId = 'link' + (index + 1);
+                checkLink(url, statusId);
+            });
+        });
+    </script>
+</body>
+</html>

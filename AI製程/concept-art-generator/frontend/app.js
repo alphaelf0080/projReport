@@ -2,7 +2,7 @@
  * Slot Game Concept Art Generator - Frontend Logic
  */
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://localhost:3010';
 
 // 全域狀態
 let currentBriefId = null;

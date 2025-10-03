@@ -3,8 +3,39 @@
  * 對話式 Concept Art 生成系統
  */
 
-// 配置
-const API_BASE = 'http://localhost:8000';
+// ==================== API 配置 ====================
+// 🔧 重要：如果前端和後端不在同一台機器，請修改此 IP
+const BACKEND_SERVER_IP = '192.168.12.75';  // 👈 修改為您的伺服器 IP
+const BACKEND_PORT = 3010;
+
+// 自動檢測 API Base URL
+function getApiBase() {
+    const hostname = window.location.hostname;
+    
+    // 如果是本機訪問 (localhost 或 127.0.0.1)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `http://localhost:${BACKEND_PORT}`;
+    }
+    
+    // 如果前端和後端在同一台機器
+    if (hostname === BACKEND_SERVER_IP) {
+        return `http://${hostname}:${BACKEND_PORT}`;
+    }
+    
+    // 否則使用配置的伺服器 IP
+    return `http://${BACKEND_SERVER_IP}:${BACKEND_PORT}`;
+}
+
+const API_BASE = getApiBase();
+const WS_BASE = API_BASE.replace('http', 'ws');
+
+console.log('📡 API 配置:', {
+    frontend: window.location.origin,
+    backend: API_BASE,
+    websocket: WS_BASE,
+    serverIP: BACKEND_SERVER_IP
+});
+
 let sessionId = null;
 let currentPromptData = null;
 let ws = null;
@@ -81,20 +112,58 @@ function setupEventListeners() {
 // ==================== 後端通訊 ====================
 
 async function checkBackendHealth() {
+    const startTime = Date.now();
+    
     try {
-        const response = await fetch(`${API_BASE}/api/health`);
+        console.log('🔍 檢查後端連線...', API_BASE);
+        
+        // 設定 5 秒超時
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${API_BASE}/api/health`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        const elapsed = Date.now() - startTime;
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log(`✅ 後端連線成功 (${elapsed}ms):`, data);
         
         if (data.gemini_agent) {
-            updateStatus('Gemini 已連線', 'success');
+            updateStatus(`Gemini 已連線 (${elapsed}ms)`, 'success');
+            addSystemMessage(`✅ 後端服務運行正常\n📍 API: ${API_BASE}\n⏱️ 延遲: ${elapsed}ms`);
         } else {
             updateStatus('Gemini 未連線，請設定 API Key', 'warning');
             addSystemMessage('⚠️ 後端 Gemini Agent 未初始化，請確認已設定 GEMINI_API_KEY 環境變數');
         }
     } catch (error) {
-        console.error('健康檢查失敗:', error);
-        updateStatus('後端連線失敗', 'error');
-        addSystemMessage('❌ 無法連線到後端服務，請確認後端已啟動');
+        const elapsed = Date.now() - startTime;
+        console.error('❌ 後端連線失敗:', error);
+        
+        let errorMsg = '連線失敗';
+        let diagnosticMsg = '';
+        
+        if (error.name === 'AbortError') {
+            errorMsg = '連線超時 (>5秒)';
+            diagnosticMsg = '連線超時，可能原因：\n• 後端服務未啟動\n• 網路不可達';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMsg = '無法連線';
+            diagnosticMsg = `無法連線到後端服務\n\n目標地址: ${API_BASE}\n\n可能原因：\n1. 後端服務未在 port ${BACKEND_PORT} 啟動\n2. 防火牆阻擋 port ${BACKEND_PORT}\n3. IP 地址 ${BACKEND_SERVER_IP} 不正確\n4. CORS 設定問題\n\n診斷步驟：\n1. 在伺服器上執行:\n   netstat -ano | findstr :${BACKEND_PORT}\n\n2. 測試連線 (在伺服器上):\n   curl http://localhost:${BACKEND_PORT}/api/health\n\n3. 測試遠端連線 (在遠端主機上):\n   curl http://${BACKEND_SERVER_IP}:${BACKEND_PORT}/api/health\n\n4. 添加防火牆規則 (需管理員權限):\n   netsh advfirewall firewall add rule name="Backend ${BACKEND_PORT}" dir=in action=allow protocol=TCP localport=${BACKEND_PORT}`;
+        } else {
+            errorMsg = error.message;
+            diagnosticMsg = `連線錯誤: ${error.message}\n\n目標地址: ${API_BASE}`;
+        }
+        
+        updateStatus(errorMsg, 'error');
+        addSystemMessage(`❌ ${diagnosticMsg}`);
     }
 }
 
@@ -509,7 +578,7 @@ function displayGeneratedImages(imageUrls) {
 // ==================== WebSocket (可選) ====================
 
 function initWebSocket() {
-    const wsUrl = `ws://localhost:8000/ws/chat/${sessionId}`;
+    const wsUrl = `ws://localhost:3010/ws/chat/${sessionId}`;
     
     try {
         ws = new WebSocket(wsUrl);

@@ -406,16 +406,44 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
 
 if __name__ == "__main__":
     import uvicorn
+    import socket
     
     # 載入環境變數
     from dotenv import load_dotenv
     load_dotenv()
     
+    # 獲取網路資訊
+    hostname = socket.gethostname()
+    try:
+        local_ip = socket.gethostbyname(hostname)
+    except:
+        local_ip = "無法取得"
+    
+    # 顯示啟動資訊
+    logger.info("=" * 70)
+    logger.info("🚀 啟動 Gemini Concept Art Generator")
+    logger.info("=" * 70)
+    logger.info(f"主機名稱: {hostname}")
+    logger.info(f"本機 IP:  {local_ip}")
+    logger.info(f"綁定介面: 0.0.0.0 (所有網路介面)")
+    logger.info(f"監聽端口: 3010")
+    logger.info("=" * 70)
+    logger.info(f"📍 本機訪問: http://localhost:3010")
+    logger.info(f"📍 區網訪問: http://{local_ip}:3010")
+    logger.info(f"📍 健康檢查: http://{local_ip}:3010/api/health")
+    logger.info("=" * 70)
+    logger.info("💡 遠端連線注意事項：")
+    logger.info("   1. 確認防火牆已開啟 port 3010")
+    logger.info("   2. 執行以下命令添加防火牆規則 (需管理員權限)：")
+    logger.info("      netsh advfirewall firewall add rule name=\"Backend 3010\" dir=in action=allow protocol=TCP localport=3010")
+    logger.info("   3. 前端配置使用: http://{}:3010".format(local_ip))
+    logger.info("=" * 70)
+    
     # 啟動服務
     uvicorn.run(
         "main_gemini:app",
         host="0.0.0.0",
-        port=8000,
+        port=3010,
         reload=True,
         log_level="info"
     )

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP：Slot Game 美術規格樣板建立流程</title>
+    <style>
+        :root {
+            --main-bg-color: #f8f9fa;
+            --content-bg-color: #ffffff;
+            --sidebar-bg-color: #e9ecef;
+            --text-color: #212529;
+            --heading-color: #007bff;
+            --border-color: #dee2e6;
+            --accent-color: #007bff;
+            --code-bg-color: #282c34;
+            --code-text-color: #abb2bf;
+            --panel-bg-color: #f0f0f0;
+            --layer-bg-color: #fff;
+            --layer-hover-bg: #e6f2ff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            background-color: var(--main-bg-color);
+            color: var(--text-color);
+            display: flex;
+        }
+        .sidebar {
+            width: 300px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background-color: var(--sidebar-bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            font-size: 1.2em;
+            color: var(--heading-color);
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li a {
+            display: block;
+            padding: 8px 10px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .sidebar li a:hover, .sidebar li a.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .content {
+            margin-left: 340px;
+            padding: 30px;
+            width: calc(100% - 340px);
+        }
+        section {
+            background-color: var(--content-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            padding: 25px;
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 {
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h4 { font-size: 1.2em; border-bottom-style: dashed; margin-top: 2em; }
+        h3::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+        h3.collapsed::after {
+            transform: rotate(-90deg);
+        }
+        .phase-content {
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+            max-height: 20000px; /* Large enough for content */
+            padding-top: 15px;
+        }
+        .phase-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        strong {
+            color: #333;
+        }
+        code {
+            font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+            background-color: rgba(0, 123, 255, 0.05);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: var(--code-bg-color);
+            color: var(--code-text-color);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: 1em;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 2em 0;
+        }
+
+        /* Visual Panel Styles */
+        .visual-panel {
+            background-color: var(--panel-bg-color);
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+            font-size: 13px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .layer-tree {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .layer-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            background-color: var(--layer-bg-color);
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .layer-row:hover { 
+            background-color: var(--layer-hover-bg);
+            transform: translateX(2px);
+        }
+        
+        .layer-group > .layer-row { 
+            font-weight: bold; 
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        
+        .layer-subgroup > .layer-row {
+            background-color: #f0f8ff;
+            border-left: 3px solid #17a2b8;
+            font-weight: 600;
+        }
+        
+        .layer-content {
+            margin-left: 20px;
+            border-left: 2px dashed #ddd;
+            padding-left: 15px;
+        }
+        
+        .layer-subcontent {
+            margin-left: 15px;
+            border-left: 1px dashed #ccc;
+            padding-left: 10px;
+        }
+        
+        .layer-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            flex-shrink: 0;
+        }
+        
+        .icon-group { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23007bff" d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm0-1h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H2a3 3 0 0 1-3-3V4a3 3 0 0 1 3-3z"/><path fill="%23007bff" d="M1 4a1 1 0 0 1 1-1h4.382a1 1 0 0 1 .707.293l.853.853a1 1 0 0 0 .708.293H14a1 1 0 0 1 1 1v1H1V4z"/></svg>'); }
+        .icon-subgroup { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%2317a2b8" d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-2zM2 2v1h12V2H2z"/><path fill="%2317a2b8" d="M2 5.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/></svg>'); }
+        .icon-layer { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236c757d" d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm1 0v10h12V3H2z"/></svg>'); }
+        .icon-fx { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23ffc107" d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path fill="%23ffc107" d="M6.271 5.055a.5.5 0 0 1 .52.26L8 7.25l1.209-1.935a.5.5 0 0 1 .52-.26c.21 0 .38.14.38.34 0 .09-.04.17-.1.23L8.85 6.77l1.16 1.14c.06.06.1.14.1.23 0 .2-.17.34-.38.34a.5.5 0 0 1-.52-.26L8 6.25 6.791 8.185a.5.5 0 0 1-.52.26.34.34 0 0 1-.38-.34c0-.09.04-.17.1-.23L7.15 6.73 5.99 5.59a.34.34 0 0 1-.1-.23c0-.2.17-.34.38-.34z"/></svg>'); }
+        .icon-mask { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="%239c27b0" stroke-width="2"/><path fill="%239c27b0" d="M8 1a7 7 0 0 0 0 14V1z"/></svg>'); }
+        .icon-inst { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23dc3545" d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm1 0v10h12V3H2z"/><path fill="%23dc3545" d="M5.5 6.5L8 4l2.5 2.5L8 9l-2.5-2.5z"/></svg>'); }
+        .icon-preview { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236c757d" d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path fill="%236c757d" d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>'); }
+        
+        .layer-name-tag { 
+            padding: 2px 6px; 
+            border-radius: 3px; 
+            color: #fff; 
+            margin-right: 4px; 
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .tag-type { background-color: #6c757d; }
+        .tag-name { color: #000; font-weight: bold; }
+        .tag-size { background-color: #17a2b8; }
+        .tag-lang { background-color: #28a745; }
+        .tag-state { background-color: #ffc107; color: #212529; }
+        .tag-special { background-color: #dc3545; }
+        .tag-bg { background-color: #007bff; }
+        .tag-symbol { background-color: #fd7e14; }
+        .tag-button { background-color: #198754; }
+        .tag-text { background-color: #e91e63; }
+        .tag-frame { background-color: #6f42c1; }
+        .tag-image { background-color: #20c997; }
+        
+        .z-index-indicator {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #495057;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>SOP 導航</h2>
+        <ul id="sidebar-nav">
+            <li><a href="#phase-1">階段 1：檔案初始化與畫布設定</a></li>
+            <li><a href="#phase-2">階段 2：建立核心圖層群組結構</a></li>
+            <li><a href="#visual-example">視覺化圖層結構範例</a></li>
+            <li><a href="#phase-3">階段 3：定義圖層命名與元數據規範</a></li>
+            <li><a href="#phase-4">階段 4：建立佔位符與內容</a></li>
+            <li><a href="#phase-5">階段 5：維護與導出</a></li>
+            <li><a href="#phase-6">階段 6：導出圖層元數據供引擎使用</a></li>
+            <li><a href="#phase-7">階段 7：Tile Map (瓦片地圖) 資產建立</a></li>
+            <li><a href="#phase-8">階段 8：遊戲內程式效果定義</a></li>
+            <li><a href="#phase-9">階段 9：遊戲引擎遮罩定義</a></li>
+            <li><a href="#phase-10">階段 10：資產實例化與變形定義</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <h1>SOP：Slot Game 美術規格樣板 (Photoshop) 建立流程</h1>
+        <p><strong>目標：</strong> 建立一個結構化、標準化的 Photoshop (<code>.psd</code>) 樣板檔案，作為所有靜態美術素材的設計與規格基準。此樣板將定義圖層組織、命名規則、尺寸邊界與語系，以利於團隊協作及後續的自動化素材導出。</p>
+        
+        <hr>
+
+        <section id="phase-1">
+            <h3>階段 1：檔案初始化與畫布設定</h3>
+            <div class="phase-content">
+                <h4>1. 建立新檔案:</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在 Photoshop 中建立一個新的 <code>.psd</code> 檔案。</li>
+                    <li><strong>規格:</strong>
+                        <ul>
+                            <li><strong>畫布尺寸 (Canvas Size):</strong> 設定為遊戲的目標解析度，例如 <code>1920x1080</code> 像素。</li>
+                            <li><strong>解析度 (Resolution):</strong> <code>72</code> pixels/inch。</li>
+                            <li><strong>色彩模式 (Color Mode):</strong> <code>RGB Color</code>, <code>8-bit</code>。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>2. 設定參考線與網格 (Guides & Grid):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 建立全域參考線，標示出遊戲畫面的重要區域。</li>
+                    <li><strong>建議參考線:</strong>
+                        <ul>
+                            <li><strong>安全區域 (Safe Area):</strong> 定義在不同螢幕比例下內容保證可見的範圍。</li>
+                            <li><strong>Reel 區塊:</strong> 標示出 5x3 或其他規格的滾輪區域。</li>
+                            <li><strong>上方 UI 區:</strong> 標示 Jackpot、Logo 等資訊的區域。</li>
+                            <li><strong>主操作區 UI:</strong> 標示 Spin 按鈕、下注調整、餘額顯示等控制項的區域。</li>
+                        </ul>
+                    </li>
+                    <li><strong>目的:</strong> 確保所有 UI 元素在設計時都有一個對齊的基準。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-2">
+            <h3>階段 2：建立核心圖層群組結構</h3>
+            <div class="phase-content">
+                <h4>1. 建立主群組 (Top-Level Groups):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在圖層面板中，建立以下 11 個主要圖層群組。這是樣板的骨架。</li>
+                    <li><strong>群組列表:</strong>
+                        <ol>
+                            <li><code>介面公版</code> (Common_Interface)</li>
+                            <li><code>jackpot 公版</code> (Common_Jackpot)</li>
+                            <li><code>跑馬燈</code> (Marquee)</li>
+                            <li><code>主操作區UI</code> (UI_MainControls)</li>
+                            <li><code>上方UI</code> (UI_Top)</li>
+                            <li><code>base game 背景</code> (BG_BaseGame)</li>
+                            <li><code>free game 背景</code> (BG_FreeGame)</li>
+                            <li><code>符號</code> (Symbols)</li>
+                            <li><code>角色</code> (Characters)</li>
+                            <li><code>reel</code> (Reels)</li>
+                            <li><code>其他</code> (Misc)</li>
+                        </ol>
+                    </li>
+                </ul>
+                <h4>2. 建立子群組 (Sub-Groups):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在主群組內建立更詳細的分類子群組，增加組織性。</li>
+                    <li><strong>範例:</strong>
+                        <ul>
+                            <li>在 <code>主操作區UI</code> 內建立 <code>Buttons</code>, <code>Info_Displays</code>, <code>Bet_Controls</code>。</li>
+                            <li>在 <code>符號</code> 內建立 <code>High_Pay</code>, <code>Low_Pay</code>, <code>Special_Symbols</code>。</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="visual-example">
+            <h3>視覺化圖層結構範例</h3>
+            <div class="phase-content">
+                <p>以下是一個完整的 Photoshop 圖層面板模擬，展示了本 SOP 中定義的所有圖層群組、子群組和特殊圖層的組織方式。採用垂直樹狀結構，清楚顯示階層關係和命名規範。</p>
+                
+                <div class="visual-panel">
+                    <div class="layer-tree">
+                        <!-- PSD 根目錄 -->
+                        <div class="layer-group">
+                            <div class="layer-row" style="position: relative;">
+                                <span class="layer-icon icon-group"></span>
+                                <strong>📁 Slot_Game_Template.psd (1920x1080)</strong>
+                                <span class="z-index-indicator">Root</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 1. 介面公版 -->
+                        <div class="layer-content">
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🏗️ 介面公版 (Common_Interface)</strong>
+                                    <span class="z-index-indicator">200+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">FRAME</span>
+                                        <span class="tag-name">MainBorder</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">FRAME</span>
+                                        <span class="tag-name">UIBackground</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-fx"></span>
+                                        <span class="layer-name-tag tag-special">[FX]</span>
+                                        <span class="tag-name">DARKEN_30</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 2. Jackpot 公版 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>💰 jackpot 公版 (Common_Jackpot)</strong>
+                                    <span class="z-index-indicator">180+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotTitle</span>
+                                        <span class="layer-name-tag tag-size">400x80</span>
+                                        <span class="layer-name-tag tag-lang">TC</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotTitle</span>
+                                        <span class="layer-name-tag tag-size">400x80</span>
+                                        <span class="layer-name-tag tag-lang">EN</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotAmount</span>
+                                        <span class="layer-name-tag tag-size">300x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 3. 跑馬燈 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>📢 跑馬燈 (Marquee)</strong>
+                                    <span class="z-index-indicator">160+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG9</span>
+                                        <span class="tag-name">MarqueeBG</span>
+                                        <span class="layer-name-tag tag-size">800x80</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">MarqueeText</span>
+                                        <span class="layer-name-tag tag-size">760x60</span>
+                                        <span class="layer-name-tag tag-lang">TC</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 4. 主操作區UI -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎮 主操作區UI (UI_MainControls)</strong>
+                                    <span class="z-index-indicator">140+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- Buttons 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🔘 Buttons</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Hover</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Pressed</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN</span>
+                                                <span class="tag-name">AutoSpin</span>
+                                                <span class="layer-name-tag tag-size">120x60</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Info_Displays 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>📊 Info_Displays</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">PANEL9</span>
+                                                <span class="tag-name">BalanceDisplay</span>
+                                                <span class="layer-name-tag tag-size">200x50</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-text">TXT</span>
+                                                <span class="tag-name">Balance</span>
+                                                <span class="layer-name-tag tag-size">180x30</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bet_Controls 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎲 Bet_Controls</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN</span>
+                                                <span class="tag-name">BetUp</span>
+                                                <span class="layer-name-tag tag-size">60x60</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-inst"></span>
+                                                <span class="layer-name-tag tag-special">[INST]</span>
+                                                <span class="tag-name">BetDown_BetUp_FLIP_V</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 5. 上方UI -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>⬆️ 上方UI (UI_Top)</strong>
+                                    <span class="z-index-indicator">120+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">ICON</span>
+                                        <span class="tag-name">Logo</span>
+                                        <span class="layer-name-tag tag-size">150x80</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">ICON</span>
+                                        <span class="tag-name">WinAmount</span>
+                                        <span class="layer-name-tag tag-size">200x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-button">BTN</span>
+                                        <span class="tag-name">Settings</span>
+                                        <span class="layer-name-tag tag-size">60x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                        <span class="layer-name-tag tag-state">Normal</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 6. base game 背景 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🖼️ base game 背景 (BG_BaseGame)</strong>
+                                    <span class="z-index-indicator">10-20</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-fx"></span>
+                                        <span class="layer-name-tag tag-special">[FX]</span>
+                                        <span class="tag-name">DARKEN_70</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG</span>
+                                        <span class="tag-name">MainBackground</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">DecorationLeft</span>
+                                        <span class="layer-name-tag tag-size">300x800</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">DecorationRight</span>
+                                        <span class="layer-name-tag tag-size">300x800</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 7. free game 背景 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🌟 free game 背景 (BG_FreeGame)</strong>
+                                    <span class="z-index-indicator">15-25</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG</span>
+                                        <span class="tag-name">FreeGameBG</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">FreeGameEffect</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 8. 符號 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎯 符號 (Symbols)</strong>
+                                    <span class="z-index-indicator">50-80</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- High_Pay 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>👑 High_Pay</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">King</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Queen</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Jack</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Low_Pay 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🔢 Low_Pay</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Ten</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Nine</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Special_Symbols 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>✨ Special_Symbols</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-fx"></span>
+                                                <span class="layer-name-tag tag-special">[FX]</span>
+                                                <span class="tag-name">TINT_FFD700</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Wild</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Scatter</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 9. 角色 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>👑 角色 (Characters)</strong>
+                                    <span class="z-index-indicator">60-90</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">SYM</span>
+                                        <span class="tag-name">Anubis</span>
+                                        <span class="layer-name-tag tag-size">400x600</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">SYM</span>
+                                        <span class="tag-name">Serpent</span>
+                                        <span class="layer-name-tag tag-size">350x500</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 10. reel -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎰 reel (Reels)</strong>
+                                    <span class="z-index-indicator">100+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- Reel_1_Content_Group 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎰 Reel_1_Content_Group</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-mask"></span>
+                                                <span class="layer-name-tag tag-special">[MASK]</span>
+                                                <span class="tag-name">Reel_1_Content_Group</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">FRAME</span>
+                                                <span class="tag-name">ReelBorder</span>
+                                                <span class="layer-name-tag tag-size">200x600</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Reel_2_Content_Group 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎰 Reel_2_Content_Group</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-mask"></span>
+                                                <span class="layer-name-tag tag-special">[MASK]</span>
+                                                <span class="tag-name">Reel_2_Content_Group</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">FRAME</span>
+                                                <span class="tag-name">ReelBorder</span>
+                                                <span class="layer-name-tag tag-size">200x600</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 11. 其他 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>📦 其他 (Misc)</strong>
+                                    <span class="z-index-indicator">0-10</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-preview"></span>
+                                        <span class="layer-name-tag tag-special" style="background-color: #6c757d;">[PREVIEW]</span>
+                                        <span class="tag-name">Tilemap</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">GUIDE</span>
+                                        <span class="tag-name">SafeArea</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <h4 style="margin-top: 0; color: #1976d2;">🔍 圖層結構說明</h4>
+                    <ul style="margin-bottom: 0;">
+                        <li><strong>垂直樹狀結構：</strong>採用縮排方式清楚顯示群組階層關係</li>
+                        <li><strong>Z-Index 指示：</strong>右側數字表示該群組在遊戲中的渲染深度</li>
+                        <li><strong>特殊圖層標記：</strong>[FX]、[MASK]、[INST]、[PREVIEW] 等功能性圖層</li>
+                        <li><strong>命名規範：</strong>所有圖層嚴格遵循 [類型]_[名稱]_[尺寸]_[語系]_[狀態] 格式</li>
+                        <li><strong>子群組組織：</strong>複雜群組內部進一步細分為邏輯子群組</li>
+                        <li><strong>色彩編碼：</strong>不同類型的圖層使用不同顏色標籤便於識別</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase-3">
+            <h3>階段 3：定義圖層命名與元數據規範</h3>
+            <div class="phase-content">
+                <p>這是此 SOP 的核心。所有圖層都必須遵循此命名規則，以便 AI 或腳本能解析並自動處理。</p>
+                <h4>1. 命名結構:</h4>
+                <pre><code>[類型]_[名稱]_[尺寸]_[語系]_[狀態]</code></pre>
+                <h4>2. 欄位定義:</h4>
+                <ul>
+                    <li><code>[類型]</code>: 圖層資產的類別縮寫。
+                        <ul>
+                            <li><code>BG</code>: 背景 (Background)</li>
+                            <li><code>SYM</code>: 符號 (Symbol)</li>
+                            <li><code>BTN</code>: 按鈕 (Button)</li>
+                            <li><code>ICON</code>: 圖標 (Icon)</li>
+                            <li><code>FRAME</code>: 框體 (Frame)</li>
+                            <li><code>TXT</code>: 文字 (Text) - *若文字內容需本地化*</li>
+                            <li><code>IMG</code>: 裝飾性圖片 (Image)</li>
+                            <li><strong><code>BG9</code></strong>: 可九宮格縮放的背景 (9-Slice Background)</li>
+                            <li><strong><code>BTN9</code></strong>: 可九宮格縮放的按鈕 (9-Slice Button)</li>
+                            <li><strong><code>FRAME9</code></strong>: 可九宮格縮放的框體 (9-Slice Frame)</li>
+                            <li><strong><code>PANEL9</code></strong>: 可九宮格縮放的面板 (9-Slice Panel)</li>
+                        </ul>
+                    </li>
+                    <li><code>[名稱]</code>: 資產的具體英文或拼音名稱。 (e.g., <code>Spin</code>, <code>Wild</code>, <code>Anubis</code>)</li>
+                    <li><code>[尺寸]</code>: 該圖層內容的導出邊界，格式為 <code>寬x高</code> (e.g., <code>256x256</code>)。</li>
+                    <li><code>[語系]</code>: 定義此素材的語言屬性。 (e.g., <code>ALL</code>, <code>EN</code>, <code>TC</code>, <code>SC</code>)</li>
+                    <li><code>[狀態]</code>: (可選) 主要用於 UI 元素，定義其互動狀態。 (e.g., <code>Normal</code>, <code>Hover</code>, <code>Pressed</code>)</li>
+                </ul>
+                <h4>3. 命名範例:</h4>
+                <ul>
+                    <li>Spin 按鈕的正常狀態: <code>BTN_Spin_300x150_ALL_Normal</code></li>
+                    <li>一個可縮放的按鈕面板: <code>PANEL9_Default_128x128_ALL_Normal</code></li>
+                    <li>Wild 符號: <code>SYM_Wild_256x256_ALL</code></li>
+                    <li>需要翻譯的「贏得」文字標題: <code>TXT_WinTitle_400x100_TC</code></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-4">
+            <h3>階段 4：建立佔位符與內容</h3>
+            <div class="phase-content">
+                <h4>1. 建立佔位符圖層:</h4>
+                <ul>
+                    <li><strong>動作:</strong> 根據遊戲規格文件，在對應的群組內為<strong>每一個</strong>所需的美術資源建立一個圖層，並使用色塊或簡單形狀作為佔位符。</li>
+                    <li><strong>關鍵:</strong> 嚴格按照階段 3 的規範為每一個佔位符圖層命名。此時，<code>.psd</code> 檔案本身就是一份視覺化的規格與待辦清單。</li>
+                </ul>
+                <h4>2. 轉換為智慧型物件 (Smart Objects):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 將每一個佔位符圖層轉換為「智慧型物件」。</li>
+                    <li><strong>目的:</strong>
+                        <ul>
+                            <li><strong>非破壞性編輯:</strong> 可以在不影響主文件佈局的情況下，獨立編輯每個素材。</li>
+                            <li><strong>易於替換:</strong> 未來 AI 生成或人工繪製的素材，可以直接更新智慧型物件的內容，尺寸和位置會自動對應。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>3. 定義九宮格 (9-Slice) 邊界:</h4>
+                <ul>
+                    <li><strong>對象:</strong> 所有 <code>[類型]</code> 結尾為 <code>9</code> 的圖層 (如 <code>BTN9</code>, <code>PANEL9</code>)。</li>
+                    <li><strong>動作:</strong> 使用 Photoshop 的 <strong>參考線 (Guides)</strong> 來定義九宮格的切割線。</li>
+                    <li><strong>執行步驟:</strong>
+                        <ol>
+                            <li>選中目標圖層（例如 <code>PANEL9_Default_128x128_ALL_Normal</code>）。</li>
+                            <li>從尺標拖曳出 <strong>兩條垂直參考線</strong> 和 <strong>兩條水平參考線</strong>。</li>
+                            <li>將這四條參考線放置在圖層內容上，用以框選出中間可拉伸的區域。四個角落的內容將保持原始尺寸，不會被拉伸變形。</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-5">
+            <h3>階段 5：維護與導出</h3>
+            <div class="phase-content">
+                <h4>1. 版本控制:</h4>
+                <ul>
+                    <li><strong>建議:</strong> 使用 Git LFS (Large File Storage) 或其他雲端同步工具對此核心 <code>.psd</code> 樣板進行版本控制，方便追蹤修改歷史。</li>
+                </ul>
+                <h4>2. 素材導出:</h4>
+                <ul>
+                    <li><strong>方法:</strong> 可利用 Photoshop 的「產生 -> 影像資產」功能，或搭配第三方腳本 (如 Adobe UXP Script)。</li>
+                    <li><strong>自動化基礎:</strong> 由於圖層已包含完整的命名元數據，可以輕易編寫腳本來讀取所有圖層，並根據其名稱自動導出為對應的檔名 (e.g., <code>BTN_Spin_Normal.png</code>) 和尺寸，存放到正確的資料夾。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-6">
+            <h3>階段 6：導出圖層元數據供引擎使用</h3>
+            <div class="phase-content">
+                <p><strong>目的：</strong> 自動化產出一份結構化的數據文件（建議為 JSON 格式），該文件包含每個美術資源在遊戲引擎中佈局、渲染所需的所有參數。</p>
+                <h4>1. 執行方式：Photoshop 腳本</h4>
+                <ul>
+                    <li><strong>動作：</strong> 此流程需要透過 Photoshop 腳本（建議使用 UXP 或 ExtendScript）來執行，導出為 <code>layout.json</code> 文件。</li>
+                </ul>
+                <h4>2. 腳本需提取的數據邏輯：</h4>
+                <ul>
+                    <li>遍歷圖層 (Iterate Layers)</li>
+                    <li>解析圖層名稱 (Parse Layer Name)</li>
+                    <li>讀取圖層屬性 (Read Layer Properties): 邊界範圍, 透明度, 混合模式。</li>
+                    <li>計算引擎用數據 (Calculate Engine Data): 引擎內座標, Z-Index, 九宮格邊界。</li>
+                </ul>
+                <h4>3. 產出 JSON 結構範例 (<code>layout.json</code>):</h4>
+                <pre><code>{
+  "scene_dimensions": { "width": 1920, "height": 1080 },
+  "assets": {
+    "PANEL9_Default_Normal": {
+      "source_image": "PANEL9_Default_128x128_ALL_Normal.png",
+      "size": { "width": 128, "height": 128 },
+      "bounds_in_canvas": { "x": 100, "y": 200, "width": 128, "height": 128 },
+      "z_index": 50,
+      "nine_slice_margins": { "left": 20, "top": 20, "right": 20, "bottom": 20 }
+    }
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-7">
+            <h3>階段 7：Tile Map (瓦片地圖) 資產建立</h3>
+            <div class="phase-content">
+                <p><strong>核心概念:</strong> Tileset (圖塊集) 在 Photoshop 中製作，而 Tilemap Data (地圖數據) 在專門的地圖編輯器中完成。</p>
+                <h4>1. Photoshop 中的 Tileset 建立流程:</h4>
+                <ol>
+                    <li><strong>建立 Tileset 專用檔案:</strong> 例如 <code>tileset_forest_128x128.psd</code>。</li>
+                    <li><strong>設定精確網格 (Grid):</strong> 網格間距設為圖塊尺寸。</li>
+                    <li><strong>繪製與組織圖塊:</strong> 每個圖塊一個圖層，對齊網格。</li>
+                    <li><strong>定義圖塊 ID (Tile ID):</strong> ID 由圖塊在網格中的位置決定。</li>
+                    <li><strong>導出 Tileset:</strong> 導出為一張單一的 <code>.png</code> 圖片。</li>
+                </ol>
+                <h4>2. 在主樣板中進行視覺預覽:</h4>
+                <ul>
+                    <li>在主 <code>.psd</code> 中建立一個名為 <code>[PREVIEW]_Tilemap</code> 的圖層群組來拼湊場景，此群組不會被導出。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-8">
+            <h3>階段 8：遊戲內程式效果定義</h3>
+            <div class="phase-content">
+                <p><strong>原則：</strong> 「一份資源，多種呈現」，以節省包體大小。</p>
+                <h4>1. 定義方式：效果指令圖層</h4>
+                <p>使用一個特殊的**空圖層**作為指令載體，放置在目標圖層正上方。</p>
+                <p><strong>命名規範：</strong> <code>[FX]_[效果類型]_[參數]</code></p>
+                <ul>
+                    <li><code>[FX]</code>: 固定前綴。</li>
+                    <li><code>[效果類型]</code>: <code>DARKEN</code> (壓暗) 或 <code>TINT</code> (純色覆蓋)。</li>
+                    <li><code>[參數]</code>:
+                        <ul>
+                            <li><code>DARKEN</code>: 0-100 的不透明度。</li>
+                            <li><code>TINT</code>: 6位十六進制顏色碼 (e.g., <code>FF0000</code>)。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li>壓暗背景: 在背景圖層上方建立空圖層，命名為 <code>[FX]_DARKEN_70</code>。</li>
+                    <li>Tint 符號: 在符號圖層上方建立空圖層，命名為 <code>[FX]_TINT_FF3300</code>。</li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p>導出腳本會在目標資產的數據中加入一個 <code>effects</code> 陣列。</p>
+                <pre><code>"SYM_Anubis": {
+  "...": "...",
+  "effects": [
+    { "type": "TINT", "color": "FF3300", "trigger": "on_character_hit" }
+  ]
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-9">
+            <h3>階段 9：遊戲引擎遮罩定義</h3>
+            <div class="phase-content">
+                <p><strong>應用場景：</strong> 滾輪內容裁切、非矩形點擊區域等。</p>
+                <h4>1. 定義方式：遮罩圖層系統</h4>
+                <p>使用一個獨立的、會被導出為灰階圖的圖層來定義遮罩。</p>
+                <p><strong>命名規範：</strong> <code>[MASK]_[目標名稱]</code></p>
+                <ul>
+                    <li><code>[MASK]</code>: 固定前綴。</li>
+                    <li><code>[目標名稱]</code>: 此遮罩要影響的圖層群組名稱。</li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li><strong>目標群組:</strong> <code>Reel_1_Content_Group</code></li>
+                    <li><strong>遮罩圖層名稱:</strong> <code>[MASK]_Reel_1_Content_Group</code></li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p><code>layout.json</code> 中會新增一個遮罩資源的定義。</p>
+                <pre><code>"Reel_1_Content_Group_Mask": {
+  "source_image": "MASK_Reel_1_Content_Group.png",
+  "type": "mask",
+  "applies_to": "Reel_1_Content_Group"
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-10">
+            <h3>階段 10：資產實例化與變形定義</h3>
+            <div class="phase-content">
+                <p><strong>原則：</strong> 「一次繪製，多次使用」，適用於鏡射等對稱性資源。</p>
+                <h4>1. 定義方式：實例指令圖層</h4>
+                <p>使用一個佔位符圖層來代表一個引用其他資產內容的新物件。</p>
+                <p><strong>命名規範：</strong> <code>[INST]_[新資產名稱]_[來源資產名稱]_[變形]</code></p>
+                <ul>
+                    <li><code>[INST]</code>: 固定前綴，此圖層不會導出圖片。</li>
+                    <li><code>[新資產名稱]</code>: 新資產在 JSON 中的名字 (e.g., <code>ArrowRight</code>)。</li>
+                    <li><code>[來源資產名稱]</code>: 來源資產的名字 (e.g., <code>ArrowLeft</code>)。</li>
+                    <li><code>[變形]</code>: <code>FLIP_H</code> (水平鏡射) 或 <code>FLIP_V</code> (垂直鏡射)。</li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li><strong>來源圖層:</strong> <code>ICON_ArrowLeft_128x128_ALL</code></li>
+                    <li><strong>實例圖層:</strong> <code>[INST]_ArrowRight_ArrowLeft_FLIP_H</code></li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p>新資產會複用來源資產的圖片，並額外記錄一個 <code>transform</code> 屬性。</p>
+                <pre><code>"ArrowRight": {
+  "source_image": "ICON_ArrowLeft_128x128_ALL.png",
+  "bounds_in_canvas": { "x": 1500, "y": 800, "width": 128, "height": 128 },
+  "transform": {
+    "flip_h": true,
+    "flip_v": false
+  }
+}</code></pre>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.content section');
+            const navLinks = document.querySelectorAll('.sidebar a');
+
+            // Collapsible sections
+            document.querySelectorAll('.content h3').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    header.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+
+            // Sidebar active link on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === '#' + entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-100px 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>

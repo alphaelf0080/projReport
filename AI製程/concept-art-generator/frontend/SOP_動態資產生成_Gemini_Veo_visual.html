@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slot Game 動態資產生成整合 SOP｜Gemini 2.5 + Veo 3</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+    :root {
+      color-scheme: light dark;
+      --bg: #0d1220;
+      --bg-gradient: radial-gradient(circle at 20% 20%, #2b2f51 0%, transparent 60%),
+                     radial-gradient(circle at 80% 10%, #1f4c73 0%, transparent 55%),
+                     radial-gradient(circle at 10% 80%, #1e3a4c 0%, transparent 60%),
+                     #080b15;
+      --surface: rgba(255, 255, 255, 0.06);
+      --surface-strong: rgba(13, 18, 32, 0.84);
+      --text: #eef4ff;
+      --muted: #a9bad9;
+      --primary: #6ee7ff;
+      --accent: #ffd166;
+      --border: rgba(255,255,255,0.14);
+      --success: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0 0 120px;
+      font-family: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    header.hero {
+      padding: 64px 8vw 48px;
+      position: relative;
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 40% 0%, rgba(110, 231, 255, 0.35), transparent 55%);
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .hero-inner {
+      position: relative;
+      display: grid;
+      gap: 32px;
+      z-index: 1;
+    }
+
+    .hero-title {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-title h1 {
+      font-size: clamp(2.6rem, 4vw, 3.6rem);
+      margin: 0;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-title p {
+      margin: 0;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .meta-card {
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .meta-card span.label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .meta-card strong {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    nav#toc {
+      position: sticky;
+      top: 12px;
+      margin: 0 auto;
+      max-width: 1120px;
+      background: rgba(13, 18, 32, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 18px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      backdrop-filter: blur(18px);
+      z-index: 2;
+    }
+
+    nav#toc a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      padding: 6px 12px;
+      border-radius: 12px;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    nav#toc a:hover {
+      color: var(--text);
+      background: rgba(110, 231, 255, 0.12);
+    }
+
+    main {
+      margin: 32px auto;
+      max-width: 1120px;
+      padding: 0 24px;
+      display: grid;
+      gap: 48px;
+    }
+
+    .section {
+      padding: 32px 32px 40px;
+      background: rgba(11, 16, 30, 0.78);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 80px rgba(4, 8, 16, 0.58);
+      backdrop-filter: blur(20px);
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section h3 {
+      margin-top: 28px;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+
+    p {
+      margin: 16px 0;
+      color: #f0f5ff;
+    }
+
+    ul, ol {
+      margin: 0 0 16px 24px;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+      background: rgba(8, 12, 24, 0.85);
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      vertical-align: top;
+    }
+
+    th {
+      text-align: left;
+      color: var(--primary);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pipeline {
+      display: grid;
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .pipeline-step {
+      background: rgba(23, 29, 48, 0.9);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: grid;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .pipeline-step span.index {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .pipeline-step strong {
+      font-size: 1.05rem;
+    }
+
+    .code-block {
+      background: rgba(12, 17, 31, 0.9);
+      border-radius: 16px;
+      border: 1px solid rgba(110, 231, 255, 0.12);
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #d9f6ff;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .grid.cards {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      background: rgba(21, 27, 45, 0.88);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 18px 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      background: rgba(110, 231, 255, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(110, 231, 255, 0.22);
+    }
+
+    .timeline {
+      position: relative;
+      margin-top: 30px;
+      padding-left: 28px;
+      border-left: 2px solid rgba(110, 231, 255, 0.36);
+      display: grid;
+      gap: 18px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 16px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -32px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(110, 231, 255, 0.15);
+    }
+
+    section#hero-kpi {
+      display: grid;
+      gap: 20px;
+    }
+
+    .notice {
+      padding: 18px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(59, 130, 246, 0.18);
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      padding: 14px 18px;
+      background: rgba(255, 209, 102, 0.1);
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    footer {
+      max-width: 1120px;
+      margin: 48px auto 0;
+      padding: 24px 24px 64px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 860px) {
+      header.hero {
+        padding: 48px 24px;
+      }
+
+      nav#toc {
+        position: static;
+        border-radius: 16px;
+      }
+
+      .section {
+        padding: 28px 24px 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-title">
+        <h1>🌀 Slot Game 動態資產生成整合 SOP</h1>
+        <p>以 Gemini 2.5 做規劃與評估、Veo 3 生產高品質動態，搭配 Python 自動化管線與 Spine Runtime，完整涵蓋符號動畫、連線、聽牌、背景循環、轉場、Big Win 及結算動態的生產規範與 QA 機制。</p>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-card"><span class="label">版本</span><strong>v1.0</strong></div>
+        <div class="meta-card"><span class="label">日期</span><strong>2025-10-03</strong></div>
+        <div class="meta-card"><span class="label">適用角色</span><strong>TA / VFX / 工具工程 / 系統整合 / AI Pipeline</strong></div>
+        <div class="meta-card"><span class="label">核心 AI 引擎</span><strong>Gemini 2.5 ・ Veo 3</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <nav id="toc">
+    <a href="#section-1">1. 動態資產分類</a>
+    <a href="#section-2">2. 系統角色</a>
+    <a href="#section-3">3. 流程總覽</a>
+    <a href="#section-4">4. 執行步驟</a>
+    <a href="#section-5">5. 規格資料</a>
+    <a href="#section-6">6. Prompt 模板</a>
+    <a href="#section-7">7. Veo 策略</a>
+    <a href="#section-8">8. 後處理</a>
+    <a href="#section-9">9. 自動化腳本</a>
+    <a href="#section-10">10. 資料夾命名</a>
+    <a href="#section-11">11. 效能預算</a>
+    <a href="#section-12">12. QA 清單</a>
+    <a href="#section-13">13. 風險控管</a>
+    <a href="#section-14">14. 數據回饋</a>
+    <a href="#section-15">15. Manifest 範例</a>
+    <a href="#section-16">16. 動態特效規格書</a>
+    <a href="#section-17">17. Runtime / Tween SOP</a>
+    <a href="#section-18">18. Spine / Hybrid SOP</a>
+    <a href="#section-19">19. 三大產出類型製程分析</a>
+  </nav>
+
+  <main>
+    <section id="hero-kpi" class="section" aria-label="使命與目標">
+      <div class="grid two">
+        <div class="card">
+          <h2>🎯 Pipeline 使命</h2>
+          <p>把需求、AI 規劃、生成、後處理、QA、部署串成可重複、可追蹤、可量化的流程。Gemini 負責理解/規劃/評估，Veo 做高品質產出，Python 管線則處理自動化封裝與檢測。</p>
+          <div class="badge-row">
+            <span class="badge">Slot 動態全覆蓋</span>
+            <span class="badge">AI Agent 驅動</span>
+            <span class="badge">自動 QA</span>
+            <span class="badge">Manifest 管理</span>
+          </div>
+        </div>
+        <div class="card">
+          <h2>🚀 快速落地建議</h2>
+          <ol>
+            <li>建立 `effects_catalog.yaml`（至少 10 個核心動態）。</li>
+            <li>串起 Prompt → Veo API → 後處理的自動腳本。</li>
+            <li>優先打通「符號命中」類資產端到端。</li>
+            <li>建立 KPI：平均迭代次數、體積、QA 通過率。</li>
+            <li>每週檢視結果，調整 Prompt 與壓縮策略。</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-1" class="section">
+      <h2>1️⃣ 動態資產分類與輸出規格</h2>
+      <div class="table-container"><table>
+        <thead>
+          <tr>
+            <th>類型</th>
+            <th>目的</th>
+            <th>典型時長</th>
+            <th>目標 FPS</th>
+            <th>尺寸 / 比例</th>
+            <th>輸出格式（優先序）</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>符號待機 (Idle)</td><td>Slot Reel 靜置微動</td><td>0.8–1.2s 循環</td><td>24 / 30</td><td>512×512 / 768×768</td><td>PNG Sprite Sheet &gt; WebP Sequence</td><td>不可喧賓奪主，≤ 8–12 幀</td></tr>
+          <tr><td>符號命中 (Symbol Win)</td><td>單圖中獎強調</td><td>0.6–0.9s</td><td>30</td><td>同符號原尺寸</td><td>PNG Sequence / APNG / WebM (alpha)</td><td>支援亮度 / 外發光 / 粒子覆蓋</td></tr>
+          <tr><td>連線效果 (Line Win)</td><td>突顯線路與倍數</td><td>0.8–1.2s</td><td>30</td><td>線條覆蓋層 (1920×1080)</td><td>WebM (alpha) / Lottie / JSON VFX</td><td>可程式化參數化顏色</td></tr>
+          <tr><td>聽牌效果 (Near-Miss)</td><td>提升期待</td><td>1.0–1.4s</td><td>30</td><td>Reel 區域裁切</td><td>WebM (alpha) + 補間程式光效</td><td>聲音同步點標記</td></tr>
+          <tr><td>背景循環 (Loop BG)</td><td>氛圍</td><td>4–8s Loop</td><td>24</td><td>1920×1080 / 2160×1080</td><td>WebM VP9 / H.265</td><td>Loop Seam ≤ 1 frame 色差</td></tr>
+          <tr><td>Free Spin 轉場</td><td>Base → Feature</td><td>1.5–2.5s</td><td>30</td><td>全螢幕</td><td>WebM (alpha 分層)</td><td>分離「前景 FX」「遮罩」「Logo」</td></tr>
+          <tr><td>Big / Mega Win 演出</td><td>情緒爆發</td><td>2.0–3.0s</td><td>30</td><td>全螢幕 / 中央聚焦</td><td>WebM (alpha) + Sprite Overlay</td><td>支援動態金幣疊加層</td></tr>
+          <tr><td>結算畫面 (Result)</td><td>回饋總贏分</td><td>1.2–2.0s</td><td>30</td><td>面板區域</td><td>WebM + 數字逐位動畫</td><td>需提供數字跳動曲線</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-2" class="section">
+      <h2>2️⃣ 系統角色與責任</h2>
+      <div class="table-container"><table>
+        <thead><tr><th>Agent / 模組</th><th>責任</th><th>工具</th></tr></thead>
+        <tbody>
+          <tr><td>Gemini 2.5 規劃 Agent</td><td>需求 → 規格拆解 / 指令模板自動生成</td><td>Gemini 2.5 Flash / Pro</td></tr>
+          <tr><td>Gemini 2.5 評估 Agent</td><td>自動對生成影片做規格比對、語義/敘述一致性檢查</td><td>Gemini 2.5</td></tr>
+          <tr><td>Veo 3 生成引擎</td><td>高品質影片 / 動態生成 (含 camera / lighting / material)</td><td>Veo 3</td></tr>
+          <tr><td>後處理管線</td><td>切帧 / Loop 無縫 / Alpha 合成 / 壓縮</td><td>ffmpeg / OpenCV</td></tr>
+          <tr><td>Sprite Sheet 打包</td><td>合併序列幀、壓縮、產生 meta JSON</td><td>Python 自動腳本</td></tr>
+          <tr><td>效能分析模組</td><td>計算體積 / 顯存 / 預載策略</td><td>Python 自動腳本</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-3" class="section">
+      <h2>3️⃣ 端到端流程總覽</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <strong>需求收集</strong>
+          <p>掌握玩法節點、視覺規範與輸出需求，產生對應的動態類別。</p>
+        </div>
+        <div class="timeline-item">
+          <strong>Gemini 規劃與 Prompt 模板化</strong>
+          <p>Gemini 將規格拆解成視覺語意矩陣，產生 Veo 及 Runtime 所需的指令模板。</p>
+        </div>
+        <div class="timeline-item">
+          <strong>Veo 生成與初篩</strong>
+          <p>多變體生成 → 自動檢測解析度、亮度、主體位移 → 篩選合格稿。</p>
+        </div>
+        <div class="timeline-item">
+          <strong>後處理與封裝</strong>
+          <p>Loop 修補、Alpha 擷取、序列幀打包、WebM 壓縮，並更新 manifest。</p>
+        </div>
+        <div class="timeline-item">
+          <strong>引擎整合與 QA</strong>
+          <p>於 Cocos / Pixi / Spine Runtime 驗證播放效能，依 QA 清單檢測並封存版本。</p>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>完整資料流：</strong> 需求 → 分類 → Gemini 規劃 → Prompt 模板 → Veo 生成 → 自動評估 → 後處理 → 封裝 → Manifest → 引擎驗證 → QA → 發佈。
+      </div>
+    </section>
+
+    <section id="section-4" class="section">
+      <h2>4️⃣ 詳細執行步驟</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="index">Step 1</span><strong>需求收集</strong><p>從美術規格書、玩法流程抽取必需動態點。</p></div>
+        <div class="pipeline-step"><span class="index">Step 2</span><strong>動態分類映射</strong><p>建立 <code>effects_catalog.yaml</code>，為每個效果定義 id、類別、觸發條件、Layer 順序。</p></div>
+        <div class="pipeline-step"><span class="index">Step 3</span><strong>Gemini 拆解</strong><p>Gemini 轉換需求為語意描述與視覺要素矩陣。</p></div>
+        <div class="pipeline-step"><span class="index">Step 4</span><strong>Prompt 模板化</strong><p>依資產類型對應模板（見第 6 節）。</p></div>
+        <div class="pipeline-step"><span class="index">Step 5</span><strong>Veo 生成</strong><p>批次送出 3–5 組變體，控制參數（溫度 / 種子 / 相機運動）。</p></div>
+        <div class="pipeline-step"><span class="index">Step 6</span><strong>自動初篩</strong><p>剔除解析度錯誤、主體偏移過大、亮度不符的稿件。</p></div>
+        <div class="pipeline-step"><span class="index">Step 7</span><strong>後處理</strong><p>Loop 修補、Alpha 擷取、Frame 對齊、色彩正規化。</p></div>
+        <div class="pipeline-step"><span class="index">Step 8</span><strong>格式輸出</strong><p>序列幀 → Sprite Sheet；影片 → WebM VP9 CRF 28。</p></div>
+        <div class="pipeline-step"><span class="index">Step 9</span><strong>Manifest 產生</strong><p>寫入 id、type、duration、fps、atlasRect、pivot、memoryCost、preloadPhase。</p></div>
+        <div class="pipeline-step"><span class="index">Step 10</span><strong>引擎整合</strong><p>Cocos / Pixi / Phaser 動態載入測試與效能計數。</p></div>
+        <div class="pipeline-step"><span class="index">Step 11</span><strong>QA 驗證</strong><p>依 QA 清單逐項檢測。</p></div>
+        <div class="pipeline-step"><span class="index">Step 12</span><strong>版本封存</strong><p>依方案落在 <code>assets/animations/{category}/{id}/v{n}</code>。</p></div>
+        <div class="pipeline-step"><span class="index">Step 13</span><strong>發佈</strong><p>更新 CDN / bundle，刷新快取索引。</p></div>
+      </div>
+    </section>
+
+    <section id="section-5" class="section">
+      <h2>5️⃣ 規格資料結構 Contract（簡化）</h2>
+      <p>一份標準動態資產的 JSON 應包含分類、輸出格式、Loop 設定、體積預算與 QA 指標。</p>
+      <pre class="code-block"><code>{
+  "id": "symbol_win_lion_v1",
+  "category": "symbolWin",
+  "trigger": "payline_match",
+  "resolution": "512x512",
+  "fps": 30,
+  "frames": 18,
+  "durationSec": 0.6,
+  "format": "spritesheet",
+  "loops": false,
+  "pivot": {"x": 0.5, "y": 0.5},
+  "atlas": {"sheet": "symbols_win_a.png", "rect": [1024, 0, 512, 512]},
+  "performanceBudgetKB": 420,
+  "dependencies": ["fx_glow_gold"],
+  "generated": {"model": "veo-3", "promptHash": "a91fbc..."},
+  "qa": {"luminanceAvg": 0.72, "loopError": 0.0, "alphaIntegrity": 0.98}
+}</code></pre>
+    </section>
+
+    <section id="section-6" class="section">
+      <h2>6️⃣ Prompt Engineering 模板</h2>
+      <p>通用核心：<strong>主體 + 動作 + 相機 + 光線 + 材質/風格 + 氛圍 + 技術指示</strong></p>
+      <h3>6.1 符號命中 (Symbol Win)</h3>
+      <pre class="code-block"><code>Generate a short slot symbol win animation.
+Subject: {symbol_description}
+Action: energetic burst, scale pulse subtle (8%), gold rune light sweep.
+Camera: locked orthographic center.
+Lighting: high contrast rim light + soft key, warm golden accents.
+Style: stylized realism, crisp edges, saturated highlights.
+Background: clean transparent or neutral dark for alpha extraction.
+Timing: 0.6-0.8s @30fps, emphasis frames at 4, 10, 14.
+Deliverable goal: consistent centroid, no motion crop, no trailing artifacts.</code></pre>
+      <h3>6.2 連線效果 (Line Win Overlay)</h3>
+      <pre class="code-block"><code>Create a translucent energy line traversal effect across slot paylines.
+Visual: luminous flowing beam, slight particle embers, accent sparks at node intersections.
+Camera: static, full frame 1920x1080.
+Timing: 0.9-1.1s single pass.
+Color: adaptive base color {payline_color}, additive glow.
+Goal: dark-safe luminance (peak < 95%).</code></pre>
+      <h3>6.3 聽牌 (Near-Miss / Tease)</h3>
+      <pre class="code-block"><code>Generate a tension-building near-miss animation for a slot reel column.
+Mood: anticipation + subtle dramatic light shift.
+Action: symbol shimmer, ambient pulse, soft camera micro-zoom (≤3%).
+Avoid: excessive flicker, disorienting shake.
+Duration: 1.2s.</code></pre>
+      <h3>6.4 背景循環 (Loop Background)</h3>
+      <pre class="code-block"><code>Create a seamless atmospheric loop background.
+Theme: {environment_theme}
+Seamless loop: ensure first and last frame continuity via cyclical motion.
+Motion intensity: low-medium; no distracting focal bursts.
+Length: 6s @24fps.</code></pre>
+      <h3>6.5 Big Win / Mega Win 演出</h3>
+      <pre class="code-block"><code>Generate a celebratory big win cinematic.
+Elements: central title emblem + radial golden light + coin burst layers + volumetric rays.
+Camera: push-in slight (5%) over duration.
+Duration: 2.5s.
+Phasing: 0-0.5 buildup, 0.5-1.6 peak cascade, 1.6-2.5 settling shimmer.</code></pre>
+    </section>
+
+    <section id="section-7" class="section">
+      <h2>7️⃣ Veo 3 生成策略</h2>
+      <div class="table-container"><table>
+        <thead><tr><th>策略</th><th>說明</th><th>參數建議</th></tr></thead>
+        <tbody>
+          <tr><td>多變體生成</td><td>同一 Prompt 變換種子，擴大樣本空間</td><td>seeds: 3–6</td></tr>
+          <tr><td>參數掃描</td><td>攝影運動幅度、光線對比、色飽和度逐一調整</td><td>每次僅改 1 項參數</td></tr>
+          <tr><td>負面指令</td><td>避免常見瑕疵與過曝</td><td><code>avoid oversharpen, avoid clipping highlights</code></td></tr>
+          <tr><td>風格鎖定</td><td>導入參考影格保持美術一致</td><td>refStrength 0.3–0.55</td></tr>
+          <tr><td>迭代評估</td><td>Gemini 比對語義與亮度直方圖</td><td>亮度區間 0.1–0.92</td></tr>
+          <tr><td>Loop 友善</td><td>Prompt 顯示循環要求</td><td>描述中加入 cyclical / seamless loop</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-8" class="section">
+      <h2>8️⃣ 後處理管線（技術詳解）</h2>
+      <ol>
+        <li>影片下載與驗證 → 檢查解析度、時長、FPS。</li>
+        <li>Loop 修補：crossfade 6–12 幀或 optical-flow 重建。</li>
+        <li>Alpha 擷取：背景移除 / matte 精修 (1px feather)。</li>
+        <li>幀抽取：<code>ffmpeg -i in.webm frame_%03d.png</code>。</li>
+        <li>幀裁切：計算 bounding box，對齊中心點。</li>
+        <li>Sprite Sheet 打包：<code>maxAtlasW = 4096</code>，高度降序排布。</li>
+        <li>色彩規範：Lab ΔE &lt; 4 vs baseline。</li>
+        <li>壓縮：zopflipng / CRF 20/24/28 三檔比較。</li>
+        <li>產 meta：紀錄 pivot、frameRect、fps、trigger。</li>
+        <li>產預覽頁：HTML + JS 播放、記憶體估算。</li>
+      </ol>
+    </section>
+
+    <section id="section-9" class="section">
+      <h2>9️⃣ 自動化腳本骨架</h2>
+      <pre class="code-block"><code>from pipeline import gemini_plan, veo_generate, evaluate_clip, extract_frames, build_spritesheet
+
+req = load_yaml('effects_catalog.yaml')
+for eff in req['effects']:
+    prompt = gemini_plan(eff)
+    clips = veo_generate(prompt, variants=4)
+    for c in clips:
+        score = evaluate_clip(c, rules=eff['qaRules'])
+        if score['pass']:
+            frames = extract_frames(c)
+            sheet = build_spritesheet(frames)
+            save_assets(eff['id'], sheet, meta=score['metrics'])
+            break</code></pre>
+    </section>
+
+    <section id="section-10" class="section">
+      <h2>🔟 資料夾與命名</h2>
+      <pre class="code-block"><code>assets/
+  animations/
+    symbol/win/lion/v1/lion_win_sheet.png
+    line/line_generic_v1.webm
+    background/base_loop_v2.webm
+    transition/base_to_free_v1.webm
+    bigwin/bigwin_standard_v3.webm
+    result/result_panel_v1.webm
+manifest/animation_manifest.json
+</code></pre>
+      <p>命名模式：<code>&lt;category&gt;_&lt;subtype?&gt;_&lt;identifier&gt;_v&lt;version&gt;.&lt;ext&gt;</code></p>
+    </section>
+
+    <section id="section-11" class="section">
+      <h2>1️⃣1️⃣ 效能與封包預算</h2>
+      <div class="table-container"><table>
+        <thead><tr><th>類別</th><th>單個上限</th><th>載入策略</th><th>降級方案</th></tr></thead>
+        <tbody>
+          <tr><td>符號命中</td><td>450 KB</td><td>首次觸發快取</td><td>幀數 18 → 12</td></tr>
+          <tr><td>Line Win</td><td>300 KB</td><td>預載 (高頻)</td><td>Glow 稀疏化</td></tr>
+          <tr><td>Near-Miss</td><td>380 KB</td><td>條件預載</td><td>去粒子層</td></tr>
+          <tr><td>Big Win</td><td>1.2 MB</td><td>延遲載入</td><td>金幣粒度減少</td></tr>
+          <tr><td>背景 Loop</td><td>2.5 MB</td><td>首屏載入</td><td>降 FPS / 提 CRF</td></tr>
+          <tr><td>Transition</td><td>1.0 MB</td><td>進入前預取</td><td>降運鏡幅度</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-12" class="section">
+      <h2>1️⃣2️⃣ QA 檢查清單</h2>
+      <div class="table-container"><table>
+        <thead><tr><th>項目</th><th>標準</th></tr></thead>
+        <tbody>
+          <tr><td>解析度</td><td>與規格匹配，無拉伸</td></tr>
+          <tr><td>FPS</td><td>偏差 ≤ 0.5 fps</td></tr>
+          <tr><td>亮度 / 對比</td><td>RGB ≥ 250 區域 &lt; 0.5%</td></tr>
+          <tr><td>Loop</td><td>Δ像素 RMS &lt; 2.0</td></tr>
+          <tr><td>Alpha</td><td>無鋸齒、黑邊、暈染</td></tr>
+          <tr><td>中心穩定</td><td>漂移 ≤ 5% 寬</td></tr>
+          <tr><td>記憶體</td><td>符合預算</td></tr>
+          <tr><td>命名 / 版本</td><td>meta 與檔案一致</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-13" class="section">
+      <h2>1️⃣3️⃣ 風險控管與回滾</h2>
+      <div class="table-container"><table>
+        <thead><tr><th>風險</th><th>緩解</th><th>回滾</th></tr></thead>
+        <tbody>
+          <tr><td>Veo 產出不穩</td><td>多種子 + 閾值過濾</td><td>改用上一版 v(n-1)</td></tr>
+          <tr><td>風格漂移</td><td>reference frame 套用</td><td>鎖定 style embedding 包</td></tr>
+          <tr><td>體積膨脹</td><td>報表預警</td><td>自動壓縮 batch</td></tr>
+          <tr><td>Loop 接縫</td><td>crossfade / optical flow</td><td>降級為靜態背景</td></tr>
+          <tr><td>播放卡頓</td><td>預載策略 + 降 FPS</td><td>提供低階資產包</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-14" class="section">
+      <h2>1️⃣4️⃣ 持續優化與數據回饋</h2>
+      <ol>
+        <li>埋點：播放次數 / 中途取消 / 完整觀賞率。</li>
+        <li>KPI：失敗率、平均迭代次數、平均體積。</li>
+        <li>A/B：Big Win 兩版 → 比較留存與局時長。</li>
+        <li>體積閾值：超過預算 15% 觸發自動壓缩程序。</li>
+      </ol>
+    </section>
+
+    <section id="section-15" class="section">
+      <h2>1️⃣5️⃣ Manifest 範例</h2>
+      <pre class="code-block"><code>{
+  "version": "2025.10.03-anim-v1",
+  "generatedBy": "ai-pipeline-gemini-veo",
+  "groups": {
+    "preload": ["background/base_loop_v2"],
+    "lazy": ["bigwin/bigwin_standard_v3", "transition/base_to_free_v1"],
+    "onDemand": ["symbol/win/lion/v1"]
+  },
+  "assets": [
+    {
+      "id": "lion_symbol_win",
+      "path": "animations/symbol/win/lion/v1/lion_win_sheet.png",
+      "meta": "animations/symbol/win/lion/v1/lion_win_sheet.json",
+      "memoryKB": 412,
+      "preloadPhase": "onDemand"
+    }
+  ]
+}</code></pre>
+    </section>
+
+    <section id="section-16" class="section">
+      <h2>1️⃣6️⃣ 動態特效美術規格書</h2>
+      <p>提供統一標準供美術、TA、VFX、AI Pipeline 使用，確保輸入資訊完整一致。</p>
+      <h3>16.1 目的與使用時機</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>場景</th><th>使用本規格</th><th>備註</th></tr></thead>
+        <tbody>
+          <tr><td>新玩法加入新特效</td><td>✅</td><td>於 Gameplay 原型確立後第一週完成</td></tr>
+          <tr><td>現有效果升級</td><td>✅</td><td>標記 <code>revisionType = enhance</code></td></tr>
+          <tr><td>資產體積優化重製</td><td>✅</td><td>附上現行體積/效能報告</td></tr>
+          <tr><td>快速試驗概念</td><td>可選</td><td>可填精簡版 Minimal Spec</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.2 規格書欄位總覽</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>欄位</th><th>必填</th><th>說明</th><th>範例</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>✅</td><td>唯一識別</td><td>symbol_win_lion_v1</td></tr>
+          <tr><td>displayName</td><td>✅</td><td>人類可讀名稱</td><td>Lion Symbol Win</td></tr>
+          <tr><td>category</td><td>✅</td><td>參考第 1 節分類</td><td>symbolWin</td></tr>
+          <tr><td>subType</td><td>選</td><td>Big / Mega / Ultra / Generic</td><td>mega</td></tr>
+          <tr><td>triggerEvent</td><td>✅</td><td>遊戲事件</td><td>payline_match</td></tr>
+          <tr><td>priority</td><td>✅</td><td>播放優先序 0 高 → 5 低</td><td>2</td></tr>
+          <tr><td>layering</td><td>✅</td><td>多層播放順序</td><td>base, glow, particles</td></tr>
+          <tr><td>cameraType</td><td>選</td><td>orthographic / perspective</td><td>orthographic</td></tr>
+          <tr><td>durationSec</td><td>✅</td><td>目標時長</td><td>0.6</td></tr>
+          <tr><td>fps</td><td>✅</td><td>幀率</td><td>30</td></tr>
+          <tr><td>loops</td><td>✅</td><td>是否循環</td><td>false</td></tr>
+          <tr><td>expectedFrames</td><td>選</td><td>預估總幀數</td><td>18</td></tr>
+          <tr><td>safeZoneRatio</td><td>選</td><td>主體需落於區域</td><td>0.85</td></tr>
+          <tr><td>motionIntensity</td><td>✅</td><td>none / low / medium / high</td><td>medium</td></tr>
+          <tr><td>energyCurve</td><td>選</td><td>節奏相位</td><td>build→peak→settle</td></tr>
+          <tr><td>colorPalette</td><td>✅</td><td>主色 / 輔色 / 強調</td><td>["#D8A531", "#5A2D10", "#FFD675"]</td></tr>
+          <tr><td>luminanceRange</td><td>✅</td><td>亮度範圍（0-1）</td><td>[0.08, 0.92]</td></tr>
+          <tr><td>styleTags</td><td>✅</td><td>風格標籤</td><td>["stylized realism","golden glow"]</td></tr>
+          <tr><td>forbiddenTraits</td><td>選</td><td>禁用元素</td><td>["overexposed","hard flicker"]</td></tr>
+          <tr><td>semanticKeywords</td><td>✅</td><td>語義關鍵字</td><td>["lion","gold","burst"]</td></tr>
+          <tr><td>variantCount</td><td>✅</td><td>初次生成變體數</td><td>4</td></tr>
+          <tr><td>perfBudgetKB</td><td>✅</td><td>體積預算</td><td>450</td></tr>
+          <tr><td>atlasTarget</td><td>選</td><td>預計放入的 Atlas 名稱</td><td>symbols_win_a</td></tr>
+          <tr><td>audioSyncPoints</td><td>選</td><td>音效節點</td><td>[0.00, 0.18, 0.42, 0.55]</td></tr>
+          <tr><td>kpiFocus</td><td>選</td><td>KPI 關注點</td><td>["attention","retention"]</td></tr>
+          <tr><td>revisionType</td><td>選</td><td>new / enhance / optimize / fix</td><td>new</td></tr>
+          <tr><td>notes</td><td>選</td><td>補充說明</td><td>需要金色粒子尾巴</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.3 YAML 規格書範本（完整版）</h3>
+      <pre class="code-block"><code>id: symbol_win_lion_v1
+displayName: Lion Symbol Win
+category: symbolWin
+triggerEvent: payline_match
+priority: 2
+layering: [base, glow, particles]
+cameraType: orthographic
+durationSec: 0.6
+fps: 30
+loops: false
+expectedFrames: 18
+safeZoneRatio: 0.85
+motionIntensity: medium
+energyCurve: [build, peak, settle]
+colorPalette: ["#D8A531", "#5A2D10", "#FFD675"]
+luminanceRange: [0.08, 0.92]
+styleTags: ["stylized realism", "radiant gold", "sharp highlights"]
+forbiddenTraits: ["overexposed", "strobing", "muddy contrast"]
+semanticKeywords: ["lion", "gold", "burst"]
+variantCount: 4
+perfBudgetKB: 450
+atlasTarget: symbols_win_a
+audioSyncPoints: [0.00, 0.18, 0.42, 0.55]
+kpiFocus: ["winEmphasis"]
+revisionType: new
+notes: "顯示階段 0.15s 出現符文掃光，0.42s 進入能量峰值"</code></pre>
+
+      <h3>16.4 簡化版 Minimal Spec</h3>
+      <pre class="code-block"><code>id: bigwin_intro_test_v0
+category: bigWin
+durationSec: 2.5
+fps: 30
+loops: false
+variantCount: 2
+semanticKeywords: ["coins","gold","title"]
+perfBudgetKB: 1200
+styleTags: ["cinematic","warm"]</code></pre>
+
+      <h3>16.5 層次（Layering）標準化</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>層</th><th>說明</th><th>可禁用？</th><th>降級策略</th></tr></thead>
+        <tbody>
+          <tr><td>base</td><td>主體基本動作</td><td>❌</td><td>N/A</td></tr>
+          <tr><td>glow</td><td>外發光/內發光脈衝</td><td>✅</td><td>降亮度頻率、改靜態</td></tr>
+          <tr><td>particles</td><td>粒子飛散/能量碎片</td><td>✅</td><td>降發射數、移除尾跡</td></tr>
+          <tr><td>rays</td><td>造型光束 / 體積光</td><td>✅</td><td>改為靜態疊圖</td></tr>
+          <tr><td>overlay</td><td>疊加紋理（noise / rune）</td><td>✅</td><td>降解析度或關閉</td></tr>
+          <tr><td>embellish</td><td>裝飾性附加元素</td><td>✅</td><td>全部移除</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.6 時間結構（Timing Blocks）</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>Block</th><th>比例（參考）</th><th>功能</th><th>評估指標</th></tr></thead>
+        <tbody>
+          <tr><td>build</td><td>20–30%</td><td>集中視覺注意</td><td>增長梯度平滑</td></tr>
+          <tr><td>peak</td><td>40–55%</td><td>最強視覺衝擊</td><td>亮度/顏色對比達標</td></tr>
+          <tr><td>settle</td><td>15–25%</td><td>緩和視覺張力</td><td>無突兀閃斷</td></tr>
+          <tr><td>exit (可選)</td><td>5–10%</td><td>平滑結束 / 淡出</td><td>無殘影 / 殘亮</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.7 語義與技術對齊檢查表</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>項目</th><th>檢查方法</th><th>允收條件</th></tr></thead>
+        <tbody>
+          <tr><td>主題語義</td><td>文字描述比對 semanticKeywords</td><td>覆蓋率 ≥ 70%</td></tr>
+          <tr><td>色彩一致性</td><td>取樣主體色相偏差</td><td>主色 Hue 偏差 < 12°</td></tr>
+          <tr><td>亮度峰值</td><td>幀亮度直方圖</td><td>峰值 ≤ luminanceRange[1] + 0.03</td></tr>
+          <tr><td>結構穩定</td><td>主體 bounding box 位移</td><td>中心漂移 ≤ 5%</td></tr>
+          <tr><td>節奏節點</td><td>audioSyncPoints 時間點</td><td>每節點 ±0.05s 內有事件</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.8 與 Pipeline 映射</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>Spec 欄位</th><th>Pipeline 階段</th><th>功能</th></tr></thead>
+        <tbody>
+          <tr><td>semanticKeywords</td><td>evaluate（語義比對）</td><td>Gemini 語義得分</td></tr>
+          <tr><td>perfBudgetKB</td><td>evaluate / pack</td><td>產出後大小檢測</td></tr>
+          <tr><td>layering</td><td>manifest</td><td>決定載入與降級策略</td></tr>
+          <tr><td>motionIntensity</td><td>plan</td><td>Prompt 運動形容詞強度</td></tr>
+          <tr><td>luminanceRange</td><td>evaluate</td><td>亮度閾值檢測</td></tr>
+          <tr><td>audioSyncPoints</td><td>（未來）音效對齊</td><td>自動節點標記</td></tr>
+          <tr><td>variantCount</td><td>generate</td><td>決定變體數量</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.9 Line Win 規格示例</h3>
+      <pre class="code-block"><code>id: line_win_generic_v1
+displayName: Generic Line Win
+category: lineWin
+triggerEvent: line_payout
+priority: 3
+layering: [base, glow]
+durationSec: 0.9
+fps: 30
+loops: false
+motionIntensity: low
+colorPalette: ["#53C2FF", "#0A2233", "#FFFFFF"]
+luminanceRange: [0.10, 0.88]
+styleTags: ["energetic", "clean"]
+semanticKeywords: ["line","energy","pulse"]
+variantCount: 3
+perfBudgetKB: 300
+safeZoneRatio: 1.0
+notes: "需保留中心透明區避免遮擋符號"</code></pre>
+
+      <h3>16.10 版本與追蹤</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>欄位</th><th>說明</th><th>範例</th></tr></thead>
+        <tbody>
+          <tr><td>versionTag</td><td>與產出檔對應</td><td>symbol_win_lion_v1</td></tr>
+          <tr><td>changeLog</td><td>版本差異紀錄</td><td>v1 → 初版 / v2 → 降光暈</td></tr>
+          <tr><td>obsolete</td><td>是否淘汰</td><td>false</td></tr>
+          <tr><td>replacedBy</td><td>被哪版取代</td><td>symbol_win_lion_v2</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>16.11 建立 → 審核 → 生產流程</h3>
+      <ol>
+        <li>美術填寫 YAML（完整版或簡化版）。</li>
+        <li>TA 技術審核欄位完整性與體積預估。</li>
+        <li>AI Pipeline 標記可自動化欄位，轉換成內部 config。</li>
+        <li>統整成 <code>effects_catalog.yaml</code> → 自動流程。</li>
+        <li>回寫執行結果到 Spec（可追加 <code>lastRun</code> 區塊）。</li>
+        <li>持續調整 styleTags / forbiddenTraits。</li>
+      </ol>
+
+      <h3>16.12 Spec 與 Catalog 的關係</h3>
+      <pre class="code-block"><code>specs/
+  symbol_win_lion_v1.yaml
+  line_win_generic_v1.yaml
+  bigwin_standard_v1.yaml
+effects_catalog.yaml   # 只列出 id 與引用路徑
+</code></pre>
+    </section>
+
+    <section id="section-17" class="section">
+      <h2>1️⃣7️⃣ 引擎內動態 / Tween 系統 SOP</h2>
+      <h3>17.1 適用場景</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>類型</th><th>適合程式化</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td>符號 Idle 輕動態</td><td>✅</td><td>週期短、重複出現、多符號共用</td></tr>
+          <tr><td>Line Win 掃線</td><td>✅</td><td>幾何規則、顏色可程式化</td></tr>
+          <tr><td>Near-Miss 邊框提醒</td><td>✅</td><td>亮度 / scale / tint 易於補間</td></tr>
+          <tr><td>Big Win 核心爆發</td><td>部分</td><td>複雜粒子仍需預渲染</td></tr>
+          <tr><td>背景深度視差</td><td>✅</td><td>UV 移動、多層合成</td></tr>
+          <tr><td>高擬真光影</td><td>✗</td><td>需預渲染材質細節</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>17.2 決策流程</h3>
+      <div class="notice">
+        <strong>流程：</strong>需求標記 → 視覺複雜度評分 (1~5) → 目標裝置性能 → 是否需要精準物理光/粒 → 若否則採用程式化。
+      </div>
+
+      <h3>17.3 程式化動畫資產描述 DSL</h3>
+      <pre class="code-block"><code>id: symbol_win_lion_runtime_v1
+bindTo: SYM_Lion
+duration: 0.6
+fps: 60
+loop: false
+tracks:
+  - type: tween
+    id: scalePulse
+    target: root
+    prop: scale
+    kf:
+      - { t: 0.00, v: 1.00, ease: cubicOut }
+      - { t: 0.08, v: 1.08 }
+      - { t: 0.20, v: 1.02 }
+      - { t: 0.40, v: 1.06 }
+      - { t: 0.60, v: 1.00 }
+  - type: shader
+    id: sweep
+    target: mat.glow
+    uniform: sweepPos
+    kf: [{ t: 0.00, v: 0.0 }, { t: 0.35, v: 1.0 }, { t: 0.60, v: 1.2 }]
+  - type: color
+    id: tintFlash
+    target: root
+    prop: tint
+    kf: [{ t:0.00,v:'#FFFFFF'},{ t:0.12,v:'#FFE8A8'},{ t:0.32,v:'#FFCF60'},{ t:0.60,v:'#FFFFFF'}]
+events:
+  - { t:0.18, name:sfx_hit }
+  - { t:0.42, name:sfx_peak }
+perf:
+  maxInstances: 30
+  warnMs: 3.0
+flags:
+  allowSkip: true</code></pre>
+
+      <h3>17.4 Track 類型與引擎對應</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>DSL type</th><th>引擎操作 (Cocos)</th><th>PixiJS 實作</th><th>效能備註</th></tr></thead>
+        <tbody>
+          <tr><td>tween</td><td>cc.tween / node.update</td><td>gsap / 自製 ticker</td><td>減少多屬性拆分</td></tr>
+          <tr><td>color</td><td>node.color / material</td><td>sprite.tint</td><td>轉線性色空間避免 banding</td></tr>
+          <tr><td>shader</td><td>material.setProperty</td><td>filter.uniform</td><td>控制更新頻率 ≥16ms</td></tr>
+          <tr><td>particle</td><td>粒子系統 playOnce</td><td>pixi-particles</td><td>共用 emitter pool</td></tr>
+          <tr><td>event</td><td>callback/time gate</td><td>eventEmitter</td><td>避免大量 closure</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>17.5 播放控制 API 建議</h3>
+      <pre class="code-block"><code>class RuntimeAnimPlayer {
+  load(spec: AnimSpec): void
+  play(opts?: { speed?: number; reverse?: boolean }): void
+  stop(reset?: boolean): void
+  setProgress(p01: number): void
+  on(evt: string, cb: (time: number) => void): void
+  isPlaying(): boolean
+}</code></pre>
+
+      <h3>17.6 效能預算指標</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>指標</th><th>目標</th><th>量測方式</th></tr></thead>
+        <tbody>
+          <tr><td>CPU update</td><td>&lt; 0.5ms / 10 active</td><td>Timeline 聚合</td></tr>
+          <tr><td>GPU uniform 更新</td><td>&lt; 50 次/秒</td><td>shader batch 計數</td></tr>
+          <tr><td>粒子執行</td><td>&lt; 1 emitter / 目標</td><td>計數 + 預熱 reuse</td></tr>
+          <tr><td>物件配置</td><td>0 動態 GC 峰值</td><td>memory snapshot</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>17.7 QA 程式化檢查</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>項目</th><th>方法</th><th>Pass 條件</th></tr></thead>
+        <tbody>
+          <tr><td>時間長度</td><td>播放實測 delta</td><td>|Δ| ≤ 1 frame</td></tr>
+          <tr><td>同步事件</td><td>比對 event 時間</td><td>誤差 ≤ 0.05s</td></tr>
+          <tr><td>中心穩定</td><td>bbox center 差異</td><td>偏移 ≤ 5%</td></tr>
+          <tr><td>亮度曲線</td><td>shader param 採樣</td><td>峰值落於指定區段</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>17.8 Hybrid 整合策略</h3>
+      <ol>
+        <li>影片 / spritesheet 作為高能量主層。</li>
+        <li>程式化補間：scale、tint、shader sweep、coin count jump。</li>
+        <li>manifest 擴充：<code>{"runtimeSpec":"runtime_specs/xxx.yaml"}</code></li>
+      </ol>
+
+      <h3>17.9 Gemini 產生 DSL Prompt 範例</h3>
+      <pre class="code-block"><code>Given an effect spec:
+id: symbol_win_lion_v1
+styleTags: ["stylized realism","radiant"]
+energyCurve: [build, peak, settle]
+Generate a compact YAML runtime tween spec with tracks: scale pulse, glow sweep, tint flash. Provide keyframes time (0~duration) four decimals, no commentary.</code></pre>
+
+      <h3>17.10 版本迭代策略</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>變更類型</th><th>說明</th><th>回溯策略</th></tr></thead>
+        <tbody>
+          <tr><td>參數微調</td><td>easing / tint</td><td>保留上一版 JSON snapshot</td></tr>
+          <tr><td>結構變更</td><td>track 增刪</td><td>增版本號 <code>_v2</code></td></tr>
+          <tr><td>性能優化</td><td>合併 track</td><td>標記 changeLog</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="section-18" class="section">
+      <h2>1️⃣8️⃣ Spine / Hybrid 動畫整合 SOP</h2>
+      <h3>18.1 目的</h3>
+      <p>打造影片 / spritesheet（Veo / Gemini）與 Spine 程式化骨架同時交付的統一流程，支援版本疊代與 QA。</p>
+
+      <h3>18.2 產物矩陣</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>類型</th><th>來源</th><th>用途</th><th>優點</th><th>缺點</th></tr></thead>
+        <tbody>
+          <tr><td>Video Loop</td><td>Veo 3 / Gemini</td><td>高能量主特效</td><td>光影 / 粒子品質高</td><td>記憶體佔用</td></tr>
+          <tr><td>SpriteSheet</td><td>Gemini Image + ffmpeg</td><td>中能量循環</td><td>壓縮效率佳</td><td>幀數固定</td></tr>
+          <tr><td>Spine Procedural</td><td>Runtime Tween DSL</td><td>補間、輕量 idle</td><td>CPU 輕、可參數化</td><td>複雜粒子較弱</td></tr>
+          <tr><td>Hybrid Manifest</td><td>export_hybrid_manifest</td><td>封裝交付</td><td>單一入口管理</td><td>需整合控管</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>18.3 Hybrid Manifest 結構</h3>
+      <pre class="code-block"><code>{
+  "id": "symbol_lion_win_v1",
+  "version": "1.0.0",
+  "video": {"path": "animations/symbol_lion_core.webm", "fps": 30, "loop": true},
+  "skeleton": {"path": "skeletons/symbol_lion_skeleton.json", "entry": "idle"},
+  "runtimeSpec": "runtime_specs/symbol_lion_win.yaml",
+  "sync": {"startOffset": 0.0, "eventAlign": [{"event": "peak", "videoTime": 1.267, "runtimeTime": 1.25}]},
+  "perfBudget": {"gpuMs": 0.4, "memMB": 18},
+  "hash": "<sha256-all-files>"
+}</code></pre>
+
+      <h3>18.4 生成步驟 Pipeline 對照</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>Stage</th><th>Video/Sprite</th><th>Spine</th><th>Runtime DSL</th><th>Artifact</th></tr></thead>
+        <tbody>
+          <tr><td>Plan</td><td>Prompt (Veo)</td><td>骨架推導</td><td>DSL prompt</td><td>plans/*.yaml</td></tr>
+          <tr><td>Gen</td><td>Veo / Gemini Video</td><td>ai_agent skeleton</td><td>DSL YAML</td><td>raw/*</td></tr>
+          <tr><td>Eval</td><td>迴圈誤差 / 亮度</td><td>骨架完整性</td><td>指標合法</td><td>eval/*.json</td></tr>
+          <tr><td>Post</td><td>去首尾抖動</td><td>名稱正規化</td><td>時間對齊</td><td>post/*</td></tr>
+          <tr><td>Pack</td><td>webm / sheet</td><td>skeleton.json</td><td>runtime.yaml</td><td>dist/*</td></tr>
+          <tr><td>Manifest</td><td>嵌入 meta</td><td>嵌入 meta</td><td>嵌入引用</td><td>manifest/*.json</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>18.5 Gemini 角色</h3>
+      <ol>
+        <li>視覺語意 → 骨架父子結構推導。</li>
+        <li>Veo Prompt 編寫與否定詞調整。</li>
+        <li>骨架 QA 建議（對稱性、slot 檢查）。</li>
+        <li>DSL 優化：建議 easing 與 peak 時序對齊亮度。</li>
+      </ol>
+
+      <h3>18.6 Veo 角色</h3>
+      <ol>
+        <li>生成高能量 win / transition 主動畫。</li>
+        <li>提供光影、volumetric、粒子層基礎。</li>
+        <li>搭配 Gemini 評估進行 Prompt 迭代。</li>
+      </ol>
+
+      <h3>18.7 同步策略</h3>
+      <ol>
+        <li>影片分析 HDR 亮度曲線取得 peak time。</li>
+        <li>DSL track peak 事件與影片時間對齊。</li>
+        <li>骨架 idle 與影片循環長度 LCM，避免跳變。</li>
+      </ol>
+
+      <h3>18.8 版本與 Hash</h3>
+      <p>計算：<code>sha256(video) ^ sha256(skeleton) ^ sha256(runtimeSpec)</code> → manifest.hash。任一檔案變動即遞增 patch 版號。</p>
+
+      <h3>18.9 QA 指標補充</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>指標</th><th>描述</th><th>工具</th><th>門檻</th></tr></thead>
+        <tbody>
+          <tr><td>loopSeamRMS</td><td>首尾幀像素差 RMS</td><td>ffmpeg + numpy</td><td>&lt; 2.5</td></tr>
+          <tr><td>luminancePeakTime</td><td>亮度峰值時間</td><td>自動亮度掃描</td><td>與 DSL peak Δ ≤ 0.06s</td></tr>
+          <tr><td>boneCoverage</td><td>slot 數 / 圖層數</td><td>skeleton 分析</td><td>≥ 0.95</td></tr>
+          <tr><td>runtimeKeyframes</td><td>程式化關鍵幀總數</td><td>解析 DSL</td><td>&lt; 180</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>18.10 CLI 對應</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>目的</th><th>指令</th><th>狀態</th></tr></thead>
+        <tbody>
+          <tr><td>生成骨架</td><td><code>generate_from_layers</code></td><td>已實作</td></tr>
+          <tr><td>生成提示詞</td><td><code>gen_prompt</code></td><td>已實作</td></tr>
+          <tr><td>Hybrid 打包</td><td><code>export_hybrid_manifest</code></td><td>已實作</td></tr>
+          <tr><td>骨架規格驗證</td><td><code>validate_spec</code></td><td>已實作</td></tr>
+          <tr><td>影片分析</td><td><code>analyze_video_loop</code></td><td>TODO</td></tr>
+          <tr><td>Hash + Manifest 更新</td><td><code>build_manifest</code></td><td>TODO</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>18.11 下一步優先序</h3>
+      <ol>
+        <li>影片 loop 分析 + runtime peak 對齊。</li>
+        <li>Hash / 版本自動遞增。</li>
+        <li>DSL 解析器 + 後端播放模組。</li>
+        <li>Web 預覽頁 (Pixi + spine-ts) 原型。</li>
+        <li>Gemini 實際接入：prompt → skeleton JSON + diff 建議。</li>
+      </ol>
+    </section>
+
+    <!-- 新增：第19節 三大產出類型製程分析 -->
+    <section id="section-19" class="section">
+      <h2>1️⃣9️⃣ 三大產出類型製程分析總結</h2>
+      <p>本節統合前述章節內容，將動態特效 <strong>產出方式</strong> 劃分為三類：<strong>① 預渲染（連續圖 / 影片）② Spine 骨架 ③ 程序 / Runtime 動態</strong>，並提供決策基準、製程差異、混合策略與 Manifest 擴充建議。</p>
+
+      <h3>19.1 類型定位與適用場景</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>類型</th><th>核心用途</th><th>優勢</th><th>限制</th><th>代表章節</th></tr></thead>
+        <tbody>
+          <tr><td>預渲染（Video / SpriteSheet）</td><td>高能量敘事 (Big Win / Transition / 背景 Loop)</td><td>光影品質高、可一次整合複雜粒子</td><td>體積 / 記憶體成本、參數化低</td><td>1, 4, 7, 8, 11, 16, 18</td></tr>
+          <tr><td>Spine 骨架</td><td>部件重用、Idle、結構動態</td><td>低體積、可重組、易版本迭代</td><td>高擬真光影不足、初建成本</td><td>18.x</td></tr>
+          <tr><td>程序 / Runtime（Tween / Shader / DSL）</td><td>亮度/掃光/縮放/色彩脈衝、數字跳動</td><td>極輕量、可參數化、快速 A/B</td><td>視覺上限受限於引擎渲染</td><td>17.x</td></tr>
+        </tbody></table></div>
+
+      <h3>19.2 決策快速流程（Decision Flow）</h3>
+      <ol>
+        <li><strong>是否需要 Cinematic 光影/粒子層次？</strong> 是 → 預渲染。</li>
+        <li><strong>是否大量重複播放且希望骨架復用？</strong> 是 → Spine。</li>
+        <li><strong>是否需大量參數調整 / A/B / 色彩即時變化？</strong> 是 → 程序。</li>
+        <li>體積超預算 15% → 優先抽離可程序化部分。</li>
+        <li>需要雙層能量（主視覺 + 補強）→ Hybrid：影片 + Runtime Shader / Tween。</li>
+      </ol>
+
+      <h3>19.3 製程核心差異</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>面向</th><th>預渲染</th><th>Spine</th><th>程序 / Runtime</th></tr></thead>
+        <tbody>
+          <tr><td>前期規劃</td><td>Prompt 模板 + 視覺語意</td><td>骨架層級 / Slot 設計</td><td>DSL Track 定義</td></tr>
+          <tr><td>生成來源</td><td>Veo / Gemini + 後處理</td><td>手工 + AI 推導</td><td>規格 YAML → 引擎解析</td></tr>
+          <tr><td>優化關鍵</td><td>Loop / 壓縮 / Alpha / 幀數</td><td>骨骼覆蓋率 / Track 簡化</td><td>事件同步 / Uniform 節流</td></tr>
+          <tr><td>版本迭代</td><td>重新渲染 / 補幀</td><td>調曲線 / 增刪骨架</td><td>改 YAML / 修改 keyframes</td></tr>
+          <tr><td>性能風險</td><td>記憶體 / IO</td><td>骨骼過多</td><td>過量更新 / 粒子 pool</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>19.4 Hybrid 應用策略</h3>
+      <ol>
+        <li><strong>主層播放：</strong> 預渲染影片 (Big Win / Transition)。</li>
+        <li><strong>骨架輔助：</strong> Spine 控制符號局部動，維持循環與互動。</li>
+        <li><strong>程序補強：</strong> Shader 掃光 / scale pulse / tint flash / 數字跳動。</li>
+        <li><strong>Manifest：</strong> 以 <code>deliveryType = "hybrid"</code> 聚合，hash 追蹤三者異動。</li>
+      </ol>
+
+      <h3>19.5 Manifest 擴充建議</h3>
+      <pre class="code-block"><code>{
+  "id": "bigwin_standard_v3",
+  "deliveryType": "hybrid",
+  "video": {"path": "animations/bigwin/bigwin_standard_v3.webm", "fps": 30, "loop": false},
+  "skeleton": {"path": "skeletons/bigwin_core.json", "entry": "core"},
+  "runtimeSpec": "runtime_specs/bigwin_standard_v3.yaml",
+  "sync": {"peakAlign": 1.62},
+  "perf": {"memMB": 22, "gpuMs": 0.5},
+  "qa": {"loopSeamRMS": 1.8, "luminancePeakTime": 1.63}
+}</code></pre>
+
+      <h3>19.6 QA 指標對應摘要</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>類型</th><th>主要指標</th><th>門檻示例</th><th>自動修正策略</th></tr></thead>
+        <tbody>
+          <tr><td>預渲染</td><td>loopSeamRMS / luminancePeak / centerDrift / alphaIntegrity</td><td>RMS &lt; 2.0</td><td>crossfade / optical flow / recenter</td></tr>
+          <tr><td>Spine</td><td>boneCoverage / keyframeCount / slot 命名一致</td><td>coverage ≥ 0.95</td><td>合併 track / 移除冗餘鍵</td></tr>
+          <tr><td>程序</td><td>eventSync / uniformRate / runtimeKeyframes</td><td>uniform &lt;= 50/s</td><td>節流更新 / 合併 keyframes</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>19.7 降級與替換策略</h3>
+      <ul>
+        <li><strong>體積超標：</strong> 影片 → 抽幀降幀 → 部分轉 Tween。</li>
+        <li><strong>低階裝置：</strong> Hybrid → Spine + 程序（移除影片疊層）。</li>
+        <li><strong>Loop 不自然：</strong> 影片改 Spine / 程序分解、或重生成 Loop Prompt。</li>
+        <li><strong>互動需求新增：</strong> 預渲染加 DSL 事件層。</li>
+        <li><strong>視覺不足：</strong> 程序 + Spine 疊層升級為 Hybrid（加入短影片爆发段）。</li>
+      </ul>
+
+      <h3>19.8 關聯章節映射</h3>
+      <div class="table-container"><table>
+        <thead><tr><th>議題</th><th>參考章節</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>Prompt 模板</td><td>6</td><td>預渲染起點</td></tr>
+          <tr><td>後處理 / 打包</td><td>8</td><td>影片/序列與壓縮</td></tr>
+          <tr><td>效能預算</td><td>11</td><td>差異化體積門檻</td></tr>
+          <tr><td>Spec 欄位意義</td><td>16</td><td>決策欄位引用</td></tr>
+          <tr><td>Runtime DSL</td><td>17</td><td>程序化標準</td></tr>
+          <tr><td>Hybrid 串接</td><td>18</td><td>三類協同封裝</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>19.9 行動建議（落地優先序）</h3>
+      <ol>
+        <li>為現有特效加註 <code>deliveryType</code> 欄位 & 建立統計儀表。</li>
+        <li>撰寫 Decision Helper：輸入 Spec → 輸出建議類型 + 降級備援。</li>
+        <li>建 CLI：<code>analyze_effect --id symbol_win_lion_v1</code> 回傳體積 / 建議轉換。</li>
+        <li>Hybrid Manifest 自動 hash + 變更偵測，失配時出列警告。</li>
+        <li>Runtime DSL keyframe 壓缩器（> 25% 線性段落合併）。</li>
+      </ol>
+
+      <div class="callout"><strong>一句話總結：</strong> 預渲染提供峰值視覺、Spine 提供結構化與復用、程序化提供靈活與效能；Hybrid 是三者價值最大化的交集。</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Slot Game AI Pipeline Team. Powered by Gemini 2.5 &amp; Veo 3 Integrations.</p>
+  </footer>
+</body>
+</html>

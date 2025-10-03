@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>Slot Game AI Pipeline Mind Map</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+:root {
+  --bg:#0f1115; --panel:#1c222b; --panel2:#202a35; --border:#2f3a46; --text:#e6e9ef; --dim:#9aa4b1;
+  --accent:#4f8bff; --accent-grad:linear-gradient(135deg,#4f8bff,#8855ff 60%,#ff3fa4);
+  --ok:#3fbf74; --warn:#f5c451; --danger:#ff5f56; --radius:14px;
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:radial-gradient(circle at 18% 18%,#1c2430,#0f1115 60%);color:var(--text);-webkit-font-smoothing:antialiased;}
+body{line-height:1.55;}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between;padding:1.2rem 1.6rem;background:rgba(28,34,43,.65);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);}
+header h1{font-size:1.15rem;margin:0;background:var(--accent-grad);-webkit-background-clip:text;color:transparent;letter-spacing:.5px;}
+nav a{color:var(--dim);text-decoration:none;font-size:.8rem;padding:.45rem .8rem;border:1px solid var(--border);border-radius:40px;transition:.25s;background:var(--panel2);} nav a:hover{color:var(--text);border-color:var(--accent);}
+
+main{padding:1.4rem 1.6rem 4rem;max-width:1500px;margin:0 auto;}
+.tools-bar{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;}
+.tools-bar input{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:.55rem .75rem;border-radius:10px;min-width:240px;font-size:.8rem;}
+.tools-bar button{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:.55rem .9rem;border-radius:10px;font-size:.7rem;letter-spacing:.5px;cursor:pointer;transition:.25s;font-weight:600;} .tools-bar button:hover{border-color:var(--accent);color:#fff;}
+
+#mindmap-wrapper{position:relative;overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);padding:1.2rem;min-height:70vh;}
+
+.tree{--gap-y:1.2rem; --gap-x:1.8rem; font-size:.78rem; line-height:1.35;}
+.tree ul{margin:0;padding:0 0 0 1.2rem;list-style:none;position:relative;}
+.tree ul:before{content:"";position:absolute;left:.3rem;top:.4rem;bottom:.75rem;width:1px;background:#334252;}
+.tree li{margin:0;padding:.35rem .65rem .35rem 1.05rem;position:relative;background:var(--panel2);border:1px solid #2e3945;border-radius:10px;display:inline-block;min-width:140px;max-width:280px;vertical-align:top;box-shadow:0 2px 6px -2px rgba(0,0,0,.4);transition:.25s;}
+.tree li + li{margin-left:.6rem;}
+.tree li:hover{border-color:#4f8bff;}
+.tree li.collapsed > ul{display:none;}
+.tree li .toggle{position:absolute;left:.35rem;top:.38rem;font-size:.65rem;background:#253140;color:var(--dim);border:1px solid #334252;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;transition:.25s;}
+.tree li.has-children > .label{padding-left:1.15rem;}
+.tree li.has-children > .toggle:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.label{font-weight:600;letter-spacing:.3px;font-size:.72rem;}
+.meta{margin-top:.25rem;font-size:.63rem;color:var(--dim);letter-spacing:.3px;}
+.badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem;}
+.badge{background:#253140;padding:.15rem .45rem;font-size:.55rem;border-radius:22px;letter-spacing:.5px;border:1px solid #2f4153;}
+.node-path{font-size:.6rem;color:#6d7a87;margin-top:.25rem;}
+.highlight{outline:2px solid #ffb347;outline-offset:2px;}
+
+.status-bar{margin-top:1rem;font-size:.6rem;color:var(--dim);display:flex;gap:1rem;flex-wrap:wrap;}
+.search-hit-count{font-weight:600;color:var(--accent);}
+
+/* mini legend */
+.legend{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 0;}
+.legend span{background:#253140;padding:.25rem .55rem;font-size:.6rem;border-radius:6px;border:1px solid #324354;}
+
+@media (max-width:900px){
+  .tree li{max-width:92%;width:100%;}
+  .tree ul{padding-left:.9rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Slot Game AI Pipeline 心智圖</h1>
+  <nav>
+    <a href="index.html">平台首頁</a>
+    <a href="slot_game_ai_agent_pipeline.html">Pipeline 文件</a>
+  </nav>
+</header>
+<main>
+  <div class="tools-bar">
+    <input id="search" placeholder="搜尋關鍵字 (節點 / KPI / 代理)..." />
+    <button id="expandAll">全部展開</button>
+    <button id="collapseAll">全部收合</button>
+    <button id="clearSearch">清除搜尋</button>
+    <button id="exportJson">匯出 JSON</button>
+    <button id="togglePixi">切換 PIXI 視圖</button>
+  </div>
+  <div id="mindmap-wrapper">
+    <div id="mindmap" class="tree"></div>
+  <div id="pixi-container" style="display:none; width:100%; height:70vh; position:relative; background:linear-gradient(145deg,#18232d,#0f181f 65%,#14242f); border:1px solid #2f3a46; border-radius:14px;">
+      <div style="position:absolute; top:8px; right:10px; z-index:10; display:flex; gap:.4rem;">
+        <button id="centerGraph" style="background:#253140; color:#b9c4cf; border:1px solid #324354; border-radius:6px; font-size:.6rem; padding:.3rem .6rem; cursor:pointer;">Center</button>
+        <button id="fitGraph" style="background:#253140; color:#b9c4cf; border:1px solid #324354; border-radius:6px; font-size:.6rem; padding:.3rem .6rem; cursor:pointer;">Fit</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <span>📌 主節點</span><span>🧩 代理</span><span>🗂️ 流程階段</span><span>🧪 檢查點</span><span>📊 KPI</span><span>⚠️ 風險/緩解</span><span>💡 未來增強</span>
+  </div>
+  <div class="status-bar">
+    <div>節點總數：<span id="nodeCount">--</span></div>
+    <div>搜尋符合：<span id="hitCount" class="search-hit-count">0</span></div>
+    <div>版本：v1.0 (生成於 2025-10-03)</div>
+  </div>
+</main>
+<!-- 使用 PixiJS v7 同步版本以避免 v8 async init 造成空白；若需升級可再調整 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.3/pixi.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+// 資料定義：與主 pipeline 文件對齊
+const DATA = {
+  title: 'Slot Game AI Agent Pipeline',
+  children: [
+    {
+      label: 'AI 代理', icon:'🧩', children: [
+        { label:'ConceptArtAgent', meta:'主視覺 / 風格探索 → concept_batch' },
+        { label:'DesignParserAgent', meta:'解析企劃 → game_structure.json' },
+        { label:'MathModelAgent', meta:'RTP 模擬 → math_model.json' },
+        { label:'PSDAnalyzerAgent', meta:'PSD 圖層 → art_spec.json' },
+        { label:'AssetGenAgent', meta:'靜態素材生成 → symbols/*.png' },
+        { label:'PromptOptimizerAgent', meta:'失敗樣本學習 → 最佳化 Prompt' },
+        { label:'VFXSpecAgent', meta:'動效規格 → vfx_spec.json' },
+        { label:'VFXGenAgent', meta:'動效輸出 → frames / spine / Lottie' },
+        { label:'EngineIntegrationAgent', meta:'整合 → manifest / slot_config.json' },
+        { label:'SimulationAgent', meta:'自動測試 → validation_report' },
+        { label:'AuditAgent', meta:'追溯 → decision_log.json' }
+      ]
+    },
+    {
+      label: '12 階段流程', icon:'🗂️', children: (
+        [ '1 Concept Art 生成','2 視覺審核','3 企劃解析','4 數學模型模擬','5 PSD 規格 JSON','6 靜態生成 + Prompt','7 靜態審核','8 動效規格','9 動效生成','10 動效審核','11 整合引擎','12 測試驗證' ]
+      ).map(t=>({label:t}))
+    },
+    {
+      label: '契約檢查點', icon:'🧪', children: [
+        '風格分散度','欄位完整性','RTP 偏差','命名合規','色偏','特效時間重疊','缺資產掃描'
+      ].map(l=>({label:l}))
+    },
+    {
+      label: 'KPI 指標', icon:'📊', children: [
+        '風格一致 ≥0.85','RTP 收斂 ≤5','靜態人工審核 <30%','動效異常幀 <1%','Prompt 迭代 ≤3','整合錯誤 ≤1','RTP 偏差 ≤0.5%','週期縮短 ≥50%'
+      ].map(l=>({label:l}))
+    },
+    {
+      label: '風險與緩解', icon:'⚠️', children: [
+        {label:'風格漂移', meta:'嵌入比對 + 色票鎖定'},
+        {label:'Prompt 冗長', meta:'Token 權重分析'},
+        {label:'PSD 混亂', meta:'命名正規化'},
+        {label:'RTP 偏差大', meta:'再模擬迭代'},
+        {label:'動效閃爍', meta:'FrameDiff 檢測'},
+        {label:'資產缺漏', meta:'hash 掃描'},
+        {label:'追溯困難', meta:'decision_log.json'}
+      ]
+    },
+    {
+      label: 'Prompt 模板', icon:'💬', children:[
+        {label:'靜態符號 Prompt', meta:'slot symbol of [元素] ...'},
+        {label:'動態特效時間軸', meta:'charge/burst/fade JSON'},
+        {label:'數學模型生成', meta:'RTP simulate + adjust'}
+      ]
+    },
+    {
+      label: '導入優先順序', icon:'🧭', children:[
+        '1 數學/企劃解析','2 PSD 規格化','3 靜態生成 + 審核','4 動態特效','5 整合與驗證'
+      ].map(l=>({label:l}))
+    },
+    {
+      label: 'Audit 紀錄', icon:'📑', children:[
+        {label:'decision_log.json 範例', meta:'timestamp/action/調整/核准'}
+      ]
+    },
+    {
+      label: '未來增強', icon:'💡', children:[
+        '差異視覺化 Diff UI','動效參數 RL 優化','玩家行為回饋迭代','Prompt Ensembling'
+      ].map(l=>({label:l}))
+    }
+  ]
+};
+
+// 生成樹狀節點
+function buildNode(obj, depth=0, path=[]) {
+  const node = document.createElement('li');
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'label';
+  const fullLabel = (obj.icon? obj.icon+' ' : '') + obj.label;
+  labelWrap.textContent = fullLabel;
+  node.appendChild(labelWrap);
+  if (obj.meta || obj.badges) {
+    if (obj.meta){
+      const m = document.createElement('div'); m.className='meta'; m.textContent = obj.meta; node.appendChild(m);
+    }
+    if (obj.badges){
+      const b = document.createElement('div'); b.className='badges'; obj.badges.forEach(x=>{ const span=document.createElement('span'); span.className='badge'; span.textContent=x; b.appendChild(span); }); node.appendChild(b);
+    }
+  }
+  const newPath = [...path, obj.label];
+  const pathEl = document.createElement('div'); pathEl.className='node-path'; pathEl.textContent=newPath.join(' / '); node.appendChild(pathEl);
+
+  if (obj.children && obj.children.length){
+    node.classList.add('has-children');
+    const toggle=document.createElement('div'); toggle.className='toggle';
+    toggle.addEventListener('click',()=>{ node.classList.toggle('collapsed'); toggle.textContent = node.classList.contains('collapsed') ? '+' : '−'; });
+    node.insertBefore(toggle, labelWrap);
+    const ul=document.createElement('ul');
+    obj.children.forEach(ch=>{
+      if (typeof ch==='string') ch={label:ch};
+      ul.appendChild(buildNode(ch, depth+1, newPath));
+    });
+    node.appendChild(ul);
+    // 初始只展開前二層：root(depth 0) + 第一層(depth 1) + 第二層(depth 2) 展開，其餘 (depth>=3) 收合
+    if (depth >= 3) {
+      node.classList.add('collapsed');
+      toggle.textContent = '+';
+    } else {
+      toggle.textContent = '−';
+    }
+  }
+  return node;
+}
+
+function render(){
+  const rootEl = document.getElementById('mindmap');
+  rootEl.innerHTML='';
+  const topUL=document.createElement('ul');
+  const rootNode = buildNode({label:DATA.title, icon:'📌', children:DATA.children});
+  topUL.appendChild(rootNode);
+  rootEl.appendChild(topUL);
+  updateCount();
+}
+
+function allNodes(){ return [...document.querySelectorAll('#mindmap li')]; }
+function updateCount(){ document.getElementById('nodeCount').textContent = allNodes().length; }
+
+// 搜尋功能
+const searchInput = document.getElementById('search');
+searchInput.addEventListener('input', ()=> performSearch(searchInput.value.trim()));
+
+function performSearch(q){
+  const nodes = allNodes();
+  nodes.forEach(n=> n.classList.remove('highlight'));
+  if(!q){ document.getElementById('hitCount').textContent='0'; return; }
+  const lower = q.toLowerCase();
+  let hits=0;
+  nodes.forEach(n=>{
+    const text = n.textContent.toLowerCase();
+    if (text.includes(lower)) {
+      n.classList.add('highlight');
+      // 展開所有父層
+      let p=n.parentElement; while(p && p.id!=='mindmap'){ if(p.tagName==='LI') { p.classList.remove('collapsed'); const t=p.querySelector(':scope > .toggle'); if(t) t.textContent='−'; } p=p.parentElement; }
+      hits++;
+    }
+  });
+  document.getElementById('hitCount').textContent=hits;
+}
+
+// 控制按鈕
+function setAll(collapsed){
+  allNodes().forEach(n=>{
+    if(n.classList.contains('has-children')){
+      n.classList.toggle('collapsed', collapsed);
+      const t=n.querySelector(':scope > .toggle'); if(t) t.textContent = collapsed ? '+' : '−';
+    }
+  });
+}
+
+document.getElementById('expandAll').onclick=()=>setAll(false);
+ document.getElementById('collapseAll').onclick=()=>setAll(true);
+ document.getElementById('clearSearch').onclick=()=>{ searchInput.value=''; performSearch(''); };
+ document.getElementById('exportJson').onclick=()=>{
+   const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pipeline_mindmap.json'; a.click(); URL.revokeObjectURL(a.href);
+ };
+
+render();
+
+// ================= PIXI.JS 視圖 =================
+// 將 DATA 轉為可折疊的樹 (加上 collapsed 屬性)
+function cloneData(obj){
+  if (typeof obj === 'string') return { label: obj };
+  return {
+    label: obj.label,
+    icon: obj.icon,
+    meta: obj.meta,
+    badges: obj.badges,
+    collapsed: false,
+    children: obj.children ? obj.children.map(cloneData) : []
+  };
+}
+const PIXI_DATA_ROOT = { label: DATA.title, icon:'📌', collapsed:false, children: DATA.children.map(cloneData) };
+// 設定初始收合規則：深度 >=3 收合 (展開到第二層)
+function initCollapsed(n, depth=0){
+  if(depth>=3) n.collapsed = true; else n.collapsed = false;
+  if(n.children) n.children.forEach(c=> initCollapsed(c, depth+1));
+}
+initCollapsed(PIXI_DATA_ROOT, 0);
+console.log('[PIXI-DEBUG] Data root children count =', PIXI_DATA_ROOT.children.length);
+
+// 錯誤訊息覆蓋層
+const pixiErrorOverlay = document.createElement('div');
+pixiErrorOverlay.id = 'pixi-error-overlay';
+pixiErrorOverlay.style.cssText='display:none;position:absolute;inset:0;z-index:20;backdrop-filter:blur(4px);background:rgba(15,20,28,.82);color:#ff7878;font:600 13px/1.5 \'Inter\',sans-serif;padding:22px;overflow:auto;border:1px solid #3a4654;border-radius:14px;';
+pixiErrorOverlay.innerHTML='<div style="max-width:560px;margin:0 auto;text-align:center;"><h2 style="margin:0 0 12px;font-size:18px;letter-spacing:.5px;">⚠️ PIXI 載入失敗</h2><p style="opacity:.85;margin:0 0 14px;">可能的原因：CDN 阻擋 / 完整性 (SRI) 驗證失敗 / 企業防火牆。已停用 Canvas 視圖。</p><button id="retryPixi" style="background:#253140;color:#c9d4df;border:1px solid #395067;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;">重新嘗試載入</button></div>';
+document.addEventListener('DOMContentLoaded',()=>{
+  const pixiContainer=document.getElementById('pixi-container');
+  if(pixiContainer) pixiContainer.appendChild(pixiErrorOverlay);
+  const retryBtn=document.getElementById('retryPixi');
+  if(retryBtn) retryBtn.addEventListener('click',()=>{
+    pixiErrorOverlay.style.display='none';
+    dynamicLoadPixi(()=>{ console.log('[PIXI] retry load attempt'); if(window.PIXI){ initPixi(); } else { pixiError('仍無法載入 PIXI。'); } });
+  });
+});
+
+let pixiInitialized = false;
+let pixiApp, pixiStage, panContainer;
+let nodeGraphics = []; // store {node,data,g,label,meta}
+const NODE_STYLE = { baseRadius: 38, hGap: 160, vGap: 110, padX: 26, padY: 12 };
+let cameraScale = 1; // 不縮放容器，手動計算位置 (文字保持清晰)
+let panX = 0, panY = 0;
+const SCALE_MIN = 0.3, SCALE_MAX = 2.8;
+let layoutMode = 'radial'; // 'radial' 全方向心智圖 (可日後加入其他模式)
+
+function buildLayout(root){
+  // 計算每個節點子樹寬度 (以葉子數為單位)
+  function dfsWidth(n){
+    if(!n.children || n.children.length===0) { n._w = 1; return 1; }
+    let sum = 0;
+    n.children.forEach(c=>{ if(!c._removed) sum += dfsWidth(c); });
+    n._w = Math.max(1,sum);
+    return n._w;
+  }
+  dfsWidth(root);
+  // 指定位址 (使用 top-down，水平根據子樹寬度中心)
+  function dfsPos(n, depth, xStart){
+    n.depth = depth;
+    if(!n.children || n.children.length===0){
+      n.xCenter = xStart + 0.5; // half unit
+      return 1;
+    }
+    let cursor = xStart;
+    n.children.forEach(c=>{
+      const w = c._w;
+      dfsPos(c, depth+1, cursor);
+      cursor += w;
+    });
+    // center = average of children centers
+    let min = Infinity, max = -Infinity;
+    n.children.forEach(c=>{ if(c.xCenter<min) min=c.xCenter; if(c.xCenter>max) max=c.xCenter; });
+    n.xCenter = (min+max)/2;
+  }
+  dfsPos(root, 0, 0);
+}
+
+function gatherVisible(root){
+  const result = [];
+  function walk(n){
+    result.push(n);
+    if(!n.collapsed && n.children){
+      n.children.forEach(c=> walk(c));
+    }
+  }
+  walk(root);
+  return result;
+}
+
+function pixiError(msg){
+  pixiErrorOverlay.style.display='block';
+  if(msg) console.error('[PIXI ERROR]', msg);
+}
+
+function dynamicLoadPixi(cb){
+  if(window.PIXI){ cb && cb(); return; }
+  const alt = document.createElement('script');
+  alt.src='https://unpkg.com/pixi.js@8/dist/pixi.min.js';
+  alt.crossOrigin='anonymous';
+  alt.onload=()=> cb && cb();
+  alt.onerror=()=> { pixiError('CDN 備援載入失敗'); cb && cb(); };
+  document.head.appendChild(alt);
+}
+
+async function initPixi(){
+  if(pixiInitialized){ console.log('[PIXI-DEBUG] Already initialized'); return; }
+  if(typeof PIXI === 'undefined'){ pixiError('PIXI 物件不存在 (可能被阻擋)'); return; }
+  const container = document.getElementById('pixi-container');
+  try {
+    // v8 相容：若 Application.prototype.init 存在則採用 async 流程
+    if(PIXI.Application && PIXI.Application.prototype && PIXI.Application.prototype.init){
+      console.log('[PIXI-DEBUG] Detected v8 style Application, using async init');
+      pixiApp = new PIXI.Application();
+      await pixiApp.init({ resizeTo: container, antialias:true, backgroundAlpha:0 });
+    } else {
+      // v7 同步
+      pixiApp = new PIXI.Application({ resizeTo: container, antialias:true, backgroundAlpha:0 });
+    }
+  } catch(err){ pixiError('初始化失敗: '+ err.message); return; }
+  container.appendChild(pixiApp.view);
+  panContainer = new PIXI.Container();
+  pixiApp.stage.addChild(panContainer);
+  pixiStage = panContainer;
+  enablePanZoom(container, panContainer);
+  pixiInitialized = true;
+  console.log('[PIXI-DEBUG] Init complete, drawing...');
+  drawPixi();
+}
+
+// ========== Radial Layout Utilities ==========
+function computeLeafCounts(n){
+  if(!n.children || n.children.length===0){ n._leaf=1; return 1; }
+  let sum=0; n.children.forEach(c=>{ sum += computeLeafCounts(c); }); n._leaf = Math.max(1,sum); return n._leaf;
+}
+function collectVisible(root){
+  const out=[]; (function walk(n){ out.push(n); if(!n.collapsed && n.children) n.children.forEach(walk); })(root); return out;
+}
+function clamp(v,min,max){ return v<min?min: (v>max?max:v); }
+function lightenColor(hex, factor){ // factor >1 變亮
+  let r=(hex>>16)&255, g=(hex>>8)&255, b=hex&255;
+  r = clamp(Math.round(r + (255-r)*factor),0,255);
+  g = clamp(Math.round(g + (255-g)*factor),0,255);
+  b = clamp(Math.round(b + (255-b)*factor),0,255);
+  return (r<<16)|(g<<8)|b;
+}
+const SECTOR_PALETTE = [ '#4f8bff','#ff6f4f','#6dd96b','#ffcb3c','#c55bff','#38d5e7','#ff3fa4','#9cc94f','#ff8bd2','#52b3ff' ];
+
+function assignAngles(root){
+  computeLeafCounts(root);
+  const children = root.children || [];
+  const total = children.reduce((a,c)=>a + c._leaf,0) || 1;
+  let cursor = -Math.PI/2; // start top
+  children.forEach((c,i)=>{
+    const span = (c._leaf/total) * Math.PI*2;
+    assignAngleRange(c, cursor, cursor+span, 1, SECTOR_PALETTE[i % SECTOR_PALETTE.length]);
+    cursor += span;
+  });
+  root._angle = 0; root._radius = 0; root._sectorColor = '#ffffff';
+}
+function assignAngleRange(n, a0, a1, depth, baseColor){
+  n._a0=a0; n._a1=a1; n._angle = (a0+a1)/2; n._radiusDepth = depth; n._sectorColor = baseColor;
+  if(!n.children || n.children.length===0) return;
+  const total = n.children.reduce((s,c)=> s + c._leaf, 0) || 1;
+  let cur=a0;
+  n.children.forEach(c=>{
+    const span = (c._leaf/total) * (a1-a0);
+    assignAngleRange(c, cur, cur+span, depth+1, baseColor);
+    cur += span;
+  });
+}
+
+function drawPixi(){
+  if(!pixiInitialized){ console.warn('[PIXI-DEBUG] drawPixi called before init'); return; }
+  panContainer.removeChildren();
+  nodeGraphics = [];
+  const containerEl = document.getElementById('pixi-container');
+  const W = containerEl.clientWidth;
+  const H = containerEl.clientHeight;
+  if(layoutMode === 'radial'){
+    assignAngles(PIXI_DATA_ROOT);
+    const visible = collectVisible(PIXI_DATA_ROOT);
+    // 求最大深度 (visible)
+    let maxDepth = 1; visible.forEach(n=>{ if(n._radiusDepth && n._radiusDepth>maxDepth) maxDepth = n._radiusDepth; });
+    const margin = 110;
+    const maxR = Math.min(W,H)/2 - margin;
+    const rStep = maxR / Math.max(1, maxDepth);
+    visible.forEach(n=>{
+      const r = (n._radiusDepth||0) * rStep;
+      n._rawX = Math.cos(n._angle || 0) * r;
+      n._rawY = Math.sin(n._angle || 0) * r;
+      n.depth = n._radiusDepth||0;
+    });
+    // ==== 節點尺寸測量 (供碰撞計算) ====
+    const measureCache = new Map();
+    function measureNode(n){
+      if(measureCache.has(n)) return measureCache.get(n);
+      const mainFont = Math.max(11, 12*cameraScale*0.95);
+      const label = new PIXI.Text(n.label,{fontSize:mainFont,fontWeight:'600'}); label.updateText();
+      let metaW=0, metaH=0; if(n.meta){ const mf=Math.max(8,9*cameraScale*0.9); const metaT=new PIXI.Text(n.meta,{fontSize:mf}); metaT.updateText(); metaW=metaT.width; metaH=metaT.height+4; }
+      const padX = NODE_STYLE.padX * (0.75 + (cameraScale-1)*0.22);
+      const padY = NODE_STYLE.padY * (0.75 + (cameraScale-1)*0.22);
+      const contentW = Math.max(label.width, metaW);
+      const boxW = Math.max(130, contentW + padX*2);
+      const boxH = label.height + metaH + padY*2;
+      const dims={boxW,boxH}; measureCache.set(n,dims); return dims;
+    }
+    visible.forEach(n=>{ const d=measureNode(n); n._boxW=d.boxW; n._boxH=d.boxH; });
+
+    // ==== 圓環排擠：多迭代圓形打包避免重疊 ====
+    function resolveRing(depth){
+      const group = visible.filter(n=> n.depth===depth);
+      if(group.length<=1) return;
+      const r = depth * rStep || 1;
+      let baseExtra = 34;
+      // 動態寬度平均，特寬節點 spacing 放大
+      const avgW = group.reduce((s,n)=> s + n._boxW, 0)/group.length;
+      const WIDE_FACTOR = 1.35; // 超過平均 1.35 倍視為特寬
+      group.forEach(n=>{ const extra = (n._boxW> avgW*WIDE_FACTOR)? 28 : 0; n._half = (n._boxW + baseExtra + extra)/(2*r); });
+      let required = group.reduce((s,n)=> s + n._half*2, 0);
+      if(required > Math.PI*2){
+        const scale = (Math.PI*2) / required; group.forEach(n=> n._half*=scale); required = Math.PI*2;
+      }
+      // 迭代相鄰碰撞分離（只往前推，之後再做首尾與回縮平衡）
+      const MAX_ITER = 10;
+      for(let iter=0; iter<MAX_ITER; iter++){
+        let moved=false; group.sort((a,b)=> (a._angle||0) - (b._angle||0));
+        // 線性 forward 分離
+        for(let i=0;i<group.length-1;i++){
+          const A = group[i], B = group[i+1];
+          const needed = A._half + B._half;
+          const gap = (B._angle||0) - (A._angle||0);
+          if(gap < needed){ const shift = needed - gap; for(let j=i+1;j<group.length;j++){ group[j]._angle += shift; } moved=true; }
+        }
+        // 首尾 wrap 檢查
+        group.sort((a,b)=> (a._angle||0) - (b._angle||0));
+        const first = group[0], last = group[group.length-1];
+        const wrapGap = (first._angle||0) + Math.PI*2 - (last._angle||0);
+        const wrapNeeded = first._half + last._half;
+        if(wrapGap < wrapNeeded){
+          const deficit = wrapNeeded - wrapGap;
+          // 均勻撐開：把所有節點角度加上線性增量（不影響相對順序）
+          const per = deficit / group.length;
+          group.forEach((n,i)=>{ n._angle += per * i; });
+          moved=true;
+        }
+        if(!moved) break;
+      }
+      // 回縮與中心化：將角度平移使平均角 ≈ 原始平均 (避免漂移過多)
+      const mean = group.reduce((s,n)=> s + (n._angle||0),0)/group.length;
+      const targetMean = group.reduce((s,n)=> s + (n._a0 + n._a1)/2,0)/group.length; // 原始分配的平均軸
+      const delta = targetMean - mean;
+      group.forEach(n=> n._angle += delta);
+      // 判斷是否需要雙層 (密度/數量準則)
+      const RING_NODE_SPLIT_THRESHOLD = 18;
+      const avgHalf = group.reduce((s,n)=> s + n._half,0)/group.length;
+      const needSplit = group.length > RING_NODE_SPLIT_THRESHOLD || avgHalf < 0.025;
+      if(needSplit){
+        group.sort((a,b)=> b._boxW - a._boxW);
+        const outer=[], inner=[]; group.forEach((n,i)=> (i%2===0?outer:inner).push(n));
+        const outShift = rStep*0.55, inShift = -rStep*0.38; const minRadius = r*0.45;
+        inner.forEach(n=>{ n._ringShift = Math.max(inShift, minRadius - r); });
+        outer.forEach(n=>{ n._ringShift = outShift; });
+      } else { group.forEach(n=> n._ringShift=0); }
+      // 正規化角度範圍
+      group.forEach(n=>{ while(n._angle > Math.PI) n._angle -= Math.PI*2; while(n._angle <= -Math.PI) n._angle += Math.PI*2; });
+    }
+    for(let d=1; d<=maxDepth; d++) resolveRing(d);
+
+    // 可選：中心再平衡 (維持原始扇區中線) – 此處略過以保證排擠結果
+    // 重新依調整後角度計算座標
+    visible.forEach(n=>{
+      const baseR = (n.depth||0) * rStep;
+      const r = baseR + (n._ringShift || 0);
+      n._rawX = Math.cos(n._angle||0) * r;
+      n._rawY = Math.sin(n._angle||0) * r;
+    });
+    // 邊線
+    const gEdges = new PIXI.Graphics(); panContainer.addChild(gEdges);
+    visible.forEach(n=>{
+      if(!n.collapsed && n.children){
+        n.children.forEach(c=>{
+          if(!visible.includes(c)) return;
+          gEdges.lineStyle(2,0x324250,0.9);
+          const sx = n._rawX * cameraScale + panX;
+          const sy = n._rawY * cameraScale + panY;
+          const tx = c._rawX * cameraScale + panX;
+          const ty = c._rawY * cameraScale + panY;
+          // 使用略微外拱的貝氏曲線，使曲線指向外部
+          const midR = Math.hypot(sx-tx, sy-ty)/2;
+          const angleMid = Math.atan2( (sy+ty)/2 - panY, (sx+tx)/2 - panX );
+          const ctrlDist = midR * 0.55;
+            const cx = ( (sx+tx)/2 ) + Math.cos(angleMid)*ctrlDist;
+            const cy = ( (sy+ty)/2 ) + Math.sin(angleMid)*ctrlDist;
+          gEdges.moveTo(sx,sy);
+          gEdges.quadraticCurveTo(cx,cy,tx,ty);
+        });
+      }
+    });
+    // 節點繪製
+    visible.forEach(n=>{
+      const g = new PIXI.Container(); g.eventMode='static'; g.cursor='pointer';
+      const depth = n.depth||0;
+      const baseColorHex = PIXI.utils.string2hex(n._sectorColor || '#4f8bff');
+      const lightenFactor = Math.min(0.6, depth*0.07); // 逐層變亮
+      const fillHex = lightenColor(baseColorHex, lightenFactor);
+      const strokeHex = baseColorHex;
+      const mainFontSize = Math.max(11, 12*cameraScale*0.95);
+      const label = new PIXI.Text(n.label,{fontSize: mainFontSize, fill:'#f2f6fb', fontWeight:'600'}); label.updateText();
+      let metaObj=null; if(n.meta){ const mf = Math.max(8, 9*cameraScale*0.9); metaObj=new PIXI.Text(n.meta,{fontSize:mf, fill:'#c9d6e2'}); metaObj.updateText(); }
+      const lineHeight = label.height; const metaHeight = metaObj? metaObj.height + 4 : 0;
+      const contentW = Math.max(label.width, metaObj? metaObj.width:0);
+      const padX = NODE_STYLE.padX * (0.75 + (cameraScale-1)*0.22);
+      const padY = NODE_STYLE.padY * (0.75 + (cameraScale-1)*0.22);
+      const boxW = Math.max(130, contentW + padX*2);
+      const boxH = lineHeight + metaHeight + padY*2;
+      const radius = 16 * (0.8 + (cameraScale-1)*0.18);
+      const box = new PIXI.Graphics();
+      box.beginFill(fillHex,0.92).lineStyle(2, strokeHex, 0.95).drawRoundedRect(-boxW/2,-boxH/2,boxW,boxH,radius).endFill();
+      try { const ds = new PIXI.filters.DropShadowFilter({color:0x000000,alpha:0.45,blur:4,distance:3,rotation:60}); box.filters=[ds]; } catch(e){}
+      g.addChild(box);
+      label.anchor.set(.5,0); label.x=0; label.y = -boxH/2 + padY; g.addChild(label);
+      if(metaObj){ metaObj.anchor.set(.5,0); metaObj.x=0; metaObj.y=label.y+lineHeight+4; g.addChild(metaObj); }
+      if(n.children && n.children.length){
+        const sign = new PIXI.Text(n.collapsed?'+':'−',{fontSize: Math.max(11, 12*cameraScale), fill:'#ffffff'}); sign.anchor.set(.5); sign.x = boxW/2 - 14; sign.y = -boxH/2 + 14; g.addChild(sign); g._sign=sign;
+      }
+      g.x = n._rawX * cameraScale + panX;
+      g.y = n._rawY * cameraScale + panY;
+      g._dims = {boxW, boxH, radius, sectorColor: strokeHex};
+      g.on('pointerdown', e=>{ if(n.children && n.children.length){ n.collapsed=!n.collapsed; drawPixi(); } e.stopPropagation(); });
+      panContainer.addChild(g);
+      nodeGraphics.push({node:n,g,box});
+    });
+  } else {
+    // 保留（未來可擴充其他模式）
+  }
+}
+
+function enablePanZoom(dom){
+  let dragging=false, lastX=0, lastY=0;
+  dom.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; });
+  window.addEventListener('pointerup', ()=> dragging=false);
+  window.addEventListener('pointermove', e=>{ if(!dragging) return; panX += (e.clientX - lastX); panY += (e.clientY - lastY); lastX=e.clientX; lastY=e.clientY; drawPixi(); });
+  dom.addEventListener('wheel', e=>{ e.preventDefault(); const mouseX=e.offsetX, mouseY=e.offsetY; const beforeX = (mouseX - panX)/cameraScale; const beforeY = (mouseY - panY)/cameraScale; const factor = (e.deltaY < 0)? 1.1 : 0.9; cameraScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, cameraScale*factor)); panX = mouseX - beforeX*cameraScale; panY = mouseY - beforeY*cameraScale; drawPixi(); }, {passive:false});
+}
+
+function autoFitIfNeeded(){
+  const dom = document.getElementById('pixi-container');
+  if(layoutMode==='radial'){
+    assignAngles(PIXI_DATA_ROOT);
+    const visible = collectVisible(PIXI_DATA_ROOT);
+    let maxDepth=1; visible.forEach(n=>{ if(n._radiusDepth && n._radiusDepth>maxDepth) maxDepth=n._radiusDepth; });
+    const margin=120; const maxR = Math.min(dom.clientWidth, dom.clientHeight)/2 - margin;
+    cameraScale = 1; // 半徑已依容器計算，不需額外縮放 (使用 pan/zoom 後才變)
+    panX = dom.clientWidth/2; panY = dom.clientHeight/2; // root 置中
+    drawPixi();
+  } else {
+    // fallback ribbon layout (unused currently)
+    buildLayout(PIXI_DATA_ROOT);
+    const rootWUnits = PIXI_DATA_ROOT._w || 1;
+    const tentativeGap = Math.min(240, Math.max(90, (dom.clientWidth - 260) / rootWUnits));
+    NODE_STYLE.hGap = tentativeGap;
+    const totalPixelWidth = rootWUnits * NODE_STYLE.hGap;
+    cameraScale = Math.min(1.4, Math.max(0.6, (dom.clientWidth - 200)/ totalPixelWidth));
+    panX = (dom.clientWidth - totalPixelWidth * cameraScale)/2;
+    panY = 40;
+    drawPixi();
+  }
+}
+
+// 搜尋同步到 PIXI (高亮描邊)
+function highlightPixiMatches(q){
+  if(!pixiInitialized) return;
+  const lower = q.toLowerCase();
+  nodeGraphics.forEach(({node,g,box})=>{
+    if(!box || !g._dims) return; const {boxW, boxH, radius, sectorColor} = g._dims;
+    const hit = q && (node.label.toLowerCase().includes(lower) || (node.meta && node.meta.toLowerCase().includes(lower)));
+    const baseColor = sectorColor || 0x4f8bff;
+    box.clear();
+    const strokeW = hit?4:2;
+    // hit 時加深填色
+    const fillCol = hit? 0x142a37 : 0x1d2b35;
+    box.beginFill(fillCol, 0.96).lineStyle(strokeW, baseColor, 0.98).drawRoundedRect(-boxW/2,-boxH/2,boxW,boxH,radius).endFill();
+    if(g._sign) g._sign.text = node.collapsed?'+':'−';
+  });
+}
+
+// 事件掛鉤整合
+document.getElementById('togglePixi').addEventListener('click', ()=>{
+  const domTree = document.getElementById('mindmap');
+  const pixiDom = document.getElementById('pixi-container');
+  const showingPixi = pixiDom.style.display !== 'none';
+  if(showingPixi){
+    pixiDom.style.display='none';
+    domTree.style.display='block';
+    document.getElementById('togglePixi').textContent='切換 PIXI 視圖';
+  } else {
+    domTree.style.display='none';
+    pixiDom.style.display='block';
+    if(!window.PIXI){
+      console.log('[PIXI-DEBUG] global PIXI missing, attempting dynamic load');
+      dynamicLoadPixi(()=>{ if(window.PIXI){ initPixi(); } else { pixiError('仍未取得 PIXI 全域物件'); } });
+    } else { initPixi(); }
+    document.getElementById('togglePixi').textContent='切換 DOM 視圖';
+  }
+});
+
+document.getElementById('centerGraph').addEventListener('click', ()=> autoFitIfNeeded());
+document.getElementById('fitGraph').addEventListener('click', ()=> autoFitIfNeeded());
+
+// Hook existing search
+const origPerformSearch = performSearch;
+performSearch = function(q){
+  origPerformSearch(q);
+  highlightPixiMatches(q);
+};
+
+// 在展開/收合全部時重新繪製 PIXI
+const origSetAll = setAll;
+setAll = function(collapsed){
+  origSetAll(collapsed);
+  // 也同步更新 PIXI_DATA_ROOT (全部折疊或展開)
+  function sync(n){ n.collapsed = collapsed; n.children && n.children.forEach(sync); }
+  sync(PIXI_DATA_ROOT);
+  drawPixi();
+};
+
+// 初始不載入 PIXI，使用者切換時再載入
+console.log('[PIXI] Ready (v7 sync preferred; v8 async guarded).');
+</script>
+</body>
+</html>

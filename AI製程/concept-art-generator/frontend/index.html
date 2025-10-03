@@ -3,120 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slot Game Concept Art Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <title>遊戲開發工具與分析平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --bg-dark: #0a0e13;
+            --bg-card: #1e2431;
+            --text-primary: #ffffff;
+            --text-secondary: #b0bec5;
+            --border-color: #2c3e50;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+            --info-color: #4FC3F7;
+            --warning-color: #ffb74d;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 頭部樣式 */
+        .header {
+            text-align: center;
+            padding: 60px 0;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffffff, #f0f8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 主要導航 */
+        .main-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .nav-category {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .nav-category:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .category-description {
+            color: #6c757d;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        /* 工具連結 */
+        .tool-links {
+            list-style: none;
+        }
+
+        .tool-link {
+            margin-bottom: 15px;
+        }
+
+        .tool-link a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .tool-link a:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .tool-icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .tool-title {
+            flex: 1;
+            font-size: 1.1rem;
+        }
+
+        .tool-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-new {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .badge-popular {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .badge-advanced {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .badge-ai {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* 統計信息 */
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 50px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* 頁腳 */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer p {
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header p {
+                font-size: 1.1rem;
+            }
+
+            .main-nav {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .nav-category {
+                padding: 20px;
+            }
+
+            .category-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .category-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        /* 動畫效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-category {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .nav-category:nth-child(1) { animation-delay: 0.1s; }
+        .nav-category:nth-child(2) { animation-delay: 0.2s; }
+        .nav-category:nth-child(3) { animation-delay: 0.3s; }
+        .nav-category:nth-child(4) { animation-delay: 0.4s; }
+        .nav-category:nth-child(5) { animation-delay: 0.5s; }
+        .nav-category:nth-child(6) { animation-delay: 0.6s; }
+
+        /* 特殊效果 */
+        .glow {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- 標題區 -->
-        <header>
-            <h1>🎨 Slot Game Concept Art Generator</h1>
-            <p>AI 輔助互動式美術工具</p>
-        </header>
+        <!-- 頭部 -->
+        <div class="header">
+            <h1>🎮 遊戲開發工具與分析平台</h1>
+            <p>整合式工具套件，提供從美術設計到遊戲分析的完整解決方案</p>
+        </div>
 
-        <!-- 主內容區 -->
-        <main>
-            <!-- 步驟 1: 輸入 Brief -->
-            <section id="step1" class="step active">
-                <h2>步驟 1: 創意簡報</h2>
-                <form id="briefForm">
-                    <div class="form-group">
-                        <label for="theme">主題 *</label>
-                        <input type="text" id="theme" name="theme" placeholder="例：東方龍與財富" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="styleKeywords">風格關鍵詞 * (逗號分隔)</label>
-                        <input type="text" id="styleKeywords" name="styleKeywords" 
-                               placeholder="例：cinematic, volumetric light, golden accents" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>色彩偏好</label>
-                        <div class="color-inputs">
-                            <div>
-                                <label for="primaryColors">主色 (HEX, 逗號分隔)</label>
-                                <input type="text" id="primaryColors" name="primaryColors" 
-                                       placeholder="#B30012, #D41F27">
-                            </div>
-                            <div>
-                                <label for="secondaryColors">輔色 (HEX, 逗號分隔)</label>
-                                <input type="text" id="secondaryColors" name="secondaryColors" 
-                                       placeholder="#CFA64D, #F7E09A">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="referenceUrls">參考圖片 URL (每行一個)</label>
-                        <textarea id="referenceUrls" name="referenceUrls" rows="3" 
-                                  placeholder="https://example.com/ref1.jpg&#10;https://example.com/ref2.jpg"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="targetCount">生成數量</label>
-                        <select id="targetCount" name="targetCount">
-                            <option value="4" selected>4 張</option>
-                            <option value="6">6 張</option>
-                            <option value="8">8 張</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="targetRatio">圖像比例</label>
-                        <select id="targetRatio" name="targetRatio">
-                            <option value="16:9" selected>16:9 (橫向)</option>
-                            <option value="4:5">4:5 (直向)</option>
-                            <option value="1:1">1:1 (方形)</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn-primary">建立 Brief</button>
-                </form>
-            </section>
-
-            <!-- 步驟 2: 生成圖像 -->
-            <section id="step2" class="step">
-                <h2>步驟 2: 生成 Concept Art</h2>
-                <div id="briefSummary"></div>
-                
-                <button id="btnGenerate" class="btn-primary">開始生成</button>
-                
-                <div id="generationProgress" class="progress-container" style="display:none;">
-                    <div class="progress-bar">
-                        <div id="progressBar" class="progress-fill"></div>
-                    </div>
-                    <p id="progressText">處理中...</p>
-                </div>
-            </section>
-
-            <!-- 步驟 3: 查看結果 -->
-            <section id="step3" class="step">
-                <h2>步驟 3: 評估與反饋</h2>
-                <div id="imageGallery" class="gallery"></div>
-                
-                <div id="feedbackPanel" class="feedback-panel" style="display:none;">
-                    <h3>提供反饋</h3>
-                    <p>選擇您喜歡的圖像，並提供調整建議</p>
-                    
-                    <div class="form-group">
-                        <label>調整建議 (每行一個)</label>
-                        <textarea id="adjustments" rows="3" 
-                                  placeholder="例：增強龍鱗立體感&#10;背景雲霧降低飽和度 20%"></textarea>
-                    </div>
-                    
-                    <div class="button-group">
-                        <button id="btnSubmitFeedback" class="btn-primary">提交反饋並重新生成</button>
-                        <button id="btnDownloadAll" class="btn-secondary">下載所有圖片</button>
+        <!-- 主要導航 -->
+        <div class="main-nav">
+            <!-- 素材管理工具 -->
+            <div class="nav-category">
+                <div class="category-header">
+                    <div class="category-icon">📦</div>
+                    <div>
+                        <div class="category-title">素材管理工具</div>
                     </div>
                 </div>
-            </section>
-        </main>
+                <div class="category-description">
+                    高效的資源整合與匯出解決方案
+                </div>
+                <ul class="tool-links">
+                    <li class="tool-link">
+                        <a href="../../../素材資源整合工具/assetExport 架構與工具說明.html" target="_blank">
+                            <span class="tool-icon">🔧</span>
+                            <span class="tool-title">Asset Export 工具說明</span>
+                            <span class="tool-badge badge-popular">熱門</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="../../../素材資源整合工具/assetExpport 與 cocos creator 整合關係.html" target="_blank">
+                            <span class="tool-icon">🎮</span>
+                            <span class="tool-title">Cocos Creator 整合</span>
+                            <span class="tool-badge badge-advanced">進階</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-        <!-- 狀態顯示 -->
-        <div id="statusMessage" class="status-message"></div>
+            <!-- 遊戲側錄分析 -->
+            <div class="nav-category">
+                <div class="category-header">
+                    <div class="category-icon">🎰</div>
+                    <div>
+                        <div class="category-title">遊戲側錄分析</div>
+                    </div>
+                </div>
+                <div class="category-description">
+                    深度遊戲數據收集與數學模型分析
+                </div>
+                <ul class="tool-links">
+                    <li class="tool-link">
+                        <a href="../../../遊戲側錄工具/架構說明網頁.html" target="_blank">
+                            <span class="tool-icon">🏗️</span>
+                            <span class="tool-title">Game Dump 系統架構</span>
+                            <span class="tool-badge badge-advanced">進階</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="../../../遊戲側錄工具/wild_bounty_enhanced_report_tb_pg_wild_bounty_v1_002.html" target="_blank">
+                            <span class="tool-icon">�</span>
+                            <span class="tool-title">Wild Bounty 數學模型分析</span>
+                            <span class="tool-badge badge-new">NEW</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 網頁監控工具 (調整為第 3 區塊) -->
+            <div class="nav-category">
+                <div class="category-header">
+                    <div class="category-icon">🕸️</div>
+                    <div>
+                        <div class="category-title">網頁監控工具</div>
+                    </div>
+                </div>
+                <div class="category-description">
+                    專業的網頁遊戲監控與分析解決方案
+                </div>
+                <ul class="tool-links">
+                    <li class="tool-link">
+                        <a href="../../../網頁資源查詢/網頁擷取分析工具說明.html" target="_blank">
+                            <span class="tool-icon">�</span>
+                            <span class="tool-title">網頁擷取分析工具</span>
+                            <span class="tool-badge badge-popular">熱門</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="../../../網頁資源查詢/架構說明.html" target="_blank">
+                            <span class="tool-icon">📖</span>
+                            <span class="tool-title">架構說明文件</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 效能分析報告 (調整為第 4 區塊) -->
+            <div class="nav-category">
+                <div class="category-header">
+                    <div class="category-icon">⚡</div>
+                    <div>
+                        <div class="category-title">效能分析報告</div>
+                    </div>
+                </div>
+                <div class="category-description">
+                    遊戲引擎優化與效能評估報告
+                </div>
+                <ul class="tool-links">
+                    <li class="tool-link">
+                        <a href="../../../遊戲效能分析/遊戲引擎重構效能分析報告.html" target="_blank">
+                            <span class="tool-icon">🔬</span>
+                            <span class="tool-title">引擎重構效能分析</span>
+                            <span class="tool-badge badge-advanced">進階</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- AI 輔助工具 (依舊最後) -->
+            <div class="nav-category">
+                <div class="category-header">
+                    <div class="category-icon">🤖</div>
+                    <div>
+                        <div class="category-title">AI 輔助製程</div>
+                    </div>
+                </div>
+                <div class="category-description">
+                    智能化設計與生成工具，提升創作效率
+                </div>
+                <ul class="tool-links">
+                    <li class="tool-link">
+                        <a href="slot_game_ai_agent_pipeline.html" target="_blank">
+                            <span class="tool-icon">🧠</span>
+                            <span class="tool-title">Slot Game AI Agent Pipeline</span>
+                            <span class="tool-badge badge-ai">AI Flow</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="SOP_visualized3.html" target="_blank">
+                            <span class="tool-icon">📄</span>
+                            <span class="tool-title">美術規格建立流程</span>
+                            <span class="tool-badge badge-new">LATEST</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="SOP_動態資產生成_Gemini_Veo_visual_v2.html" target="_blank">
+                            <span class="tool-icon">🎬</span>
+                            <span class="tool-title">動態資產生成</span>
+                            <span class="tool-badge badge-new">NEW</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="index_gemini.html" target="_blank">
+                            <span class="tool-icon">🎨</span>
+                            <span class="tool-title">概念美術生成器</span>
+                            <span class="tool-badge badge-popular">熱門</span>
+                        </a>
+                    </li>
+                    <li class="tool-link">
+                        <a href="project-analysis-visualization.html" target="_blank">
+                            <span class="tool-icon">📊</span>
+                            <span class="tool-title">專案分析視覺化</span>
+                            <span class="tool-badge badge-advanced">分析</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 統計信息 -->
+        <div class="stats-section">
+            <h2 style="text-align: center; margin-bottom: 10px; font-size: 2rem;">平台統計</h2>
+            <p style="text-align: center; opacity: 0.8;">綜合工具平台使用概況</p>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">10+</span>
+                    <div class="stat-label">專業工具</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <div class="stat-label">主要類別</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">AI</span>
+                    <div class="stat-label">智能輔助</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <div class="stat-label">開源免費</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁腳 -->
+        <div class="footer">
+            <p>© 2024 遊戲開發工具與分析平台</p>
+            <p style="opacity: 0.7;">讓遊戲開發變得更簡單、更智能 🎮✨</p>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // 添加頁面載入動畫
+        document.addEventListener('DOMContentLoaded', function() {
+            // 為每個工具連結添加點擊統計
+            const toolLinks = document.querySelectorAll('.tool-link a');
+            toolLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const toolName = this.querySelector('.tool-title').textContent;
+                    console.log(`工具點擊: ${toolName}`);
+                    
+                    // 添加點擊效果
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // 隨機顯示一些特殊效果
+            function addRandomEffects() {
+                const categories = document.querySelectorAll('.nav-category');
+                const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+                randomCategory.classList.add('pulse');
+                
+                setTimeout(() => {
+                    randomCategory.classList.remove('pulse');
+                }, 2000);
+            }
+
+            // 每10秒隨機添加一次特效
+            setInterval(addRandomEffects, 10000);
+
+            // 統計數字動畫
+            function animateNumbers() {
+                const numbers = document.querySelectorAll('.stat-number');
+                numbers.forEach(num => {
+                    const text = num.textContent;
+                    if (!isNaN(text)) {
+                        const final = parseInt(text);
+                        let current = 0;
+                        const increment = final / 30;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= final) {
+                                current = final;
+                                clearInterval(timer);
+                            }
+                            num.textContent = Math.floor(current) + (text.includes('+') ? '+' : '');
+                        }, 50);
+                    }
+                });
+            }
+
+            // 延遲執行數字動畫
+            setTimeout(animateNumbers, 1000);
+        });
+
+        // 主題切換功能（未來擴展）
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
+        // 搜索功能（未來擴展）
+        function searchTools(query) {
+            const tools = document.querySelectorAll('.tool-link');
+            tools.forEach(tool => {
+                const title = tool.querySelector('.tool-title').textContent.toLowerCase();
+                if (title.includes(query.toLowerCase())) {
+                    tool.style.display = 'block';
+                } else {
+                    tool.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

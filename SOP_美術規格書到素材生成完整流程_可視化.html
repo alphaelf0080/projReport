@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP：美術規格書到素材生成完整流程 - 可視化指南</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-panel {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .content-panel.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stage-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .stage-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stage-title {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step-list {
+            list-style: none;
+            margin-left: 20px;
+        }
+
+        .step-list li {
+            position: relative;
+            padding: 10px 0 10px 30px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .step-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, rgba(255,255,0,0.3) 0%, rgba(255,255,0,0.3) 100%);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .info-box {
+            background: #e6f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .flow-diagram {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .naming-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .rule-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .rule-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .example-table th,
+        .example-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .example-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .example-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .progress-item span:first-child {
+            min-width: 200px;
+            font-weight: 500;
+        }
+
+        .progress-item .progress-bar {
+            flex: 1;
+            margin: 0;
+            height: 6px;
+            background: #e9ecef;
+        }
+
+        .progress-item span:last-child {
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .json-viewer {
+            background: #1a202c;
+            color: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .json-key { color: #63b3ed; }
+        .json-string { color: #68d391; }
+        .json-number { color: #fbb6ce; }
+        .json-boolean { color: #fbd38d; }
+
+        .layer-tree {
+            font-family: 'Courier New', monospace;
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            line-height: 1.8;
+        }
+
+        .layer-item {
+            margin: 2px 0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .layer-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .layer-group {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+
+        .layer-normal {
+            color: #68d391;
+        }
+
+        .layer-special {
+            color: #fbb6ce;
+        }
+
+        .layer-effect {
+            color: #fbd38d;
+        }
+
+        .layer-mask {
+            color: #9f7aea;
+        }
+
+        .layer-instance {
+            color: #fc8181;
+        }
+
+        .layer-preview {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .indent-1 { margin-left: 20px; }
+        .indent-2 { margin-left: 40px; }
+        .indent-3 { margin-left: 60px; }
+        .indent-4 { margin-left: 80px; }
+
+        .psd-canvas {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .ui-element {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .ui-element:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .ui-element.bg { background: rgba(102, 126, 234, 0.3); border-color: #667eea; }
+        .ui-element.symbol { background: rgba(255, 193, 7, 0.3); border-color: #ffc107; }
+        .ui-element.button { background: rgba(40, 167, 69, 0.3); border-color: #28a745; }
+        .ui-element.text { background: rgba(220, 53, 69, 0.3); border-color: #dc3545; }
+        .ui-element.frame { background: rgba(108, 117, 125, 0.3); border-color: #6c757d; }
+
+        .layer-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .structure-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .group-box {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .group-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .layer-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .layer-tag {
+            padding: 5px 10px;
+            background: #e9ecef;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .psd-structure-diagram {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .svg-container {
+            width: 100%;
+            overflow-x: auto;
+            padding: 20px;
+        }
+
+        .group-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-node:hover {
+            transform: scale(1.02);
+        }
+
+        .group-folder {
+            fill: #4a90e2;
+            stroke: #2d5aa0;
+            stroke-width: 2;
+        }
+
+        .group-folder:hover {
+            fill: #5ba0f2;
+        }
+
+        .layer-item-rect {
+            fill: #f8f9fa;
+            stroke: #667eea;
+            stroke-width: 1.5;
+            rx: 4;
+        }
+
+        .layer-item-rect.bg { fill: #e3f2fd; stroke: #2196f3; }
+        .layer-item-rect.symbol { fill: #fff3e0; stroke: #ff9800; }
+        .layer-item-rect.button { fill: #e8f5e8; stroke: #4caf50; }
+        .layer-item-rect.text { fill: #fce4ec; stroke: #e91e63; }
+        .layer-item-rect.effect { fill: #fff8e1; stroke: #ffc107; }
+        .layer-item-rect.mask { fill: #f3e5f5; stroke: #9c27b0; }
+        .layer-item-rect.instance { fill: #ffebee; stroke: #f44336; }
+
+        .group-text {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            fill: #333;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .layer-text {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            fill: #555;
+            text-anchor: start;
+            dominant-baseline: central;
+        }
+
+        .connection-line {
+            stroke: #ddd;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .group-icon {
+            font-size: 16px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .structure-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .legend-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .legend-group.bg { border-color: #2196f3; }
+        .legend-group.symbol { border-color: #ff9800; }
+        .legend-group.button { border-color: #4caf50; }
+        .legend-group.text { border-color: #e91e63; }
+        .legend-group.effect { border-color: #ffc107; }
+        .legend-group.mask { border-color: #9c27b0; }
+        .legend-group.instance { border-color: #f44336; }
+
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .legend-icon.bg { background: #2196f3; }
+        .legend-icon.symbol { background: #ff9800; }
+        .legend-icon.button { background: #4caf50; }
+        .legend-icon.text { background: #e91e63; }
+        .legend-icon.effect { background: #ffc107; }
+        .legend-icon.mask { background: #9c27b0; }
+        .legend-icon.instance { background: #f44336; }
+
+        @media (max-width: 768px) {
+            .psd-canvas {
+                height: 300px;
+            }
+            
+            .ui-element {
+                font-size: 8px;
+            }
+
+            .svg-container {
+                padding: 10px;
+            }
+
+            .group-text {
+                font-size: 12px;
+            }
+
+            .layer-text {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎨 SOP：美術規格書到素材生成完整流程</h1>
+            <p>Slot Game 美術資產標準化與自動化工作流程</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showPanel('overview')">📋 流程概覽</button>
+            <button class="nav-tab" onclick="showPanel('psd-structure')">🗂️ PSD 結構</button>
+            <button class="nav-tab" onclick="showPanel('stages1-3')">🚀 階段 1-3</button>
+            <button class="nav-tab" onclick="showPanel('stages4-6')">📝 階段 4-6</button>
+            <button class="nav-tab" onclick="showPanel('stages7-8')">🗺️ 階段 7-8</button>
+            <button class="nav-tab" onclick="showPanel('stages9-10')">🎭 階段 9-10</button>
+            <button class="nav-tab" onclick="showPanel('ai-agent')">🤖 AI Agent 整合</button>
+            <button class="nav-tab" onclick="showPanel('examples')">💡 實例與範本</button>
+        </nav>
+
+        <!-- 流程概覽 -->
+        <div id="overview" class="content-panel active">
+            <h2>🎯 整體流程概覽</h2>
+            
+            <div class="flow-diagram">
+                <div class="mermaid">
+                graph TD
+                    A[📁 建立 PSD 樣板檔案] --> B[🏗️ 設定畫布與參考線]
+                    B --> C[📂 建立圖層群組結構]
+                    C --> D[🏷️ 定義命名規範]
+                    D --> E[🖼️ 建立佔位符與智慧型物件]
+                    E --> F[📊 導出圖層元數據]
+                    F --> G[🗺️ Tile Map 資產建立]
+                    G --> H[🎨 程式效果定義]
+                    H --> I[🎭 遮罩定義]
+                    I --> J[🔄 資產實例化與變形]
+                    
+                    style A fill:#667eea,stroke:#333,stroke-width:2px,color:#fff
+                    style J fill:#764ba2,stroke:#333,stroke-width:2px,color:#fff
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>🎯 SOP 核心目標</h3>
+                <ul>
+                    <li><strong>標準化</strong>：建立統一的美術資產組織與命名規範</li>
+                    <li><strong>自動化</strong>：透過腳本自動導出資產與元數據</li>
+                    <li><strong>協作化</strong>：提升團隊協作效率，減少溝通成本</li>
+                    <li><strong>優化化</strong>：減少資源冗餘，提升遊戲性能</li>
+                </ul>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🎨</div>
+                    <span>美術樣板核心架構</span>
+                </div>
+                <p>建立一個結構化的 Photoshop 樣板，包含 11 個主要圖層群組，每個群組負責不同類型的遊戲資產。</p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🏷️</div>
+                    <span>智能命名系統</span>
+                </div>
+                <p>採用 <code>[類型]_[名稱]_[尺寸]_[語系]_[狀態]</code> 的命名規範，讓 AI 和腳本能夠自動解析並處理每個圖層。</p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">📊</div>
+                    <span>自動化導出</span>
+                </div>
+                <p>透過 Photoshop 腳本自動產生 JSON 元數據，包含座標、尺寸、特效等遊戲引擎所需的完整資訊。</p>
+            </div>
+        </div>
+
+        <!-- PSD 結構視覺化 -->
+        <div id="psd-structure" class="content-panel">
+            <h2>🗂️ PSD 檔案內部結構視覺化</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🎨</div>
+                    <span>1920x1080 遊戲畫布布局</span>
+                </div>
+                
+                <div class="psd-canvas">
+                    <!-- 背景區域 -->
+                    <div class="ui-element bg" style="top: 0; left: 0; width: 100%; height: 100%;">
+                        BG_BaseGame_1920x1080_ALL
+                    </div>
+                    
+                    <!-- 上方 UI 區域 -->
+                    <div class="ui-element frame" style="top: 5%; left: 5%; width: 90%; height: 15%;">
+                        UI_Top (Jackpot, Logo, Info)
+                    </div>
+                    
+                    <!-- Reel 區域 -->
+                    <div class="ui-element symbol" style="top: 25%; left: 25%; width: 50%; height: 50%;">
+                        Reel Area (5x3 Symbols)
+                    </div>
+                    
+                    <!-- 主操作區 UI -->
+                    <div class="ui-element button" style="bottom: 5%; left: 5%; width: 90%; height: 15%;">
+                        UI_MainControls (Spin, Bet, Balance)
+                    </div>
+                    
+                    <!-- 側邊角色區域 -->
+                    <div class="ui-element text" style="top: 30%; left: 5%; width: 15%; height: 40%;">
+                        Characters
+                    </div>
+                    
+                    <!-- 跑馬燈 -->
+                    <div class="ui-element frame" style="top: 82%; left: 5%; width: 90%; height: 8%;">
+                        Marquee
+                    </div>
+                </div>
+
+                <div class="layer-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(102, 126, 234, 0.5);"></div>
+                        <span>背景圖層 (Background)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(255, 193, 7, 0.5);"></div>
+                        <span>符號區域 (Symbols/Reels)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(40, 167, 69, 0.5);"></div>
+                        <span>按鈕控制 (Buttons/Controls)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(220, 53, 69, 0.5);"></div>
+                        <span>角色文字 (Characters/Text)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(108, 117, 125, 0.5);"></div>
+                        <span>框架介面 (Frames/Interface)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🎨</div>
+                    <span>PSD 檔案結構示意圖</span>
+                </div>
+                
+                <div class="psd-structure-diagram">
+                    <div class="svg-container">
+                        <svg width="1100" height="800" viewBox="0 0 1100 800">
+                            <!-- 主 PSD 檔案 -->
+                            <rect x="50" y="30" width="200" height="50" rx="8" fill="#667eea" stroke="#4a5d8a" stroke-width="3"/>
+                            <text x="150" y="55" class="group-text" fill="white">📁 Slot_Game_Template.psd</text>
+                            
+                            <!-- 主要群組連接線 -->
+                            <line x1="150" y1="80" x2="150" y2="120" class="connection-line"/>
+                            <line x1="80" y1="120" x2="1020" y2="120" class="connection-line"/>
+                            
+                            <!-- 11個主要群組 -->
+                            <!-- 介面公版 -->
+                            <g class="group-node" data-group="interface">
+                                <line x1="80" y1="120" x2="80" y2="150" class="connection-line"/>
+                                <rect x="30" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="80" y="170" class="group-text" fill="white">🏗️ 介面公版</text>
+                                
+                                <!-- 子圖層 -->
+                                <line x1="80" y1="190" x2="80" y2="210" class="connection-line"/>
+                                <rect x="10" y="215" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="15" y="227" class="layer-text">FRAME_MainBorder_1920x1080_ALL</text>
+                                <rect x="10" y="245" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="15" y="257" class="layer-text">FRAME_UIBackground_1920x1080_ALL</text>
+                                <rect x="10" y="275" width="140" height="25" class="layer-item-rect effect"/>
+                                <text x="15" y="287" class="layer-text">[FX]_DARKEN_30</text>
+                            </g>
+                            
+                            <!-- Jackpot 公版 -->
+                            <g class="group-node" data-group="jackpot">
+                                <line x1="180" y1="120" x2="180" y2="150" class="connection-line"/>
+                                <rect x="130" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="180" y="170" class="group-text" fill="white">💰 Jackpot</text>
+                                
+                                <line x1="180" y1="190" x2="180" y2="210" class="connection-line"/>
+                                <rect x="110" y="215" width="140" height="25" class="layer-item-rect text"/>
+                                <text x="115" y="227" class="layer-text">TXT_JackpotTitle_400x80_TC</text>
+                                <rect x="110" y="245" width="140" height="25" class="layer-item-rect text"/>
+                                <text x="115" y="257" class="layer-text">TXT_JackpotAmount_300x60_ALL</text>
+                            </g>
+                            
+                            <!-- 跑馬燈 -->
+                            <g class="group-node" data-group="marquee">
+                                <line x1="280" y1="120" x2="280" y2="150" class="connection-line"/>
+                                <rect x="230" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="280" y="170" class="group-text" fill="white">📢 跑馬燈</text>
+                                
+                                <line x1="280" y1="190" x2="280" y2="210" class="connection-line"/>
+                                <rect x="210" y="215" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="215" y="227" class="layer-text">BG9_MarqueeBG_800x80_ALL</text>
+                                <rect x="210" y="245" width="140" height="25" class="layer-item-rect text"/>
+                                <text x="215" y="257" class="layer-text">TXT_MarqueeText_760x60_TC</text>
+                            </g>
+                            
+                            <!-- 主操作區UI -->
+                            <g class="group-node" data-group="controls">
+                                <line x1="380" y1="120" x2="380" y2="150" class="connection-line"/>
+                                <rect x="330" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="380" y="170" class="group-text" fill="white">🎮 操作區</text>
+                                
+                                <line x1="380" y1="190" x2="380" y2="210" class="connection-line"/>
+                                <!-- Buttons 子群組 -->
+                                <rect x="300" y="215" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="340" y="230" class="group-text" fill="white" font-size="12">Buttons</text>
+                                <rect x="285" y="250" width="110" height="20" class="layer-item-rect button"/>
+                                <text x="290" y="260" class="layer-text" font-size="10">BTN9_Spin_200x80_ALL_Normal</text>
+                                <rect x="285" y="275" width="110" height="20" class="layer-item-rect button"/>
+                                <text x="290" y="285" class="layer-text" font-size="10">BTN_AutoSpin_120x60_ALL</text>
+                                
+                                <!-- Bet Controls 子群組 -->
+                                <rect x="400" y="215" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="440" y="230" class="group-text" fill="white" font-size="12">Bet_Controls</text>
+                                <rect x="385" y="250" width="110" height="20" class="layer-item-rect button"/>
+                                <text x="390" y="260" class="layer-text" font-size="10">BTN_BetUp_60x60_ALL_Normal</text>
+                                <rect x="385" y="275" width="110" height="20" class="layer-item-rect instance"/>
+                                <text x="390" y="285" class="layer-text" font-size="10">[INST]_BetDown_BetUp_FLIP_V</text>
+                            </g>
+                            
+                            <!-- 上方UI -->
+                            <g class="group-node" data-group="topui">
+                                <line x1="530" y1="120" x2="530" y2="150" class="connection-line"/>
+                                <rect x="480" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="530" y="170" class="group-text" fill="white">⬆️ 上方UI</text>
+                                
+                                <line x1="530" y1="190" x2="530" y2="210" class="connection-line"/>
+                                <rect x="460" y="215" width="140" height="25" class="layer-item-rect button"/>
+                                <text x="465" y="227" class="layer-text">ICON_Logo_150x80_ALL</text>
+                                <rect x="460" y="245" width="140" height="25" class="layer-item-rect text"/>
+                                <text x="465" y="257" class="layer-text">ICON_WinAmount_200x60_ALL</text>
+                            </g>
+                            
+                            <!-- Base Game 背景 -->
+                            <g class="group-node" data-group="basebg">
+                                <line x1="630" y1="120" x2="630" y2="150" class="connection-line"/>
+                                <rect x="580" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="630" y="170" class="group-text" fill="white">🖼️ Base BG</text>
+                                
+                                <line x1="630" y1="190" x2="630" y2="210" class="connection-line"/>
+                                <rect x="560" y="215" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="565" y="227" class="layer-text">BG_MainBackground_1920x1080_ALL</text>
+                                <rect x="560" y="245" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="565" y="257" class="layer-text">IMG_DecorationLeft_300x800_ALL</text>
+                            </g>
+                            
+                            <!-- Free Game 背景 -->
+                            <g class="group-node" data-group="freebg">
+                                <line x1="730" y1="120" x2="730" y2="150" class="connection-line"/>
+                                <rect x="680" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="730" y="170" class="group-text" fill="white">🌟 Free BG</text>
+                                
+                                <line x1="730" y1="190" x2="730" y2="210" class="connection-line"/>
+                                <rect x="660" y="215" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="665" y="227" class="layer-text">BG_FreeGameBG_1920x1080_ALL</text>
+                                <rect x="660" y="245" width="140" height="25" class="layer-item-rect effect"/>
+                                <text x="665" y="257" class="layer-text">IMG_FreeGameEffect_1920x1080_ALL</text>
+                            </g>
+                            
+                            <!-- 符號 -->
+                            <g class="group-node" data-group="symbols">
+                                <line x1="400" y1="120" x2="400" y2="350" class="connection-line"/>
+                                <rect x="350" y="350" width="100" height="40" class="group-folder"/>
+                                <text x="400" y="370" class="group-text" fill="white">🎯 符號</text>
+                                
+                                <line x1="400" y1="390" x2="400" y2="410" class="connection-line"/>
+                                <!-- High Pay 子群組 -->
+                                <rect x="300" y="415" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="340" y="430" class="group-text" fill="white" font-size="12">High_Pay</text>
+                                <rect x="285" y="450" width="110" height="20" class="layer-item-rect symbol"/>
+                                <text x="290" y="460" class="layer-text" font-size="10">SYM_King_256x256_ALL</text>
+                                <rect x="285" y="475" width="110" height="20" class="layer-item-rect symbol"/>
+                                <text x="290" y="485" class="layer-text" font-size="10">SYM_Queen_256x256_ALL</text>
+                                
+                                <!-- Special Symbols 子群組 -->
+                                <rect x="420" y="415" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="460" y="430" class="group-text" fill="white" font-size="12">Special</text>
+                                <rect x="405" y="450" width="110" height="20" class="layer-item-rect symbol"/>
+                                <text x="410" y="460" class="layer-text" font-size="10">SYM_Wild_256x256_ALL</text>
+                                <rect x="405" y="475" width="110" height="20" class="layer-item-rect effect"/>
+                                <text x="410" y="485" class="layer-text" font-size="10">[FX]_TINT_FFD700</text>
+                            </g>
+                            
+                            <!-- 角色 -->
+                            <g class="group-node" data-group="characters">
+                                <line x1="830" y1="120" x2="830" y2="150" class="connection-line"/>
+                                <rect x="780" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="830" y="170" class="group-text" fill="white">👑 角色</text>
+                                
+                                <line x1="830" y1="190" x2="830" y2="210" class="connection-line"/>
+                                <rect x="760" y="215" width="140" height="25" class="layer-item-rect symbol"/>
+                                <text x="765" y="227" class="layer-text">SYM_Anubis_400x600_ALL</text>
+                                <rect x="760" y="245" width="140" height="25" class="layer-item-rect symbol"/>
+                                <text x="765" y="257" class="layer-text">SYM_Serpent_350x500_ALL</text>
+                            </g>
+                            
+                            <!-- Reel -->
+                            <g class="group-node" data-group="reels">
+                                <line x1="930" y1="120" x2="930" y2="150" class="connection-line"/>
+                                <rect x="880" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="930" y="170" class="group-text" fill="white">🎰 Reel</text>
+                                
+                                <line x1="930" y1="190" x2="930" y2="210" class="connection-line"/>
+                                <!-- Reel 1 子群組 -->
+                                <rect x="860" y="215" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="900" y="230" class="group-text" fill="white" font-size="12">Reel_1</text>
+                                <rect x="845" y="250" width="110" height="20" class="layer-item-rect bg"/>
+                                <text x="850" y="260" class="layer-text" font-size="10">FRAME_ReelBorder_200x600_ALL</text>
+                                <rect x="845" y="275" width="110" height="20" class="layer-item-rect mask"/>
+                                <text x="850" y="285" class="layer-text" font-size="10">[MASK]_Reel_1_Content_Group</text>
+                                
+                                <!-- Reel 2 子群組 -->
+                                <rect x="970" y="215" width="80" height="30" class="group-folder" fill="#5ba0f2"/>
+                                <text x="1010" y="230" class="group-text" fill="white" font-size="12">Reel_2</text>
+                                <rect x="955" y="250" width="110" height="20" class="layer-item-rect bg"/>
+                                <text x="960" y="260" class="layer-text" font-size="10">FRAME_ReelBorder_200x600_ALL</text>
+                                <rect x="955" y="275" width="110" height="20" class="layer-item-rect mask"/>
+                                <text x="960" y="285" class="layer-text" font-size="10">[MASK]_Reel_2_Content_Group</text>
+                            </g>
+                            
+                            <!-- 其他 -->
+                            <g class="group-node" data-group="misc">
+                                <line x1="1020" y1="120" x2="1020" y2="150" class="connection-line"/>
+                                <rect x="970" y="150" width="100" height="40" class="group-folder"/>
+                                <text x="1020" y="170" class="group-text" fill="white">📦 其他</text>
+                                
+                                <line x1="1020" y1="190" x2="1020" y2="210" class="connection-line"/>
+                                <rect x="950" y="215" width="140" height="25" class="layer-item-rect" fill="#f0f0f0" stroke="#999"/>
+                                <text x="955" y="227" class="layer-text" fill="#666">[PREVIEW]_Tilemap</text>
+                                <rect x="950" y="245" width="140" height="25" class="layer-item-rect bg"/>
+                                <text x="955" y="257" class="layer-text">GUIDE_SafeArea_1920x1080_ALL</text>
+                            </g>
+                            
+                            <!-- 圖層深度指示 -->
+                            <text x="50" y="550" class="group-text" fill="#667eea">圖層深度與 Z-Index 順序</text>
+                            <line x1="50" y1="570" x2="1050" y2="570" stroke="#667eea" stroke-width="2"/>
+                            
+                            <!-- Z-Index 示例 -->
+                            <g>
+                                <rect x="50" y="580" width="120" height="30" fill="#e3f2fd" stroke="#2196f3" rx="5"/>
+                                <text x="110" y="595" class="layer-text" text-anchor="middle">Z-Index: 10-20</text>
+                                <text x="110" y="610" class="layer-text" text-anchor="middle" font-size="10">背景圖層</text>
+                                
+                                <rect x="200" y="580" width="120" height="30" fill="#fff3e0" stroke="#ff9800" rx="5"/>
+                                <text x="260" y="595" class="layer-text" text-anchor="middle">Z-Index: 50-80</text>
+                                <text x="260" y="610" class="layer-text" text-anchor="middle" font-size="10">符號圖層</text>
+                                
+                                <rect x="350" y="580" width="120" height="30" fill="#e8f5e8" stroke="#4caf50" rx="5"/>
+                                <text x="410" y="595" class="layer-text" text-anchor="middle">Z-Index: 100-150</text>
+                                <text x="410" y="610" class="layer-text" text-anchor="middle" font-size="10">UI 控制項</text>
+                                
+                                <rect x="500" y="580" width="120" height="30" fill="#fff8e1" stroke="#ffc107" rx="5"/>
+                                <text x="560" y="595" class="layer-text" text-anchor="middle">Z-Index: 200+</text>
+                                <text x="560" y="610" class="layer-text" text-anchor="middle" font-size="10">特效遮罩</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="structure-legend">
+                    <div class="legend-group bg">
+                        <div class="legend-icon bg">BG</div>
+                        <div>
+                            <strong>背景圖層</strong><br>
+                            <small>Background, Image, Frame</small>
+                        </div>
+                    </div>
+                    <div class="legend-group symbol">
+                        <div class="legend-icon symbol">SYM</div>
+                        <div>
+                            <strong>符號圖層</strong><br>
+                            <small>Symbol, Icon, Character</small>
+                        </div>
+                    </div>
+                    <div class="legend-group button">
+                        <div class="legend-icon button">BTN</div>
+                        <div>
+                            <strong>按鈕控制</strong><br>
+                            <small>Button, Panel, Control</small>
+                        </div>
+                    </div>
+                    <div class="legend-group text">
+                        <div class="legend-icon text">TXT</div>
+                        <div>
+                            <strong>文字圖層</strong><br>
+                            <small>Text, Label, Title</small>
+                        </div>
+                    </div>
+                    <div class="legend-group effect">
+                        <div class="legend-icon effect">FX</div>
+                        <div>
+                            <strong>效果指令</strong><br>
+                            <small>[FX] Darken, Tint, Glow</small>
+                        </div>
+                    </div>
+                    <div class="legend-group mask">
+                        <div class="legend-icon mask">MSK</div>
+                        <div>
+                            <strong>遮罩圖層</strong><br>
+                            <small>[MASK] Clipping, Hit Area</small>
+                        </div>
+                    </div>
+                    <div class="legend-group instance">
+                        <div class="legend-icon instance">INST</div>
+                        <div>
+                            <strong>實例參照</strong><br>
+                            <small>[INST] Flip, Transform</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">📁</div>
+                    <span>完整圖層樹狀結構</span>
+                </div>
+                
+                <div class="layer-tree">
+<div class="layer-item layer-group">📁 Slot_Game_Template.psd (1920x1080)</div>
+<div class="layer-item layer-group indent-1">📂 介面公版 (Common_Interface)</div>
+<div class="layer-item layer-normal indent-2">🖼️ FRAME_MainBorder_1920x1080_ALL</div>
+<div class="layer-item layer-normal indent-2">🖼️ FRAME_UIBackground_1920x1080_ALL</div>
+<div class="layer-item layer-effect indent-2">✨ [FX]_DARKEN_30</div>
+
+<div class="layer-item layer-group indent-1">📂 jackpot 公版 (Common_Jackpot)</div>
+<div class="layer-item layer-normal indent-2">💰 TXT_JackpotTitle_400x80_TC</div>
+<div class="layer-item layer-normal indent-2">💰 TXT_JackpotTitle_400x80_EN</div>
+<div class="layer-item layer-normal indent-2">💰 TXT_JackpotAmount_300x60_ALL</div>
+
+<div class="layer-item layer-group indent-1">📂 跑馬燈 (Marquee)</div>
+<div class="layer-item layer-normal indent-2">📢 BG9_MarqueeBG_800x80_ALL</div>
+<div class="layer-item layer-normal indent-2">📢 TXT_MarqueeText_760x60_TC</div>
+
+<div class="layer-item layer-group indent-1">📂 主操作區UI (UI_MainControls)</div>
+<div class="layer-item layer-group indent-2">📂 Buttons</div>
+<div class="layer-item layer-normal indent-3">🎯 BTN9_Spin_200x80_ALL_Normal</div>
+<div class="layer-item layer-normal indent-3">🎯 BTN9_Spin_200x80_ALL_Hover</div>
+<div class="layer-item layer-normal indent-3">🎯 BTN9_Spin_200x80_ALL_Pressed</div>
+<div class="layer-item layer-normal indent-3">🎯 BTN_AutoSpin_120x60_ALL_Normal</div>
+<div class="layer-item layer-group indent-2">📂 Info_Displays</div>
+<div class="layer-item layer-normal indent-3">💰 PANEL9_BalanceDisplay_200x50_ALL</div>
+<div class="layer-item layer-normal indent-3">💰 TXT_Balance_180x30_ALL</div>
+<div class="layer-item layer-group indent-2">📂 Bet_Controls</div>
+<div class="layer-item layer-normal indent-3">⬆️ BTN_BetUp_60x60_ALL_Normal</div>
+<div class="layer-item layer-normal indent-3">⬇️ BTN_BetDown_60x60_ALL_Normal</div>
+<div class="layer-item layer-instance indent-3">🔄 [INST]_BetDown_BetUp_FLIP_V</div>
+
+<div class="layer-item layer-group indent-1">📂 上方UI (UI_Top)</div>
+<div class="layer-item layer-normal indent-2">🏆 ICON_Logo_150x80_ALL</div>
+<div class="layer-item layer-normal indent-2">💎 ICON_WinAmount_200x60_ALL</div>
+<div class="layer-item layer-normal indent-2">⚙️ BTN_Settings_60x60_ALL_Normal</div>
+
+<div class="layer-item layer-group indent-1">📂 base game 背景 (BG_BaseGame)</div>
+<div class="layer-item layer-normal indent-2">🖼️ BG_MainBackground_1920x1080_ALL</div>
+<div class="layer-item layer-normal indent-2">🖼️ IMG_DecorationLeft_300x800_ALL</div>
+<div class="layer-item layer-normal indent-2">🖼️ IMG_DecorationRight_300x800_ALL</div>
+
+<div class="layer-item layer-group indent-1">📂 free game 背景 (BG_FreeGame)</div>
+<div class="layer-item layer-normal indent-2">🌟 BG_FreeGameBG_1920x1080_ALL</div>
+<div class="layer-item layer-normal indent-2">✨ IMG_FreeGameEffect_1920x1080_ALL</div>
+
+<div class="layer-item layer-group indent-1">📂 符號 (Symbols)</div>
+<div class="layer-item layer-group indent-2">📂 High_Pay</div>
+<div class="layer-item layer-normal indent-3">👑 SYM_King_256x256_ALL</div>
+<div class="layer-item layer-normal indent-3">👸 SYM_Queen_256x256_ALL</div>
+<div class="layer-item layer-normal indent-3">🃏 SYM_Jack_256x256_ALL</div>
+<div class="layer-item layer-group indent-2">📂 Low_Pay</div>
+<div class="layer-item layer-normal indent-3">🔟 SYM_Ten_256x256_ALL</div>
+<div class="layer-item layer-normal indent-3">🇯 SYM_Nine_256x256_ALL</div>
+<div class="layer-item layer-group indent-2">📂 Special_Symbols</div>
+<div class="layer-item layer-normal indent-3">🎯 SYM_Wild_256x256_ALL</div>
+<div class="layer-item layer-normal indent-3">💰 SYM_Scatter_256x256_ALL</div>
+<div class="layer-item layer-effect indent-3">✨ [FX]_TINT_FFD700</div>
+
+<div class="layer-item layer-group indent-1">📂 角色 (Characters)</div>
+<div class="layer-item layer-normal indent-2">🏺 SYM_Anubis_400x600_ALL</div>
+<div class="layer-item layer-normal indent-2">🐍 SYM_Serpent_350x500_ALL</div>
+
+<div class="layer-item layer-group indent-1">📂 reel (Reels)</div>
+<div class="layer-item layer-group indent-2">📂 Reel_1_Content_Group</div>
+<div class="layer-item layer-normal indent-3">🎰 FRAME_ReelBorder_200x600_ALL</div>
+<div class="layer-item layer-mask indent-3">🎭 [MASK]_Reel_1_Content_Group</div>
+<div class="layer-item layer-group indent-2">📂 Reel_2_Content_Group</div>
+<div class="layer-item layer-normal indent-3">🎰 FRAME_ReelBorder_200x600_ALL</div>
+<div class="layer-item layer-mask indent-3">🎭 [MASK]_Reel_2_Content_Group</div>
+
+<div class="layer-item layer-group indent-1">📂 其他 (Misc)</div>
+<div class="layer-item layer-preview indent-2">👁️ [PREVIEW]_Tilemap</div>
+<div class="layer-item layer-normal indent-2">📏 GUIDE_SafeArea_1920x1080_ALL</div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🏗️</div>
+                    <span>圖層群組結構化組織</span>
+                </div>
+                
+                <div class="structure-diagram">
+                    <div class="group-box">
+                        <div class="group-title">🏗️ 介面公版 (Common_Interface)</div>
+                        <div class="layer-list">
+                            <div class="layer-tag">主邊框</div>
+                            <div class="layer-tag">UI 背景</div>
+                            <div class="layer-tag">通用裝飾</div>
+                        </div>
+                    </div>
+                    
+                    <div class="group-box">
+                        <div class="group-title">💰 Jackpot 公版 (Common_Jackpot)</div>
+                        <div class="layer-list">
+                            <div class="layer-tag">標題文字</div>
+                            <div class="layer-tag">金額顯示</div>
+                            <div class="layer-tag">多語系版本</div>
+                        </div>
+                    </div>
+                    
+                    <div class="group-box">
+                        <div class="group-title">🎮 主操作區UI (UI_MainControls)</div>
+                        <div class="layer-list">
+                            <div class="layer-tag">旋轉按鈕</div>
+                            <div class="layer-tag">自動旋轉</div>
+                            <div class="layer-tag">押注控制</div>
+                            <div class="layer-tag">餘額顯示</div>
+                            <div class="layer-tag">多種狀態</div>
+                        </div>
+                    </div>
+                    
+                    <div class="group-box">
+                        <div class="group-title">🎯 符號 (Symbols)</div>
+                        <div class="layer-list">
+                            <div class="layer-tag">高分符號</div>
+                            <div class="layer-tag">低分符號</div>
+                            <div class="layer-tag">特殊符號</div>
+                            <div class="layer-tag">Wild/Scatter</div>
+                            <div class="layer-tag">動畫狀態</div>
+                        </div>
+                    </div>
+                    
+                    <div class="group-box">
+                        <div class="group-title">🎰 Reel (滾輪)</div>
+                        <div class="layer-list">
+                            <div class="layer-tag">滾輪邊框</div>
+                            <div class="layer-tag">內容群組</div>
+                            <div class="layer-tag">遮罩定義</div>
+                            <div class="layer-tag">裁切範圍</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>🎨 圖層命名色彩編碼</h3>
+                <div class="layer-legend">
+                    <div class="legend-item">
+                        <div class="legend-color layer-group" style="background: #63b3ed;"></div>
+                        <span><strong>群組圖層</strong> - 主要分類容器</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color layer-normal" style="background: #68d391;"></div>
+                        <span><strong>普通圖層</strong> - 標準美術資產</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color layer-effect" style="background: #fbd38d;"></div>
+                        <span><strong>效果圖層</strong> - [FX] 程式效果</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color layer-mask" style="background: #9f7aea;"></div>
+                        <span><strong>遮罩圖層</strong> - [MASK] 裁切範圍</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color layer-instance" style="background: #fc8181;"></div>
+                        <span><strong>實例圖層</strong> - [INST] 變形參照</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color layer-preview" style="background: #a0aec0;"></div>
+                        <span><strong>預覽圖層</strong> - [PREVIEW] 不導出</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ 重要結構規則</h4>
+                <ul>
+                    <li><strong>群組命名</strong>：使用英文名稱，便於腳本識別</li>
+                    <li><strong>圖層順序</strong>：Z-Index 由上到下遞減</li>
+                    <li><strong>智慧型物件</strong>：所有美術資產必須轉換為智慧型物件</li>
+                    <li><strong>命名一致性</strong>：嚴格遵循 [類型]_[名稱]_[尺寸]_[語系]_[狀態] 格式</li>
+                    <li><strong>參考線對齊</strong>：九宮格元素需設定正確的切割參考線</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 階段 1-3 -->
+        <div id="stages1-3" class="content-panel">
+            <h2>🚀 階段 1-3：基礎建立與結構設計</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">1</div>
+                    <span>檔案初始化與畫布設定</span>
+                </div>
+                <ul class="step-list">
+                    <li><strong>畫布尺寸：</strong>1920x1080 像素（16:9 遊戲標準）</li>
+                    <li><strong>解析度：</strong>72 pixels/inch</li>
+                    <li><strong>色彩模式：</strong>RGB Color, 8-bit</li>
+                    <li><strong>參考線設定：</strong>安全區域、Reel 區塊、UI 區域標示</li>
+                </ul>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">2</div>
+                    <span>建立核心圖層群組結構</span>
+                </div>
+                <div class="naming-rules">
+                    <div class="rule-card">
+                        <h4>🏗️ 介面公版</h4>
+                        <p>Common_Interface</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>💰 Jackpot 公版</h4>
+                        <p>Common_Jackpot</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>📢 跑馬燈</h4>
+                        <p>Marquee</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🎮 主操作區 UI</h4>
+                        <p>UI_MainControls</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>⬆️ 上方 UI</h4>
+                        <p>UI_Top</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🖼️ Base Game 背景</h4>
+                        <p>BG_BaseGame</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🎆 Free Game 背景</h4>
+                        <p>BG_FreeGame</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🎯 符號</h4>
+                        <p>Symbols</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>👑 角色</h4>
+                        <p>Characters</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🎰 Reel</h4>
+                        <p>Reels</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>📦 其他</h4>
+                        <p>Misc</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">3</div>
+                    <span>定義圖層命名與元數據規範</span>
+                </div>
+                <div class="info-box">
+                    <h4>📝 命名結構公式</h4>
+                    <div class="code-block">
+                        [類型]_[名稱]_[尺寸]_[語系]_[狀態]
+                    </div>
+                </div>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>欄位</th>
+                            <th>說明</th>
+                            <th>範例值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="highlight">[類型]</span></td>
+                            <td>資產類別縮寫</td>
+                            <td>BG, SYM, BTN, ICON, FRAME, TXT, IMG, BG9, BTN9</td>
+                        </tr>
+                        <tr>
+                            <td><span class="highlight">[名稱]</span></td>
+                            <td>資產具體名稱</td>
+                            <td>Spin, Wild, Anubis, JackpotTitle</td>
+                        </tr>
+                        <tr>
+                            <td><span class="highlight">[尺寸]</span></td>
+                            <td>導出邊界 (寬x高)</td>
+                            <td>256x256, 300x150, 128x128</td>
+                        </tr>
+                        <tr>
+                            <td><span class="highlight">[語系]</span></td>
+                            <td>語言屬性</td>
+                            <td>ALL, EN, TC, SC</td>
+                        </tr>
+                        <tr>
+                            <td><span class="highlight">[狀態]</span></td>
+                            <td>互動狀態 (可選)</td>
+                            <td>Normal, Hover, Pressed, Disabled</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 階段 4-6 -->
+        <div id="stages4-6" class="content-panel">
+            <h2>📝 階段 4-6：內容建立與自動化導出</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">4</div>
+                    <span>建立佔位符與內容</span>
+                </div>
+                <ul class="step-list">
+                    <li><strong>建立佔位符圖層：</strong>為每個所需資源建立圖層</li>
+                    <li><strong>轉換智慧型物件：</strong>所有佔位符轉為智慧型物件</li>
+                    <li><strong>定義九宮格邊界：</strong>為可縮放元素設定參考線</li>
+                </ul>
+                
+                <div class="warning-box">
+                    <strong>⚠️ 重要提醒：</strong>每個圖層的實際內容不得超出命名中定義的尺寸邊界！
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">5</div>
+                    <span>維護與導出</span>
+                </div>
+                <ul class="step-list">
+                    <li><strong>版本控制：</strong>使用 Git LFS 追蹤 PSD 檔案</li>
+                    <li><strong>素材導出：</strong>利用 Photoshop「產生 -> 影像資產」功能</li>
+                    <li><strong>自動化基礎：</strong>根據命名元數據自動導出到正確位置</li>
+                </ul>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">6</div>
+                    <span>導出圖層元數據供引擎使用</span>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🔧 Photoshop 腳本功能</h4>
+                    <ul>
+                        <li><strong>遍歷圖層：</strong>掃描所有可見圖層和群組</li>
+                        <li><strong>解析命名：</strong>從命名規範中提取元數據</li>
+                        <li><strong>讀取屬性：</strong>獲取邊界、透明度、混合模式</li>
+                        <li><strong>計算數據：</strong>轉換為引擎座標系統</li>
+                    </ul>
+                </div>
+
+                <div class="json-viewer">
+<pre><code>{
+  <span class="json-key">"scene_dimensions"</span>: {
+    <span class="json-key">"width"</span>: <span class="json-number">1920</span>,
+    <span class="json-key">"height"</span>: <span class="json-number">1080</span>
+  },
+  <span class="json-key">"assets"</span>: {
+    <span class="json-key">"PANEL9_Default_Normal"</span>: {
+      <span class="json-key">"source_image"</span>: <span class="json-string">"PANEL9_Default_128x128_ALL_Normal.png"</span>,
+      <span class="json-key">"size"</span>: { <span class="json-key">"width"</span>: <span class="json-number">128</span>, <span class="json-key">"height"</span>: <span class="json-number">128</span> },
+      <span class="json-key">"bounds_in_canvas"</span>: { 
+        <span class="json-key">"x"</span>: <span class="json-number">100</span>, <span class="json-key">"y"</span>: <span class="json-number">200</span>, 
+        <span class="json-key">"width"</span>: <span class="json-number">128</span>, <span class="json-key">"height"</span>: <span class="json-number">128</span> 
+      },
+      <span class="json-key">"z_index"</span>: <span class="json-number">50</span>,
+      <span class="json-key">"nine_slice_margins"</span>: {
+        <span class="json-key">"left"</span>: <span class="json-number">20</span>, <span class="json-key">"top"</span>: <span class="json-number">20</span>,
+        <span class="json-key">"right"</span>: <span class="json-number">20</span>, <span class="json-key">"bottom"</span>: <span class="json-number">20</span>
+      }
+    }
+  }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 階段 7-8 -->
+        <div id="stages7-8" class="content-panel">
+            <h2>🗺️ 階段 7-8：Tile Map 與程式效果</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">7</div>
+                    <span>Tile Map (瓦片地圖) 資產建立</span>
+                </div>
+                
+                <div class="flow-diagram">
+                    <div class="mermaid">
+                    graph LR
+                        A[🎨 建立 Tileset PSD] --> B[📐 設定精確網格]
+                        B --> C[🖼️ 繪製圖塊]
+                        C --> D[🔢 定義 Tile ID]
+                        D --> E[📤 導出 Tileset]
+                        E --> F[👁️ 主樣板預覽]
+                        
+                        style A fill:#667eea,stroke:#333,stroke-width:2px,color:#fff
+                        style F fill:#764ba2,stroke:#333,stroke-width:2px,color:#fff
+                    </div>
+                </div>
+
+                <ul class="step-list">
+                    <li><strong>建立專用檔案：</strong>tileset_forest_128x128.psd</li>
+                    <li><strong>設定網格：</strong>128 像素格線間距，子格設為 1</li>
+                    <li><strong>繪製圖塊：</strong>每個圖塊獨立圖層，對齊網格</li>
+                    <li><strong>定義 ID：</strong>從 0 開始，左到右、上到下編號</li>
+                    <li><strong>導出資源：</strong>單一 PNG 圖片</li>
+                </ul>
+
+                <div class="info-box">
+                    <h4>🔍 預覽功能</h4>
+                    <p>在主樣板中建立 <code>[PREVIEW]_Tilemap</code> 群組，用於視覺預覽，腳本會自動忽略此群組。</p>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">8</div>
+                    <span>遊戲內程式效果定義</span>
+                </div>
+                
+                <div class="info-box">
+                    <h4>💡 核心原則</h4>
+                    <p><strong>「一份資源，多種呈現」</strong> - 不需導出多份圖片，使用效果參數讓引擎即時渲染。</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🎨 效果指令圖層命名規範</h4>
+                    <div class="code-block">
+                        [FX]_[效果類型]_[參數]
+                    </div>
+                </div>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>效果類型</th>
+                            <th>參數說明</th>
+                            <th>範例</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>DARKEN</strong></td>
+                            <td>0-100 黑色遮罩不透明度</td>
+                            <td>[FX]_DARKEN_70</td>
+                            <td>彈窗背景壓暗</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TINT</strong></td>
+                            <td>6位十六進制顏色碼</td>
+                            <td>[FX]_TINT_FF3300</td>
+                            <td>角色受傷變色</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="json-viewer">
+<pre><code>{
+  <span class="json-key">"BG_BaseGame"</span>: {
+    <span class="json-key">"source_image"</span>: <span class="json-string">"BG_BaseGame_1920x1080_ALL.png"</span>,
+    <span class="json-key">"z_index"</span>: <span class="json-number">10</span>,
+    <span class="json-key">"effects"</span>: [
+      {
+        <span class="json-key">"type"</span>: <span class="json-string">"DARKEN"</span>,
+        <span class="json-key">"opacity"</span>: <span class="json-number">70</span>,
+        <span class="json-key">"trigger"</span>: <span class="json-string">"on_popup_show"</span>
+      }
+    ]
+  }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 階段 9-10 -->
+        <div id="stages9-10" class="content-panel">
+            <h2>🎭 階段 9-10：遮罩與實例化</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">9</div>
+                    <span>遊戲引擎遮罩定義</span>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🎯 應用場景</h4>
+                    <ul>
+                        <li><strong>滾輪內容裁切：</strong>確保符號只在指定區域可見</li>
+                        <li><strong>非矩形點擊區域：</strong>為不規則按鈕定義精確範圍</li>
+                        <li><strong>特殊視覺效果：</strong>創造淡入淡出或擦除效果</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🎨 遮罩圖層命名規範</h4>
+                    <div class="code-block">
+                        [MASK]_[目標名稱]
+                    </div>
+                    <p><strong>繪製規則：</strong>純白色 = 顯示區域，透明/黑色 = 隱藏區域</p>
+                </div>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>目標群組</th>
+                            <th>遮罩圖層名稱</th>
+                            <th>用途說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Reel_1_Content_Group</td>
+                            <td>[MASK]_Reel_1_Content_Group</td>
+                            <td>第一個滾輪的符號裁切範圍</td>
+                        </tr>
+                        <tr>
+                            <td>Character_Anubis</td>
+                            <td>[MASK]_Character_Anubis</td>
+                            <td>角色不規則點擊範圍</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">10</div>
+                    <span>資產實例化與變形定義</span>
+                </div>
+                
+                <div class="info-box">
+                    <h4>💡 核心原則</h4>
+                    <p><strong>「一次繪製，多次使用」</strong> - 透過變形實現資源重用，節省材質空間。</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🔄 實例圖層命名規範</h4>
+                    <div class="code-block">
+                        [INST]_[新資產名稱]_[來源資產名稱]_[變形]
+                    </div>
+                </div>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>變形類型</th>
+                            <th>說明</th>
+                            <th>應用範例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>FLIP_H</strong></td>
+                            <td>水平鏡射</td>
+                            <td>左箭頭 → 右箭頭</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FLIP_V</strong></td>
+                            <td>垂直鏡射</td>
+                            <td>上箭頭 → 下箭頭</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="json-viewer">
+<pre><code>{
+  <span class="json-key">"ArrowLeft"</span>: {
+    <span class="json-key">"source_image"</span>: <span class="json-string">"ICON_ArrowLeft_128x128_ALL.png"</span>,
+    <span class="json-key">"transform"</span>: {
+      <span class="json-key">"flip_h"</span>: <span class="json-boolean">false</span>,
+      <span class="json-key">"flip_v"</span>: <span class="json-boolean">false</span>
+    }
+  },
+  <span class="json-key">"ArrowRight"</span>: {
+    <span class="json-key">"source_image"</span>: <span class="json-string">"ICON_ArrowLeft_128x128_ALL.png"</span>,
+    <span class="json-key">"transform"</span>: {
+      <span class="json-key">"flip_h"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"flip_v"</span>: <span class="json-boolean">false</span>
+    }
+  }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Agent 整合 -->
+        <div id="ai-agent" class="content-panel">
+            <h2>🤖 AI Agent 整合方案</h2>
+            
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🏗️</div>
+                    <span>系統架構概覽</span>
+                </div>
+                
+                <div class="flow-diagram">
+                    <div class="mermaid">
+                    graph TD
+                        A[美術規格書] --> B[規格解析 Agent]
+                        B --> C[引擎適配器選擇]
+                        C --> D[Cocos Creator Agent]
+                        C --> E[Unity Agent]
+                        C --> F[其他引擎 Agent]
+                        
+                        D --> G[Cocos 項目生成]
+                        E --> H[Unity 項目生成]
+                        F --> I[通用項目生成]
+                        
+                        G --> J[性能監控 Agent]
+                        H --> J
+                        I --> J
+                        
+                        J --> K[優化建議]
+                        J --> L[報告生成]
+                        
+                        style A fill:#e1f5fe
+                        style B fill:#f3e5f5
+                        style C fill:#fff3e0
+                        style J fill:#e8f5e8
+                    </div>
+                </div>
+                
+                <p>基於微服務架構的AI Agent系統，提供從美術規格書到前端引擎的全自動化轉換。</p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🔍</div>
+                    <span>核心 Agent 組件</span>
+                </div>
+                
+                <div class="rule-grid">
+                    <div class="rule-card">
+                        <h4>📋 規格解析 Agent</h4>
+                        <ul>
+                            <li>解析 PSD 文件結構</li>
+                            <li>提取圖層信息和命名規則</li>
+                            <li>生成標準化規格 JSON</li>
+                            <li>驗證規格完整性</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>🎮 引擎適配 Agent</h4>
+                        <ul>
+                            <li>Cocos Creator 項目生成</li>
+                            <li>Unity 項目模板創建</li>
+                            <li>通用格式轉換</li>
+                            <li>API 接口適配</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>📊 監控分析 Agent</h4>
+                        <ul>
+                            <li>實時性能監控</li>
+                            <li>資源使用分析</li>
+                            <li>錯誤檢測報告</li>
+                            <li>優化建議生成</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>🔄 工作流程 Agent</h4>
+                        <ul>
+                            <li>流程狀態管理</li>
+                            <li>任務調度執行</li>
+                            <li>進度追踪報告</li>
+                            <li>異常處理恢復</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">⚙️</div>
+                    <span>技術實現架構</span>
+                </div>
+                
+                <div class="json-viewer">
+                    <pre><code>{
+  <span class="json-key">"microservices"</span>: {
+    <span class="json-key">"spec_parser"</span>: {
+      <span class="json-key">"port"</span>: <span class="json-number">8001</span>,
+      <span class="json-key">"endpoints"</span>: [
+        <span class="json-string">"/parse-psd"</span>,
+        <span class="json-string">"/validate-spec"</span>,
+        <span class="json-string">"/extract-assets"</span>
+      ]
+    },
+    <span class="json-key">"cocos_adapter"</span>: {
+      <span class="json-key">"port"</span>: <span class="json-number">8002</span>,
+      <span class="json-key">"endpoints"</span>: [
+        <span class="json-string">"/generate-project"</span>,
+        <span class="json-string">"/create-scenes"</span>,
+        <span class="json-string">"/setup-animations"</span>
+      ]
+    },
+    <span class="json-key">"unity_adapter"</span>: {
+      <span class="json-key">"port"</span>: <span class="json-number">8003</span>,
+      <span class="json-key">"endpoints"</span>: [
+        <span class="json-string">"/create-prefabs"</span>,
+        <span class="json-string">"/setup-timeline"</span>,
+        <span class="json-string">"/configure-ui"</span>
+      ]
+    },
+    <span class="json-key">"monitor"</span>: {
+      <span class="json-key">"port"</span>: <span class="json-number">8004</span>,
+      <span class="json-key">"endpoints"</span>: [
+        <span class="json-string">"/performance-metrics"</span>,
+        <span class="json-string">"/generate-report"</span>,
+        <span class="json-string">"/optimization-tips"</span>
+      ]
+    }
+  }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🎯</div>
+                    <span>實施計劃與效益</span>
+                </div>
+                
+                <div class="progress-section">
+                    <h4>📈 實施階段進度</h4>
+                    <div class="progress-item">
+                        <span>階段 1: 核心 Agent 開發</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span>0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <span>階段 2: 引擎適配器實現</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span>0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <span>階段 3: 監控系統整合</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span>0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <span>階段 4: 生產環境部署</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span>0%</span>
+                    </div>
+                </div>
+                
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>效益項目</th>
+                            <th>現狀</th>
+                            <th>AI Agent 後</th>
+                            <th>改善幅度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>專案設置時間</td>
+                            <td>2-4 小時</td>
+                            <td>5-10 分鐘</td>
+                            <td>↓ 90%</td>
+                        </tr>
+                        <tr>
+                            <td>錯誤率</td>
+                            <td>15-25%</td>
+                            <td>2-5%</td>
+                            <td>↓ 80%</td>
+                        </tr>
+                        <tr>
+                            <td>人力需求</td>
+                            <td>3-5 人</td>
+                            <td>1-2 人</td>
+                            <td>↓ 60%</td>
+                        </tr>
+                        <tr>
+                            <td>維護成本</td>
+                            <td>高</td>
+                            <td>低</td>
+                            <td>↓ 70%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🔮</div>
+                    <span>未來發展路線</span>
+                </div>
+                
+                <div class="flow-diagram">
+                    <div class="mermaid">
+                    timeline
+                        title AI Agent 發展路線圖
+                        
+                        Q1 2024 : 核心 Agent 開發
+                               : 規格解析功能
+                               : 基礎 API 接口
+                        
+                        Q2 2024 : 引擎適配器
+                               : Cocos Creator 整合
+                               : Unity 適配器
+                        
+                        Q3 2024 : 監控與優化
+                               : 性能監控系統
+                               : 自動優化建議
+                        
+                        Q4 2024 : 智能化升級
+                               : AI 驅動優化
+                               : 預測性維護
+                        
+                        2025+ : 生態擴展
+                             : 多引擎支持
+                             : 雲端服務化
+                    </div>
+                </div>
+                
+                <div class="rule-grid">
+                    <div class="rule-card">
+                        <h4>🌟 近期目標</h4>
+                        <ul>
+                            <li>完成核心 Agent 原型</li>
+                            <li>實現 Cocos Creator 適配</li>
+                            <li>建立基礎監控系統</li>
+                            <li>完成初步測試驗證</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>🚀 中期規劃</h4>
+                        <ul>
+                            <li>擴展多引擎支持</li>
+                            <li>增強 AI 智能化</li>
+                            <li>優化性能監控</li>
+                            <li>建立標準化流程</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>🌈 長期願景</h4>
+                        <ul>
+                            <li>全自動化工作流</li>
+                            <li>智能化決策支持</li>
+                            <li>雲端服務生態</li>
+                            <li>行業標準建立</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <h4>💡 創新方向</h4>
+                        <ul>
+                            <li>機器學習優化</li>
+                            <li>自適應調整</li>
+                            <li>預測性分析</li>
+                            <li>生成式 AI 整合</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 實例與範本 -->
+        <div id="examples" class="content-panel">
+            <h2>💡 實例與範本</h2>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">📋</div>
+                    <span>完整命名範例</span>
+                </div>
+                
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>資產類型</th>
+                            <th>圖層命名範例</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>按鈕 (正常)</td>
+                            <td><code>BTN_Spin_300x150_ALL_Normal</code></td>
+                            <td>Spin 按鈕正常狀態，所有語系適用</td>
+                        </tr>
+                        <tr>
+                            <td>九宮格面板</td>
+                            <td><code>PANEL9_Default_128x128_ALL_Normal</code></td>
+                            <td>可縮放的預設面板</td>
+                        </tr>
+                        <tr>
+                            <td>符號</td>
+                            <td><code>SYM_Wild_256x256_ALL</code></td>
+                            <td>Wild 符號，256x256 尺寸</td>
+                        </tr>
+                        <tr>
+                            <td>本地化文字</td>
+                            <td><code>TXT_WinTitle_400x100_TC</code></td>
+                            <td>「贏得」標題，繁體中文版本</td>
+                        </tr>
+                        <tr>
+                            <td>壓暗效果</td>
+                            <td><code>[FX]_DARKEN_70</code></td>
+                            <td>70% 不透明度黑色遮罩</td>
+                        </tr>
+                        <tr>
+                            <td>遮罩</td>
+                            <td><code>[MASK]_Reel_1_Content_Group</code></td>
+                            <td>第一滾輪的裁切遮罩</td>
+                        </tr>
+                        <tr>
+                            <td>實例化</td>
+                            <td><code>[INST]_ArrowRight_ArrowLeft_FLIP_H</code></td>
+                            <td>水平鏡射的右箭頭實例</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">🛠️</div>
+                    <span>腳本處理流程</span>
+                </div>
+                
+                <div class="flow-diagram">
+                    <div class="mermaid">
+                    graph TD
+                        A[🔍 掃描 PSD 所有圖層] --> B{識別圖層類型}
+                        B -->|普通圖層| C[🖼️ 導出圖片資源]
+                        B -->|[FX] 圖層| D[🎨 解析效果參數]
+                        B -->|[MASK] 圖層| E[🎭 導出遮罩圖片]
+                        B -->|[INST] 圖層| F[🔄 建立實例參照]
+                        B -->|[PREVIEW] 圖層| G[⏭️ 跳過處理]
+                        
+                        C --> H[📊 收集圖層屬性]
+                        D --> H
+                        E --> H
+                        F --> H
+                        
+                        H --> I[🧮 計算引擎座標]
+                        I --> J[📝 生成 JSON 元數據]
+                        J --> K[✅ 完成導出]
+                        
+                        style A fill:#667eea,stroke:#333,stroke-width:2px,color:#fff
+                        style K fill:#764ba2,stroke:#333,stroke-width:2px,color:#fff
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-title">
+                    <div class="stage-number">📈</div>
+                    <span>效益統計</span>
+                </div>
+                
+                <div class="naming-rules">
+                    <div class="rule-card">
+                        <h4>⚡ 開發效率</h4>
+                        <p>減少 <strong>80%</strong> 手動標註時間</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🎯 錯誤率</h4>
+                        <p>降低 <strong>95%</strong> 人為疏失</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>💾 資源優化</h4>
+                        <p>節省 <strong>30%</strong> 材質記憶體</p>
+                    </div>
+                    <div class="rule-card">
+                        <h4>🤝 團隊協作</h4>
+                        <p>提升 <strong>60%</strong> 溝通效率</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>🚀 下一步行動</h3>
+                <ol>
+                    <li>建立第一個 PSD 樣板檔案</li>
+                    <li>測試命名規範的實際應用</li>
+                    <li>開發或取得 Photoshop 導出腳本</li>
+                    <li>與程式團隊確認 JSON 格式需求</li>
+                    <li>建立團隊培訓材料</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#333',
+                primaryBorderColor: '#667eea',
+                lineColor: '#764ba2',
+                secondaryColor: '#f0f0f0',
+                tertiaryColor: '#f9f9f9'
+            }
+        });
+
+        // 頁面切換功能
+        function showPanel(panelId) {
+            // 隱藏所有面板
+            const panels = document.querySelectorAll('.content-panel');
+            panels.forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // 移除所有按鈕的 active 狀態
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 顯示選中的面板
+            document.getElementById(panelId).classList.add('active');
+            
+            // 高亮選中的按鈕
+            event.target.classList.add('active');
+
+            // 特殊處理 AI Agent 面板
+            if (panelId === 'ai-agent') {
+                setTimeout(() => {
+                    // 添加進度條動畫效果
+                    const aiProgressBars = document.querySelectorAll('#ai-agent .progress-fill');
+                    aiProgressBars.forEach((bar, index) => {
+                        setTimeout(() => {
+                            bar.style.width = '0%';
+                            bar.style.background = 'linear-gradient(90deg, #ff6b6b, #4ecdc4)';
+                        }, index * 100);
+                    });
+                }, 200);
+            }
+
+            // 重新渲染 Mermaid 圖表
+            setTimeout(() => {
+                mermaid.init();
+            }, 100);
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 設定進度條動畫
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach((bar, index) => {
+                // 檢查是否是AI Agent面板的進度條
+                const progressItem = bar.closest('.progress-item');
+                if (progressItem && progressItem.closest('#ai-agent')) {
+                    // AI Agent 面板的進度條保持0%（項目尚未開始）
+                    setTimeout(() => {
+                        bar.style.width = '0%';
+                    }, 500 + (index * 200));
+                } else {
+                    // 其他面板的進度條使用原有邏輯
+                    setTimeout(() => {
+                        bar.style.width = `${85 + (index * 3)}%`;
+                    }, 500 + (index * 200));
+                }
+            });
+
+            // 為程式碼區塊添加複製功能
+            const codeBlocks = document.querySelectorAll('.code-block, .json-viewer');
+            codeBlocks.forEach(block => {
+                block.style.cursor = 'pointer';
+                block.title = '點擊複製';
+                block.addEventListener('click', function() {
+                    const text = this.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        const originalTitle = this.title;
+                        this.title = '已複製！';
+                        setTimeout(() => {
+                            this.title = originalTitle;
+                        }, 2000);
+                    });
+                });
+            });
+
+            // 為群組節點添加互動功能
+            const groupNodes = document.querySelectorAll('.group-node');
+            groupNodes.forEach(node => {
+                node.addEventListener('click', function() {
+                    const groupType = this.getAttribute('data-group');
+                    
+                    // 重置所有群組的高亮狀態
+                    groupNodes.forEach(n => {
+                        n.style.filter = '';
+                        n.style.transform = '';
+                    });
+                    
+                    // 高亮選中的群組
+                    this.style.filter = 'drop-shadow(0 0 10px rgba(102, 126, 234, 0.8))';
+                    this.style.transform = 'scale(1.05)';
+                    
+                    // 顯示群組資訊
+                    showGroupInfo(groupType);
+                });
+                
+                node.addEventListener('mouseenter', function() {
+                    this.style.filter = 'drop-shadow(0 0 5px rgba(102, 126, 234, 0.5))';
+                });
+                
+                node.addEventListener('mouseleave', function() {
+                    if (!this.style.transform.includes('scale(1.05)')) {
+                        this.style.filter = '';
+                    }
+                });
+            });
+
+            function showGroupInfo(groupType) {
+                const groupInfo = {
+                    'interface': '介面公版：包含主要邊框、UI背景和通用介面元素',
+                    'jackpot': 'Jackpot 公版：包含累積獎金顯示、標題文字等',
+                    'marquee': '跑馬燈：包含滾動消息背景和文字內容',
+                    'controls': '主操作區UI：包含旋轉按鈕、自動旋轉、押注控制等',
+                    'topui': '上方UI：包含Logo、獲勝金額顯示、設定按鈕等',
+                    'basebg': 'Base Game 背景：一般遊戲狀態的背景圖層',
+                    'freebg': 'Free Game 背景：免費遊戲狀態的背景圖層',
+                    'symbols': '符號：包含高分符號、低分符號、特殊符號等',
+                    'characters': '角色：包含遊戲中的主要角色圖像',
+                    'reels': 'Reel：包含滾輪邊框、遮罩定義等',
+                    'misc': '其他：包含預覽圖層、參考線等輔助元素'
+                };
+                
+                console.log(`選中群組: ${groupInfo[groupType] || '未知群組'}`);
+                
+                // 可以在這裡添加更多互動功能，比如顯示詳細資訊面板
+            }
+
+            // 為 UI 元素添加工具提示
+            const uiElements = document.querySelectorAll('.ui-element');
+            uiElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.zIndex = '20';
+                    this.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.6)';
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    this.style.zIndex = '1';
+                    this.style.boxShadow = 'none';
+                });
+            });
+
+            // 圖層樹狀結構互動
+            const layerItems = document.querySelectorAll('.layer-item');
+            layerItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 切換高亮狀態
+                    layerItems.forEach(i => i.style.background = '');
+                    this.style.background = 'rgba(102, 126, 234, 0.2)';
+                    
+                    // 顯示圖層資訊
+                    const layerName = this.textContent.trim();
+                    console.log('選中圖層:', layerName);
+                });
+            });
+        });
+
+        // 滾動時的視差效果
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const header = document.querySelector('.header');
+            header.style.transform = `translateY(${scrolled * 0.5}px)`;
+        });
+    </script>
+</body>
+</html>

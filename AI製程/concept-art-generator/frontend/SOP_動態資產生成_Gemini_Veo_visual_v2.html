@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slot Game 動態資產生成 Pipeline (Refactored v2)</title>
+  <meta name="description" content="Slot 動態特效預渲染 / Spine / 程序化 / Hybrid 一體化製程與自動化治理" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0d121b;
+      --panel: #121c2b;
+      --panel-alt: #182538;
+      --panel-soft: rgba(255,255,255,0.05);
+      --text: #eef4ff;
+      --text-dim: #a9b8cc;
+      --primary: #5ed1ff;
+      --primary-glow: 0 0 0 4px rgba(94,209,255,0.15);
+      --accent: #ffcc5c;
+      --danger: #f87171;
+      --warn: #fbbf24;
+      --ok: #34d399;
+      --border: rgba(255,255,255,0.12);
+      --gradient: radial-gradient(circle at 18% 18%,rgba(94,209,255,0.18),transparent 60%),radial-gradient(circle at 82% 12%,rgba(255,204,92,0.18),transparent 55%),linear-gradient(140deg,#0d121b,#0b1624 55%,#09101a);
+      --code: #d9f6ff;
+      --mono: 'JetBrains Mono','Fira Code',monospace;
+      --shadow-elev: 0 8px 28px -6px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.04);
+      --radius-s: 6px; --radius-m: 14px; --radius-l: 22px;
+      --trans-fast: 140ms cubic-bezier(.4,.2,.2,1);
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'Inter','Noto Sans TC',system-ui,sans-serif; background:var(--gradient); color:var(--text); line-height:1.6; }
+    h1,h2,h3,h4 { font-weight:600; line-height:1.25; }
+    h2 { scroll-margin-top: 88px; }
+    p { margin: 0 0 14px; }
+    a { color: var(--primary); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+
+    /* Layout */
+    .layout { display:grid; grid-template-columns: 270px 1fr; max-width: 1750px; margin:0 auto; gap:24px; padding:0 24px 120px; }
+    @media (max-width:1240px){ .layout { grid-template-columns: 240px 1fr; } }
+    @media (max-width:980px){ .layout { grid-template-columns:1fr; padding:0 18px 120px;} nav.sidebar {position:static; height:auto; max-height:none;} }
+
+    header.hero { padding:56px 8vw 32px; position:relative; }
+    header.hero:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 40% 0%,rgba(94,209,255,0.28),transparent 55%); pointer-events:none; }
+    .hero-inner { position:relative; display:flex; flex-direction:column; gap:32px; }
+    .hero-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+    .metric { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-m); padding:14px 16px; display:grid; gap:4px; box-shadow:var(--shadow-elev); }
+    .metric span.label { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); }
+    .metric strong { font-size:15px; font-weight:600; }
+
+    nav.sidebar { position:sticky; top:12px; align-self:start; display:flex; flex-direction:column; gap:18px; height: calc(100vh - 24px); overflow:auto; padding:20px 18px 40px; background:linear-gradient(145deg,#111b29,#0f1925); border:1px solid var(--border); border-radius:var(--radius-l); box-shadow:0 10px 50px -10px rgba(0,0,0,0.6); }
+    .nav-group { display:grid; gap:4px; }
+    .nav-title { font-size:11px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; margin:12px 0 4px; color:var(--text-dim); }
+    .sidebar a { font-size:13px; padding:6px 10px 6px 12px; border-radius:10px; color:var(--text-dim); display:flex; gap:6px; align-items:center; transition:var(--trans-fast); position:relative; }
+    .sidebar a.active, .sidebar a:hover { color:var(--text); background:var(--panel-soft); }
+    .badge-inline { background:var(--panel-soft); padding:2px 8px 3px; border-radius:999px; font-size:11px; letter-spacing:0.02em; color:var(--primary); border:1px solid rgba(255,255,255,0.08); }
+
+    main { display:grid; gap:48px; }
+    section.panel { background:var(--panel-alt); padding:34px 38px 42px; border:1px solid var(--border); border-radius:var(--radius-l); box-shadow:var(--shadow-elev); position:relative; overflow:hidden; }
+    section.panel:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%,rgba(94,209,255,0.12),transparent 60%); pointer-events:none; }
+    section.panel h2 { margin:0 0 18px; font-size:1.8rem; }
+    section.panel h3 { margin:30px 0 12px; font-size:1.18rem; color:var(--primary); letter-spacing:0.01em; }
+
+    .grid { display:grid; gap:16px; }
+    .grid.cols-3 { grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+    .callout { border-left:4px solid var(--accent); background:rgba(255,204,92,0.08); padding:14px 18px; border-radius:12px; font-size:0.95rem; margin:18px 0; }
+    .info { border-left:4px solid var(--primary); background:rgba(94,209,255,0.08); padding:14px 18px; border-radius:12px; margin:18px 0; }
+    .warn { border-left:4px solid var(--warn); background:rgba(251,191,36,0.1); padding:14px 18px; border-radius:12px; margin:18px 0; }
+
+    /* Tables */
+    .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:16px; margin:18px 0; }
+    table { width:100%; border-collapse:collapse; font-size:14px; background:#101a27; min-width:640px; }
+    th,td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.07); vertical-align:top; }
+    th { text-align:left; font-weight:600; color:var(--primary); font-size:13px; letter-spacing:0.03em; white-space:nowrap; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr.highlight { background:linear-gradient(90deg,rgba(94,209,255,0.12),transparent); }
+
+    /* Cards */
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:18px 20px 20px; display:grid; gap:10px; position:relative; }
+    .card h4 { margin:0; font-size:16px; }
+    .tag-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .tag { font-size:11px; background:rgba(255,255,255,0.08); padding:4px 10px 5px; border-radius:999px; letter-spacing:0.03em; color:var(--text-dim); cursor:default; }
+    .tag[data-variant="type"] { background:rgba(94,209,255,0.15); color:var(--primary); border:1px solid rgba(94,209,255,0.3); }
+
+    /* Code */
+    pre.code { background:#0f1924; border:1px solid var(--border); border-radius:16px; padding:18px 20px; font-family:var(--mono); font-size:13px; line-height:1.55; overflow:auto; color:var(--code); position:relative; }
+    pre.code:before { content:"CODE"; position:absolute; top:6px; right:12px; font-size:10px; letter-spacing:0.12em; opacity:0.4; }
+
+    details.slim { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 14px; }
+    details.slim summary { cursor:pointer; list-style:none; font-weight:600; color:var(--primary); }
+    details.slim[open] { box-shadow:var(--shadow-elev); }
+
+    .flow-diagram { display:grid; gap:12px; margin:18px 0; }
+    .flow-row { display:flex; flex-wrap:wrap; gap:10px; align-items:stretch; }
+    .flow-node { flex:1 1 180px; min-width:160px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px 14px; font-size:13px; position:relative; display:grid; gap:6px; }
+    .flow-node:after { content:""; position:absolute; width:34px; height:2px; background:linear-gradient(90deg,var(--primary),transparent); right:-34px; top:50%; transform:translateY(-50%); opacity:0.6; }
+    .flow-row .flow-node:last-child:after { display:none; }
+    .flow-node strong { font-size:13px; }
+    .flow-node span.small { font-size:11px; color:var(--text-dim); }
+
+    /* Decision Helper */
+    .helper { display:grid; gap:16px; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:20px 22px 24px; }
+    .helper-grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+    .helper label { display:grid; gap:6px; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-dim); }
+    .helper select,.helper input { background:#0f1924; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 10px; font-size:14px; }
+    .helper button { background:linear-gradient(135deg,#1796c8,#43c7ff); color:#fff; font-weight:600; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; font-size:14px; letter-spacing:0.02em; box-shadow:0 4px 18px -4px rgba(12,182,255,0.5); transition:var(--trans-fast); }
+    .helper button:hover { filter:brightness(1.08); box-shadow:0 6px 24px -4px rgba(12,182,255,0.6); }
+    .helper-output { background:#0f1924; border:1px solid var(--border); border-radius:14px; padding:16px 18px; font-size:14px; display:grid; gap:10px; }
+    .helper-output .result-main { font-size:16px; font-weight:600; }
+    .result-main span { padding:4px 10px 5px; border-radius:999px; font-size:12px; letter-spacing:0.05em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); }
+
+    .filters { display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 14px; }
+    .filters button { background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--text-dim); padding:6px 10px; border-radius:10px; font-size:12px; cursor:pointer; letter-spacing:0.04em; }
+    .filters button.active { background:var(--primary); color:#08212d; font-weight:600; box-shadow:var(--primary-glow); }
+
+    footer { max-width:1750px; margin:64px auto 0; padding:32px 24px 72px; text-align:center; font-size:12px; color:var(--text-dim); }
+    .divider { height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); margin:32px 0; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1>🌀 Slot Game 動態資產生成管線 (Refactored v2)</h1>
+        <p style="max-width:880px;color:var(--text-dim);">整合 <strong>預渲染 (Video/SpriteSheet)</strong>、<strong>Spine 骨架</strong>、<strong>程序化 Runtime (Tween/Shader/DSL)</strong> 與 <strong>Hybrid</strong> 的統一決策與生產標準，支援規格 → 生成 → QA → 版本治理 → 效能度量。</p>
+      </div>
+      <div class="hero-grid">
+        <div class="metric"><span class="label">版本</span><strong>v2.0 (Refactor)</strong></div>
+        <div class="metric"><span class="label">更新日期</span><strong>2025-10-03</strong></div>
+        <div class="metric"><span class="label">核心引擎</span><strong>Gemini 2.5 ・ Veo 3</strong></div>
+        <div class="metric"><span class="label">覆蓋類型</span><strong>9 動態分類</strong></div>
+        <div class="metric"><span class="label">交付模式</span><strong>4 (V / S / R / H)</strong></div>
+        <div class="metric"><span class="label">自動 QA 指標</span><strong>12+</strong></div>
+      </div>
+      <div class="callout"><strong>導讀：</strong> 先看「A. 快速上線」、再用「B. 決策與分類」判斷產出模式，之後依對應管線章節落地，最後用 QA / Manifest / 自動化工具收斂。</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="nav-group">
+        <div class="nav-title">Overview</div>
+        <a href="#quickstart">A. 快速上線</a>
+        <a href="#decision">B. 決策與分類</a>
+        <a href="#flows">C. 四大管線流程</a>
+        <a href="#specs">D. 規格 & Artifact</a>
+        <a href="#prompts">E. Prompt Library</a>
+        <a href="#automation">F. 自動化 / CLI</a>
+        <a href="#quality">G. 品質 & 效能</a>
+        <a href="#risk">H. 風險 & 版本</a>
+        <a href="#appendix">附錄 (Reference)</a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- A. 快速上線 -->
+      <section id="quickstart" class="panel">
+        <h2>A. 快速上線 (5-Step Launch)</h2>
+        <div class="grid cols-3">
+          <div class="card"><h4>1. 建立 Catalog</h4><p>列出核心 10 個動態，填入 <code>effects_catalog.yaml</code> 基礎欄位：<code>id, category, durationSec, perfBudgetKB</code>。</p></div>
+          <div class="card"><h4>2. 選擇交付模式</h4><p>用下方「決策助手」輸入視覺複雜度 / 循環 / 體積預算 → 得出 <code>deliveryType</code>。</p></div>
+          <div class="card"><h4>3. Prompt 生成</h4><p>引用對應模板（E 節），Gemini 自動補語意矩陣 + 否定詞。</p></div>
+          <div class="card"><h4>4. 自動初篩 + 後處理</h4><p>執行 <code>veo_generate → evaluate_clip → extract_frames → build_spritesheet</code> 或 DSL 解析。</p></div>
+          <div class="card"><h4>5. Manifest + QA</h4><p>寫入 <code>memoryCost / fps / duration / hash</code>，套 QA 規則（G 節）→ 通過即納入版本。</p></div>
+          <div class="card"><h4>里程碑 KPI</h4><p>首批平均迭代 ≤ 3 次；QA 通過率 ≥ 80%；平均體積 ≤ 預算 +10%。</p></div>
+        </div>
+      </section>
+
+      <!-- B. 決策與分類 -->
+      <section id="decision" class="panel">
+        <h2>B. 動態分類與交付決策</h2>
+        <p>將產出方法統一為四象限：<strong>V = Video/序列</strong>、<strong>S = Spine</strong>、<strong>R = Runtime 程序</strong>、<strong>H = Hybrid 組合</strong>。下表可依篩選快速對應。</p>
+        <div class="filters" id="typeFilters">
+          <button data-filter="video">Video</button>
+          <button data-filter="spine">Spine</button>
+          <button data-filter="runtime">Runtime</button>
+          <button data-filter="hybrid">Hybrid</button>
+          <button data-filter="reset" class="active">全部</button>
+        </div>
+        <div class="table-wrap"><table id="decisionTable">
+          <thead><tr><th>分類</th><th>目的</th><th>典型時長</th><th>建議交付模式</th><th>備註</th></tr></thead>
+          <tbody>
+            <tr data-type="video"><td>符號命中</td><td>強調單一贏圖</td><td>0.6–0.9s</td><td>V / H</td><td>影片 + 程序掃光</td></tr>
+            <tr data-type="runtime"><td>符號 Idle</td><td>微循環</td><td>0.8–1.2s Loop</td><td>R / S</td><td>程式縮放 / Tint / Spine 輕骨架</td></tr>
+            <tr data-type="video hybrid"><td>Line Win</td><td>路徑掃描</td><td>0.8–1.2s</td><td>R → (V/H) 若粒子複雜</td><td>優先程序以節省體積</td></tr>
+            <tr data-type="video"><td>聽牌效果</td><td>期待營造</td><td>1.0–1.4s</td><td>V / H</td><td>含光暈漂移</td></tr>
+            <tr data-type="video"><td>背景循環</td><td>氛圍</td><td>4–8s Loop</td><td>V</td><td>嚴控 loopSeam</td></tr>
+            <tr data-type="video hybrid"><td>Free Spin 轉場</td><td>模式切換</td><td>1.5–2.5s</td><td>V / H</td><td>多分層特效</td></tr>
+            <tr data-type="video hybrid"><td>Big / Mega Win</td><td>情緒峰值</td><td>2.0–3.0s</td><td>H</td><td>影片 + 程序數字/掃光</td></tr>
+            <tr data-type="video runtime"><td>結算畫面</td><td>分數回饋</td><td>1.2–2.0s</td><td>V + R</td><td>數字跳動程式化</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>決策助手 (Delivery Type Helper)</h3>
+        <div class="helper" id="helper">
+          <div class="helper-grid">
+            <label>視覺複雜度
+              <select id="complexity"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+            </label>
+            <label>循環需求 (Loop)
+              <select id="loop"><option value="none">None</option><option value="short">Short (≤2s)</option><option value="long">Long (&gt;2s)</option></select>
+            </label>
+            <label>體積預算 (KB)
+              <input type="number" id="budget" value="500" min="50" />
+            </label>
+            <label>互動 / 參數化
+              <select id="interactive"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+            </label>
+            <label>播放頻率
+              <select id="freq"><option value="rare">Rare</option><option value="moderate">Moderate</option><option value="high">High</option></select>
+            </label>
+            <label>峰值視覺要求
+              <select id="peak"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+            </label>
+          </div>
+          <button id="runDecision">分析交付模式</button>
+          <div class="helper-output" id="decisionOutput" hidden>
+            <div class="result-main">建議模式：<span id="resultType"></span></div>
+            <div id="resultReason" style="color:var(--text-dim);"></div>
+            <div id="resultNext"></div>
+          </div>
+        </div>
+
+        <h3>決策規則（摘要）</h3>
+        <ul>
+          <li>Complexity = high 且 Peak = high → Video / Hybrid 優先。</li>
+          <li>Loop = long 且 Budget &lt; 300KB → Spine 或 Runtime。</li>
+          <li>Interactive = high → Runtime / Spine；若仍需高光影 → Hybrid。</li>
+          <li>頻率 = high 且 Budget 嚴格 → 盡量 Runtime → Spine → Video。</li>
+        </ul>
+      </section>
+
+      <!-- C. 四大管線流程 -->
+      <section id="flows" class="panel">
+        <h2>C. 四大管線流程概覽</h2>
+        <p>所有模式共用「需求 → 規格 → 生成 → 評估 → 後處理 → 打包 → Manifest → QA → 發佈」主幹，差異在 <strong>生成 + 後處理 + 交付物</strong>。</p>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node"><strong>需求收集</strong><span class="small">玩法節點 & 視覺語意</span></div>
+            <div class="flow-node"><strong>Gemini 規劃</strong><span class="small">語意矩陣 / Prompt</span></div>
+            <div class="flow-node"><strong>生成</strong><span class="small">Veo / Spine / DSL</span></div>
+            <div class="flow-node"><strong>自動評估</strong><span class="small">解析度 / 亮度 / Loop</span></div>
+            <div class="flow-node"><strong>後處理</strong><span class="small">抽幀 / Alpha / keyframes</span></div>
+            <div class="flow-node"><strong>打包</strong><span class="small">Sprite / JSON / YAML</span></div>
+            <div class="flow-node"><strong>Manifest</strong><span class="small">meta / hash</span></div>
+            <div class="flow-node"><strong>QA</strong><span class="small">指標與規範</span></div>
+            <div class="flow-node"><strong>發佈</strong><span class="small">CDN / Bundle</span></div>
+          </div>
+        </div>
+
+        <h3>各模式差異焦點</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>面向</th><th>Video / Sprite</th><th>Spine</th><th>Runtime</th><th>Hybrid</th></tr></thead>
+          <tbody>
+            <tr><td>生成工具</td><td>Veo + ffmpeg</td><td>Spine Editor / AI 骨架</td><td>DSL → 引擎</td><td>混合上述</td></tr>
+            <tr><td>後處理</td><td>Loop 修補 / Alpha 擷取</td><td>骨架結構檢查</td><td>Keyframe 合理化</td><td>同步對齊</td></tr>
+            <tr><td>核心 QA</td><td>loopSeamRMS / 中心漂移</td><td>boneCoverage</td><td>eventSync</td><td>peak 對齊</td></tr>
+            <tr><td>版本控制</td><td>vN (渲染)</td><td>骨架/動作 vN</td><td>DSL vN</td><td>三項 hash</td></tr>
+            <tr><td>降級策略</td><td>降幀/壓縮</td><td>減骨骼</td><td>降低頻率</td><td>回拆三獨立</td></tr>
+          </tbody></table></div>
+      </section>
+
+      <!-- D. 規格 & Artifact -->
+      <section id="specs" class="panel">
+        <h2>D. 規格 & Artifact 管理</h2>
+        <h3>D.1 主要資料結構</h3>
+        <div class="grid cols-3">
+          <div class="card"><h4>Effect Spec (YAML)</h4><p>描述單一動態：語意、時長、fps、顏色、perfBudget、variantCount。</p><div class="tag-row"><span class="tag" data-variant="type">author</span><span class="tag">版本化</span></div></div>
+          <div class="card"><h4>Catalog</h4><p>聚合 id 列表 + 路徑，供批次處理與 CLI 使用。</p><div class="tag-row"><span class="tag" data-variant="type">batch</span></div></div>
+          <div class="card"><h4>Manifest</h4><p>發佈交付：<code>id, path, memoryCost, deliveryType, hash</code>。</p><div class="tag-row"><span class="tag" data-variant="type">runtime</span></div></div>
+          <div class="card"><h4>Runtime DSL</h4><p>Tween / Shader / event 時序與 keyframes。</p><div class="tag-row"><span class="tag">可壓縮</span></div></div>
+          <div class="card"><h4>Hybrid Manifest</h4><p>封裝 video + skeleton + runtimeSpec + sync。</p></div>
+          <div class="card"><h4>QA Report</h4><p>存放計算結果：loopSeamRMS, luminancePeakTime, boneCoverage。</p></div>
+        </div>
+
+        <h3>D.2 Manifest 擴充示例</h3>
+        <pre class="code">{
+  "id": "symbol_win_lion_v2",
+  "deliveryType": "hybrid",
+  "video": {"path": "animations/symbol/win/lion/v2/core.webm", "fps":30, "loop":false},
+  "runtimeSpec": "runtime_specs/symbol_win_lion_v2.yaml",
+  "skeleton": {"path":"skeletons/symbol_lion.json", "entry":"idle"},
+  "perf": {"memoryKB": 412, "gpuMs": 0.45},
+  "hash": "sha256:a912...",
+  "qa": {"loopSeamRMS":0.0, "centerDriftPct":2.1}
+}</pre>
+
+        <h3>D.3 DSL 範例 (Runtime)</h3>
+        <pre class="code">id: symbol_win_lion_runtime_v2
+bindTo: SYM_Lion
+fps: 60
+tracks:
+  - type: tween
+    target: root
+    prop: scale
+    kf:
+      - { t:0.00, v:1.00, ease:cubicOut }
+      - { t:0.08, v:1.09 }
+      - { t:0.24, v:1.02 }
+      - { t:0.46, v:1.07 }
+      - { t:0.60, v:1.00 }
+  - type: shader
+    target: mat.glow
+    uniform: sweepPos
+    kf: [{t:0.00,v:0.0},{t:0.32,v:1.0},{t:0.60,v:1.2}]
+perf:
+  maxInstances: 30
+  warnMs: 3.0</pre>
+
+        <details class="slim"><summary>欄位對照與作用 (展開)</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th>欄位</th><th>來源</th><th>用途</th><th>管線階段</th></tr></thead>
+            <tbody>
+              <tr><td>semanticKeywords</td><td>Spec</td><td>語意比對</td><td>Evaluate</td></tr>
+              <tr><td>perfBudgetKB</td><td>Spec</td><td>體積預算</td><td>Evaluate / Pack</td></tr>
+              <tr><td>variantCount</td><td>Spec</td><td>生成變體數</td><td>Generate</td></tr>
+              <tr><td>layering</td><td>Spec</td><td>層/降級策略</td><td>Manifest</td></tr>
+              <tr><td>audioSyncPoints</td><td>Spec</td><td>事件對齊</td><td>Hybrid Sync</td></tr>
+              <tr><td>deliveryType</td><td>Decision Helper</td><td>模式辨識</td><td>Pack/Manifest</td></tr>
+              <tr><td>hash</td><td>Build</td><td>版本完整性</td><td>Release</td></tr>
+            </tbody></table></div>
+        </details>
+      </section>
+
+      <!-- E. Prompt Library -->
+      <section id="prompts" class="panel">
+        <h2>E. Prompt Library (精選模板)</h2>
+        <p>保持結構：<strong>Subject + Motion + Camera + Lighting + Style + Timing + Technical</strong>。示例節錄：</p>
+        <h3>符號命中 (Symbol Win)</h3>
+        <pre class="code">Generate a short slot symbol win animation.
+Subject: {symbol_description}
+Action: energetic burst, subtle 8% scale pulse, gold rune sweep.
+Camera: locked orthographic.
+Lighting: high contrast rim + warm key.
+Style: stylized realism, crisp edges.
+Timing: 0.6-0.8s @30fps, emphasis frames: 4,10,14.
+Goal: consistent centroid, clean alpha.</pre>
+        <h3>背景循環 (Loop Background)</h3>
+        <pre class="code">Create a seamless atmospheric loop background.
+Theme: {environment_theme}
+Motion: low-medium cyclical parallax.
+Length: 6s @24fps.
+Loop: seamless first-last frame continuity.
+Avoid: distracting focal bursts.</pre>
+        <h3>Big Win / Mega Win</h3>
+        <pre class="code">Generate a celebratory big win cinematic.
+Elements: central emblem + radial golden rays + layered coin burst.
+Camera: 5% slow push-in.
+Phasing: 0-0.5 build, 0.5-1.6 cascade, 1.6-2.5 settle shimmer.
+Duration: 2.5s.
+Ensure: no clipping highlights, stable center.</pre>
+      </section>
+
+      <!-- F. 自動化 / CLI -->
+      <section id="automation" class="panel">
+        <h2>F. 自動化 / CLI Pipeline</h2>
+        <h3>核心骨架</h3>
+        <pre class="code">for eff in catalog.effects:
+  prompt = gemini_plan(eff)
+  clips = veo_generate(prompt, variants=eff.variantCount)
+  chosen = select_best(clips, rules=eff.qaRules)
+  if chosen:
+    if eff.deliveryType in ['video','hybrid']:
+      frames = extract_frames(chosen)
+      sheet = build_spritesheet(frames)
+    if eff.deliveryType in ['runtime','hybrid']:
+      dsl = build_runtime_spec(eff)
+    pack_and_manifest(eff, artifacts=[sheet,dsl,chosen])
+    qa_report = run_qa(eff)
+    update_catalog(eff.id, qa=qa_report)</pre>
+        <h3>建議 CLI 任務</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>指令</th><th>目的</th><th>狀態</th></tr></thead>
+          <tbody>
+            <tr><td>gen_prompt</td><td>輸出語意化 Prompt</td><td>已實作</td></tr>
+            <tr><td>generate_from_layers</td><td>推導骨架 → Spine</td><td>已實作</td></tr>
+            <tr><td>export_hybrid_manifest</td><td>組合 Hybrid</td><td>已實作</td></tr>
+            <tr><td>validate_spec</td><td>規格完整性/類型</td><td>已實作</td></tr>
+            <tr><td>analyze_video_loop</td><td>Loop 誤差 (RMS)</td><td>TODO</td></tr>
+            <tr><td>build_manifest</td><td>hash / meta 聚合</td><td>TODO</td></tr>
+            <tr><td>decision_helper</td><td>批次推論 deliveryType</td><td>TODO</td></tr>
+          </tbody></table></div>
+      </section>
+
+      <!-- G. 品質 & 效能 -->
+      <section id="quality" class="panel">
+        <h2>G. 品質 & 效能治理</h2>
+        <h3>G.1 指標矩陣</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>指標</th><th>說明</th><th>門檻</th><th>適用</th></tr></thead>
+          <tbody>
+            <tr><td>loopSeamRMS</td><td>首尾差 RMS</td><td>&lt; 2.0</td><td>Video / Hybrid</td></tr>
+            <tr><td>centerDriftPct</td><td>中心漂移%</td><td>&lt;= 5%</td><td>All</td></tr>
+            <tr><td>alphaIntegrity</td><td>Alpha 邊緣乾淨度</td><td>&gt;= 0.95</td><td>Video / Sprite</td></tr>
+            <tr><td>boneCoverage</td><td>骨架覆蓋率</td><td>&gt;= 0.95</td><td>Spine / Hybrid</td></tr>
+            <tr><td>runtimeKeyframes</td><td>Keyframe 總數</td><td>&lt; 180</td><td>Runtime / Hybrid</td></tr>
+            <tr><td>uniformUpdateRate</td><td>Shader 更新頻率</td><td>&lt; 50/s</td><td>Runtime / Hybrid</td></tr>
+            <tr><td>memoryKB</td><td>單資產記憶體</td><td>依分類預算</td><td>All</td></tr>
+            <tr><td>luminancePeakTime</td><td>亮度峰值時間</td><td>±0.06s 對齊</td><td>Hybrid</td></tr>
+          </tbody></table></div>
+
+        <h3>G.2 QA Checklist (最小套件)</h3>
+        <ul>
+          <li>解析度 / FPS 檢查</li>
+          <li>Loop 誤差 & Alpha 邊緣</li>
+          <li>中心穩定 (bounding box)</li>
+          <li>體積 ≤ perfBudgetKB</li>
+          <li>事件 / 音效同步 (如有)</li>
+          <li>Manifest 一致性 (id / path / hash)</li>
+        </ul>
+
+        <h3>G.3 降級策略索引</h3>
+        <div class="grid cols-3">
+          <div class="card"><h4>Video</h4><p>抽幀→減幀率→提高 CRF→改 sprite 局部。</p></div>
+          <div class="card"><h4>Spine</h4><p>合併 bone / 移除裝飾 slot / 降貼圖解析度。</p></div>
+          <div class="card"><h4>Runtime</h4><p>減 keyframe / 降 uniform 更新頻率 / 移除粒子。</p></div>
+        </div>
+      </section>
+
+      <!-- H. 風險 & 版本 -->
+      <section id="risk" class="panel">
+        <h2>H. 風險 & 版本治理</h2>
+        <h3>H.1 風險表</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>風險</th><th>緩解</th><th>回滾</th></tr></thead>
+          <tbody>
+            <tr><td>Veo 產出不穩</td><td>多種子 + 閾值過濾</td><td>回 v(n-1)</td></tr>
+            <tr><td>風格漂移</td><td>參考影格 + style embedding</td><td>鎖定前版 embedding</td></tr>
+            <tr><td>體積膨脹</td><td>預警報表</td><td>批次壓縮 / 抽幀</td></tr>
+            <tr><td>Loop 接縫</td><td>crossfade / optical flow</td><td>暫降為靜態</td></tr>
+            <tr><td>播放卡頓</td><td>預載策略 / 降 FPS</td><td>低階資產包</td></tr>
+          </tbody></table></div>
+
+        <h3>H.2 版本標記</h3>
+        <ul>
+          <li><code>_vN</code>：視覺或 DSL 結構變更。</li>
+          <li><code>hash</code>：Video ^ Skeleton ^ RuntimeSpec。</li>
+          <li>Manifest <code>versionTag</code> 變動時寫入 ChangeLog。</li>
+        </ul>
+
+        <h3>H.3 迭代策略</h3>
+        <ol>
+          <li>收集 QA 報告 → 找出高體積低使用頻率資產。</li>
+          <li>Decision Helper 再評估是否可程序化替換。</li>
+          <li>建立 <code>deprecated = true</code> 標記 → 延後移除。</li>
+          <li>每週產出 <code>pipeline_metrics.json</code>：平均迭代、通過率、體積分布。</li>
+        </ol>
+      </section>
+
+      <!-- 附錄 -->
+      <section id="appendix" class="panel">
+        <h2>附錄 (Reference)</h2>
+        <details class="slim"><summary>原始 Prompt 擴展分類</summary>
+          <p>可依視覺能量：<code>lowAmbient / midAction / burstCinematic</code> 分級修飾詞。</p>
+        </details>
+        <details class="slim"><summary>指標計算片段（Pseudo)</summary>
+          <pre class="code">def loop_seam_rms(first_frame, last_frame):
+  diff = (first_frame.astype(float) - last_frame.astype(float)) ** 2
+  return np.sqrt(diff.mean())</pre>
+        </details>
+        <details class="slim"><summary>Decision Helper 規則簡化</summary>
+          <pre class="code">if complexity=='high' and peak=='high': video_or_hybrid()
+elif interactive=='high': runtime_or_spine()
+elif loop=='long' and budget < 300: runtime_or_spine()
+else: video_if_budget_allows()</pre>
+        </details>
+        <details class="slim"><summary>Hybrid Sync 要點</summary>
+          <ul><li>取亮度峰值 time → 對齊 runtime peak track。</li><li>Spine idle 時長與影片循環 LCM。</li><li>事件節點 ±0.05s 允收。</li></ul>
+        </details>
+        <details class="slim"><summary>降級路徑參考</summary>
+          <ul><li>Big Win H → (影片低幀率 + Runtime)</li><li>Transition V → Spine overlay + 簡化 shader</li></ul>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <footer>© 2025 Slot Game AI Pipeline Team · Refactored v2 · Gemini 2.5 + Veo 3</footer>
+
+  <script>
+    // Sidebar active highlight
+    const links = Array.from(document.querySelectorAll('#sidebar a'));
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.toggle('active', l.getAttribute('href').slice(1) === e.target.id));
+        }
+      });
+    }, { rootMargin: '0px 0px -70% 0px', threshold: 0.1 });
+    document.querySelectorAll('main section').forEach(sec => observer.observe(sec));
+
+    // Filters for decision table
+    const filterBtns = document.querySelectorAll('#typeFilters button');
+    const decisionRows = document.querySelectorAll('#decisionTable tbody tr');
+    filterBtns.forEach(btn => btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      decisionRows.forEach(r => {
+        if (!f || f==='reset') { r.hidden = false; return; }
+        r.hidden = !r.dataset.type.includes(f);
+      });
+    }));
+
+    // Decision Helper logic
+    const runBtn = document.getElementById('runDecision');
+    runBtn?.addEventListener('click', () => {
+      const complexity = document.getElementById('complexity').value;
+      const loop = document.getElementById('loop').value;
+      const budget = parseInt(document.getElementById('budget').value, 10) || 0;
+      const interactive = document.getElementById('interactive').value;
+      const freq = document.getElementById('freq').value;
+      const peak = document.getElementById('peak').value;
+
+      let type = 'video';
+      const reasons = [];
+      // Rule evaluation
+      if (complexity === 'high' && peak === 'high') { type = 'video'; reasons.push('高視覺複雜 + 高峰值 → 需要預渲染品質'); }
+      if (interactive === 'high') { type = 'runtime'; reasons.push('高互動/參數化 → 程序化優先'); }
+      if (loop === 'long' && budget < 300) { type = (interactive !== 'low') ? 'runtime' : 'spine'; reasons.push('長 Loop + 嚴格體積 → Spine/Runtime'); }
+      if (type === 'video' && budget < 350 && peak !== 'high') { type = 'hybrid'; reasons.push('體積緊張且非高峰值 → Hybrid 混合節省'); }
+      if (type === 'runtime' && peak === 'high' && complexity !== 'low') { type = 'hybrid'; reasons.push('程序化不足以支撐視覺 → Hybrid'); }
+      if (freq === 'high' && type === 'video' && budget < 600) { type = 'hybrid'; reasons.push('高頻播放 + 體積關注 → Hybrid'); }
+
+      // Next step suggestions
+      const next = {
+        video: '使用 Prompt 模板 (E 節) → Veo 生成 → 後處理 (Loop/Alpha) → Manifest。',
+        spine: '建立骨架 + Idle 動作 → 覆蓋率檢查 → Export → Manifest skeleton。',
+        runtime: '用 Spec 衍生 DSL → 建立 Tween/Shader → 事件對齊 QA。',
+        hybrid: '先產影片主層 → 生成 DSL / Skeleton 補強 → Sync 峰值時間 → Hybrid Manifest。'
+      };
+
+      document.getElementById('decisionOutput').hidden = false;
+      document.getElementById('resultType').textContent = type.toUpperCase();
+      document.getElementById('resultReason').innerHTML = reasons.map(r => '• ' + r).join('<br>');
+      document.getElementById('resultNext').textContent = next[type];
+    });
+  </script>
+</body>
+</html>

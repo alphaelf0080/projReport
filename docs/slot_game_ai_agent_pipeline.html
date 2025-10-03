@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Slot Game AI Agent 製作流程與 SOP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1115;
+  --panel: #1c222b;
+  --panel-alt: #222b36;
+  --border: #2e3945;
+  --text: #e6e9ef;
+  --text-dim: #9aa4b1;
+  --accent: #4f8bff;
+  --accent-grad: linear-gradient(135deg,#4f8bff,#8855ff 60%,#ff3fa4);
+  --danger: #ff5f56;
+  --warn: #f5c451;
+  --ok: #3fbf74;
+  --code-bg: #1b1f27;
+  --radius: 14px;
+  --shadow: 0 4px 18px -4px rgba(0,0,0,.5),0 8px 32px -8px rgba(0,0,0,.35);
+  --grid-gap: 1.25rem;
+}
+* { box-sizing: border-box; }
+html,body { margin:0; padding:0; font-family: 'Inter', system-ui,-apple-system, BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background: radial-gradient(circle at 20% 20%,#1c2430,#0f1115 60%); color: var(--text); -webkit-font-smoothing: antialiased; }
+body { line-height: 1.55; }
+
+h1,h2,h3,h4 { font-weight: 600; line-height: 1.25; letter-spacing: .5px; }
+code, pre { font-family: 'JetBrains Mono','Consolas','Courier New',monospace; }
+
+/* Layout */
+.wrapper { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+.sidebar { background: rgba(25,30,38,.7); backdrop-filter: blur(16px); border-right: 1px solid var(--border); padding: 1.2rem 1rem 2rem; position: sticky; top:0; height: 100vh; overflow-y: auto; }
+.sidebar h2 { font-size: .95rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); margin: .75rem 0 .5rem; letter-spacing: 1px; }
+.nav-group { margin-bottom: 1.2rem; }
+.nav-group a { display: block; padding: .55rem .75rem; margin: 2px 0; font-size: .85rem; border-radius: 8px; color: var(--text-dim); text-decoration: none; position: relative; transition: .25s; }
+.nav-group a:hover, .nav-group a.active { color: var(--text); background: linear-gradient(90deg,rgba(79,139,255,.15),rgba(136,85,255,.12)); }
+.nav-group a::before { content:""; position:absolute; left:8px; top:50%; width:4px; height:4px; margin-top:-2px; background: var(--accent); border-radius:50%; opacity:.4; }
+
+.main { padding: 2rem 2.25rem 4rem; }
+.hero { background: linear-gradient(135deg,rgba(79,139,255,.18),rgba(136,85,255,.16)); border:1px solid rgba(120,140,170,.25); padding: 2rem 2.25rem; border-radius: var(--radius); box-shadow: var(--shadow); position:relative; overflow:hidden; }
+.hero::after { content:""; position:absolute; inset:0; background: radial-gradient(circle at 85% 15%,rgba(255,255,255,.15),transparent 60%); mix-blend-mode: overlay; pointer-events:none; }
+.badges { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
+.badge { background: var(--panel-alt); padding:.4rem .75rem; font-size:.7rem; letter-spacing:.5px; border:1px solid var(--border); border-radius: 30px; text-transform: uppercase; font-weight:600; color: var(--text-dim); }
+
+.grid { display:grid; gap: var(--grid-gap); }
+.grid.cols-3 { grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); }
+.card { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:1.1rem 1.1rem 1.25rem; position:relative; display:flex; flex-direction:column; gap:.5rem; box-shadow: 0 2px 8px -2px rgba(0,0,0,.4); transition:.3s; }
+.card:hover { border-color: #5b6b85; transform: translateY(-3px); }
+.card h3 { font-size: .95rem; margin:0; font-weight:600; letter-spacing:.5px; }
+.card small { color: var(--text-dim); font-size:.65rem; letter-spacing:.5px; text-transform: uppercase; }
+.card p { margin:.25rem 0 0; font-size:.8rem; color:#c9d2dc; line-height:1.4; }
+
+.section { margin-top: 3rem; }
+.section h2 { font-size:1.35rem; margin:0 0 1rem; background: var(--accent-grad); -webkit-background-clip:text; color:transparent; }
+.sub { font-size:.8rem; color:var(--text-dim); margin-top:-.35rem; margin-bottom:1.25rem; letter-spacing:.75px; text-transform:uppercase; }
+.divider { height:1px; background: linear-gradient(90deg,transparent,var(--border),transparent); margin:2.5rem 0; border:none; }
+
+.table-wrapper { overflow:auto; border:1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+.table-wrapper table { width:100%; border-collapse: collapse; font-size:.78rem; }
+.table-wrapper th, .table-wrapper td { padding:.55rem .7rem; text-align:left; border-bottom:1px solid #2a3440; }
+.table-wrapper th { background: var(--panel-alt); font-weight:600; color:#d5dde6; position:sticky; top:0; z-index:1; }
+.table-wrapper tr:last-child td { border-bottom:none; }
+.table-wrapper tr:hover td { background: #242e39; }
+
+.flex-row { display:flex; gap:1rem; flex-wrap:wrap; }
+.metric { flex:1 1 160px; background: var(--panel); border:1px solid var(--border); padding: .9rem 1rem; border-radius: 12px; display:flex; flex-direction:column; gap:.35rem; }
+.metric span { font-size:.7rem; color: var(--text-dim); letter-spacing:.5px; text-transform:uppercase; }
+.metric strong { font-size:1.1rem; font-weight:600; }
+.metric.good strong { color: var(--ok); }
+.metric.warn strong { color: var(--warn); }
+.metric.bad strong { color: var(--danger); }
+
+.code-block { background: var(--code-bg); border:1px solid #303a46; padding: .9rem 1rem; border-radius: 10px; font-size:.75rem; line-height:1.4; position:relative; }
+.code-block pre { margin:0; white-space:pre-wrap; word-break:break-word; }
+.code-block::before { content:"CODE"; position:absolute; top:8px; right:12px; font-size:.6rem; color:var(--text-dim); letter-spacing:1px; }
+
+.flow-diagram { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:1rem 1.2rem; font-size:.7rem; line-height:1.5; font-family: 'JetBrains Mono',monospace; overflow:auto; }
+.badge-inline { background:#253140; padding:.15rem .5rem; border-radius:6px; font-size:.65rem; margin-left:.35rem; }
+
+.tag-list { display:flex; flex-wrap:wrap; gap:.4rem; }
+.tag { background: #253140; padding:.35rem .6rem; font-size:.65rem; border-radius: 6px; letter-spacing:.5px; }
+
+.footer { margin-top:4rem; padding:2rem 0 3rem; text-align:center; font-size:.65rem; color:var(--text-dim); }
+
+/* Step timeline */
+.timeline { position:relative; margin-top:1.5rem; }
+.timeline::before { content:""; position:absolute; left:18px; top:0; width:2px; height:100%; background: linear-gradient(var(--accent), #7038e0); }
+.step { position:relative; padding-left:55px; margin-bottom:2rem; }
+.step:last-child { margin-bottom:0; }
+.step-marker { position:absolute; left:0; top:.15rem; width:36px; height:36px; border-radius:50%; background: var(--accent-grad); display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:600; box-shadow:0 0 0 4px #16202b; color:#fff; }
+.step h3 { margin:.1rem 0 .4rem; font-size:1rem; }
+.step p { margin:.25rem 0 .5rem; font-size:.75rem; color:#c5ced6; }
+.step .mini { font-size:.65rem; color: var(--text-dim); margin:0 0 .4rem; letter-spacing:.5px; }
+.badge-set { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.35rem; }
+.badge-chip { background:#253140; border:1px solid #314356; padding:.25rem .55rem; font-size:.6rem; border-radius: 30px; letter-spacing:.5px; }
+
+.highlight { background: linear-gradient(90deg,rgba(79,139,255,.15),rgba(136,85,255,.15)); padding:.55rem .7rem; border:1px solid var(--border); border-radius:10px; font-size:.7rem; }
+
+@media (max-width: 1080px){
+  .wrapper { grid-template-columns: 230px 1fr; }
+  .sidebar { padding:.9rem .75rem 2rem; }
+}
+@media (max-width: 880px){
+  .wrapper { display:block; }
+  .sidebar { position:relative; height:auto; max-height:unset; border-right:none; border-bottom:1px solid var(--border); border-radius:0 0 var(--radius) var(--radius); }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <aside class="sidebar" id="sidebar">
+    <h2>內容導覽</h2>
+    <div class="nav-group">
+      <a href="#hero" class="active">總覽</a>
+      <a href="#agents">AI 代理</a>
+      <a href="#timeline">12 階段流程</a>
+      <a href="#contracts">契約摘要</a>
+      <a href="#kpi">KPI</a>
+      <a href="#risks">風險控管</a>
+      <a href="#prompts">Prompt 模板</a>
+      <a href="#priority">導入優先順序</a>
+      <a href="#audit">Audit 範例</a>
+      <a href="#future">未來增強</a>
+    </div>
+  </aside>
+  <main class="main">
+    <section class="hero" id="hero">
+      <h1>Slot Game AI Agent 製作流程與 SOP</h1>
+      <div class="badges">
+        <div class="badge">Version v1.0</div>
+        <div class="badge">端到端流程</div>
+        <div class="badge">AI Assisted</div>
+        <div class="badge">Last Update: 2025-10-03</div>
+      </div>
+      <p style="margin-top:1rem; font-size:.9rem; max-width:860px;">本文件描述使用 AI 代理協助 Slot Game 從「概念 → 數學模型 → 靜態 / 動態素材 → 整合 → 驗證」的端到端自動化與協作流程。藉由模組化代理分工與資料契約，降低人力重複投入並強化品質可追溯性。</p>
+      <div class="flex-row" style="margin-top:1.25rem;">
+        <div class="metric good"><span>目標</span><strong>加速 50% 週期</strong></div>
+        <div class="metric"><span>代理數量</span><strong>11 Agents</strong></div>
+        <div class="metric warn"><span>RTP 調校</span><strong>≤ 5 次</strong></div>
+        <div class="metric"><span>風格一致</span><strong>≥ 0.85</strong></div>
+      </div>
+    </section>
+
+    <section class="section" id="agents">
+      <h2>AI 代理角色與分工</h2>
+      <p class="sub">Roles & Responsibilities</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>代理</th><th>任務</th><th>主要輸入</th><th>主要輸出</th><th>人類介入</th></tr></thead>
+          <tbody>
+            <tr><td>ConceptArtAgent</td><td>主視覺 / Symbol 風格探索</td><td>主題, 品牌調性</td><td>key_visual_*, concept_batch</td><td>Art Lead 選擇</td></tr>
+            <tr><td>DesignParserAgent</td><td>解析企劃結構</td><td>企劃書文本</td><td>game_structure.json</td><td>企劃確認</td></tr>
+            <tr><td>MathModelAgent</td><td>權重 / RTP 模擬</td><td>game_structure.json</td><td>math_model.json, simulation_report</td><td>數學驗證</td></tr>
+            <tr><td>PSDAnalyzerAgent</td><td>圖層轉規格</td><td>PSD</td><td>art_spec.json</td><td>TA 校對</td></tr>
+            <tr><td>AssetGenAgent</td><td>靜態素材生成</td><td>art_spec, style_guide</td><td>symbols/*.png</td><td>美術審核</td></tr>
+            <tr><td>PromptOptimizerAgent</td><td>Prompt 改良</td><td>原始 Prompt, 失敗樣本</td><td>最佳化 Prompt</td><td>Art Lead 核准</td></tr>
+            <tr><td>VFXSpecAgent</td><td>動效規格生成</td><td>symbol meta</td><td>vfx_spec.json</td><td>動效調整</td></tr>
+            <tr><td>VFXGenAgent</td><td>動效素材輸出</td><td>vfx_spec.json</td><td>frames / spine / Lottie</td><td>動效審核</td></tr>
+            <tr><td>EngineIntegrationAgent</td><td>整合與輸出</td><td>spec / assets / math</td><td>manifest, slot_config.json</td><td>前端驗證</td></tr>
+            <tr><td>SimulationAgent</td><td>自動測試</td><td>config, math_model</td><td>validation_report</td><td>QA 評估</td></tr>
+            <tr><td>AuditAgent</td><td>流程追溯</td><td>中介產物</td><td>decision_log.json</td><td>PM / 稽核</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="timeline">
+      <h2>12 階段流程 Timeline</h2>
+      <p class="sub">End-to-End Production Flow</p>
+      <div class="timeline">
+        <!-- Steps injected -->
+      </div>
+    </section>
+
+    <section class="section" id="contracts">
+      <h2>契約摘要 (Contracts)</h2>
+      <p class="sub">Input / Output / Checks / Fallbacks</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Step</th><th>Input</th><th>Output</th><th>檢查點</th><th>失敗處理</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>主題</td><td>concept_batch</td><td>風格分散度</td><td>重新生成 topN</td></tr>
+            <tr><td>3</td><td>企劃書</td><td>game_structure.json</td><td>缺欄位</td><td>人工補填</td></tr>
+            <tr><td>4</td><td>結構 JSON</td><td>math_model.json</td><td>RTP 偏差</td><td>自動調整</td></tr>
+            <tr><td>5</td><td>PSD</td><td>art_spec.json</td><td>命名錯誤</td><td>正規化</td></tr>
+            <tr><td>6</td><td>spec</td><td>symbols/</td><td>色偏</td><td>色票修正</td></tr>
+            <tr><td>8</td><td>symbols meta</td><td>vfx_spec.json</td><td>時間重疊</td><td>timeline 重排</td></tr>
+            <tr><td>11</td><td>specs+assets</td><td>manifest</td><td>缺資產</td><td>報表警示</td></tr>
+            <tr><td>12</td><td>config</td><td>validation_report</td><td>RTP 偏差</td><td>回溯第 4 步</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="kpi">
+      <h2>KPI 指標</h2>
+      <p class="sub">Performance & Quality Metrics</p>
+      <div class="grid cols-3">
+        <div class="card"><small>風格一致性</small><h3>≥ 0.85</h3><p>Embedding 相似度作為風格穩定性指標。</p></div>
+        <div class="card"><small>RTP 收斂迭代</small><h3>≤ 5 次</h3><p>自動調整權重直到達標。</p></div>
+        <div class="card"><small>靜態人工審核率</small><h3>< 30%</h3><p>AI 初審過濾低品質輸出。</p></div>
+        <div class="card"><small>動效異常幀率</small><h3>< 1%</h3><p>FrameDiff 檢測異常抖動。</p></div>
+        <div class="card"><small>Prompt 平均迭代</small><h3>≤ 3</h3><p>提升初次生成命中率。</p></div>
+        <div class="card"><small>整合錯誤次數</small><h3>≤ 1 / 版本</h3><p>自動檢查資產引用。</p></div>
+        <div class="card"><small>RTP 偏差</small><h3>≤ 0.5%</h3><p>確保數學公平性。</p></div>
+        <div class="card"><small>開發週期縮短</small><h3>≥ 50%</h3><p>端到端自動化目標。</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="risks">
+      <h2>風險與緩解</h2>
+      <p class="sub">Risk Control Matrix</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>風險</th><th>描述</th><th>緩解</th></tr></thead>
+          <tbody>
+            <tr><td>風格漂移</td><td>不同批次色調差異</td><td>嵌入比對 + 色票鎖定</td></tr>
+            <tr><td>Prompt 冗長</td><td>Artifact 產生</td><td>Token 權重分析</td></tr>
+            <tr><td>PSD 混亂</td><td>規格萃取失敗</td><td>命名正規化</td></tr>
+            <tr><td>RTP 偏差大</td><td>權重初值不良</td><td>自動再模擬</td></tr>
+            <tr><td>動效閃爍</td><td>幀品質不穩</td><td>FrameDiff 檢測</td></tr>
+            <tr><td>資產缺漏</td><td>manifest 不完整</td><td>自動掃描 hash</td></tr>
+            <tr><td>追溯困難</td><td>版本混亂</td><td>decision_log.json</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="prompts">
+      <h2>Prompt 模板</h2>
+      <p class="sub">Reusable Generation Patterns</p>
+      <div class="grid cols-3">
+        <div class="card"><small>靜態符號</small><div class="code-block"><pre>[主題] slot symbol of [元素], stylized, 256x256, clean edges, high clarity, no watermark, transparent background</pre></div></div>
+        <div class="card"><small>動態特效</small><div class="code-block"><pre>Generate JSON timeline for [symbol] hit effect: phases: charge(0-120ms gold glow), burst(120-240ms particles 24 spread 45deg), fade(240-300ms).</pre></div></div>
+        <div class="card"><small>數學模型</small><div class="code-block"><pre>Given target RTP:[96.2], reels:5x3, symbols:[...], produce weightMatrix + simulate 100k spins + adjust if deviation >0.5%.</pre></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="priority">
+      <h2>導入優先順序</h2>
+      <p class="sub">Implementation Roadmap</p>
+      <ol style="font-size:.8rem; line-height:1.5; padding-left:1.1rem;">
+        <li>數學模型與企劃解析（Step 3 / 4）</li>
+        <li>PSD → 規格化（Step 5）</li>
+        <li>靜態素材生成 + 審核（Step 6 / 7）</li>
+        <li>動態特效（Step 8–10）</li>
+        <li>整合與驗證（Step 11 / 12）</li>
+      </ol>
+    </section>
+
+    <section class="section" id="audit">
+      <h2>Audit 紀錄範例</h2>
+      <p class="sub">Decision Log Format</p>
+      <div class="code-block"><pre>{
+  "timestamp": "2025-10-03T10:22:00Z",
+  "action": "math_model_update",
+  "rpt_target": 0.962,
+  "rpt_observed": 0.958,
+  "adjustment": "increase Wild weight +2%",
+  "operator": "MathModelAgent",
+  "approved_by": "math_designer"
+}</pre></div>
+    </section>
+
+    <section class="section" id="future">
+      <h2>未來增強</h2>
+      <p class="sub">Growth & Evolution</p>
+      <ul style="font-size:.8rem; line-height:1.5; padding-left:1.1rem;">
+        <li>自動差異視覺化 (Diff UI)</li>
+        <li>生成式動效物理參數優化 (基於 RL)</li>
+        <li>玩家行為資料回饋調整權重</li>
+        <li>多模型 Prompt Ensembling</li>
+      </ul>
+    </section>
+
+    <div class="footer">© 2025 Slot Game AI Agent Pipeline — 自動化 · 協作 · 可追溯</div>
+  </main>
+</div>
+<script>
+// 動態注入 12 階段流程 (便於調整 / 後續擴充)
+const steps = [
+  { n:1, title:'產生 Concept Art 與主視覺', tags:['創意','視覺'], desc:'產出多版本主視覺與風格探索，建立色票與構圖基準。', output:'concept_batch_v1/, style_guide.md', kpi:'風格一致性 ≥0.80' },
+  { n:2, title:'概念與主視覺審核', tags:['審核','優化'], desc:'細化與比較強化版本，輸出最終主視覺。', output:'key_visual_final.png', kpi:'審核回合 ≤3' },
+  { n:3, title:'解析企劃書 → PSD 結構', tags:['結構化','解析'], desc:'盤面 / Symbol 配置與圖層規劃。', output:'game_structure.json, psd_plan.json', kpi:'缺漏欄位=0' },
+  { n:4, title:'數學模型 + 模擬', tags:['RTP','模擬'], desc:'權重初始 → 模擬迭代收斂 RTP。', output:'math_model.json, simulation_report.html', kpi:'RTP 偏差 ≤1%' },
+  { n:5, title:'PSD → 素材規格 JSON', tags:['規格化','解析'], desc:'解析圖層並產出素材 spec 與導出規則。', output:'art_spec.json', kpi:'命名合規 100%' },
+  { n:6, title:'靜態素材生成 / Prompt 建議', tags:['生成','美術'], desc:'依規格生成多變體與對應提示。', output:'symbols/*.png, prompt_suggestions.json', kpi:'可用率 ≥70%' },
+  { n:7, title:'靜態素材審核', tags:['QA','分析'], desc:'AI 自動評分 + 人類針對低分複核。', output:'static_review_report.json', kpi:'人工審核 <30%' },
+  { n:8, title:'動態特效規格生成', tags:['動效','規格'], desc:'符號屬性驅動特效時間軸規劃。', output:'vfx_spec.json', kpi:'時間重疊=0' },
+  { n:9, title:'動態特效素材生成', tags:['動效','生成'], desc:'輸出序列/Spine/Lottie 資料。', output:'vfx_manifest.json', kpi:'閃爍率 <1%' },
+  { n:10, title:'動態素材審核', tags:['QA','動效'], desc:'幀品質與節奏檢測與複核。', output:'vfx_review_report.json', kpi:'抖動=低' },
+  { n:11, title:'整合 MCP / 前端引擎', tags:['整合','配置'], desc:'manifest / config / 資產綁定。', output:'assets_manifest.json, slot_config.json', kpi:'缺資產=0' },
+  { n:12, title:'接入資料測試', tags:['驗證','模擬'], desc:'自動 spin 測試統計與合法性檢查。', output:'integration_validation_report.html', kpi:'RTP 偏差 ≤0.5%' }
+];
+
+const timelineEl = document.querySelector('.timeline');
+steps.forEach(s => {
+  const div = document.createElement('div');
+  div.className = 'step';
+  div.innerHTML = `\n    <div class="step-marker">${s.n}</div>\n    <h3>${s.title}</h3>\n    <p>${s.desc}</p>\n    <div class="mini">輸出：${s.output}</div>\n    <div class="badge-set">${s.tags.map(t=>`<span class='badge-chip'>${t}</span>`).join('')}</div>\n    <div class="highlight" style="margin-top:.6rem;">KPI：${s.kpi}</div>\n  `;
+  timelineEl.appendChild(div);
+});
+
+// Scrollspy
+const navLinks = [...document.querySelectorAll('.nav-group a')];
+const sections = navLinks.map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+const activate = (id) => { navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href')===`#${id}`)); };
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ activate(e.target.id); } });
+},{ rootMargin:'-40% 0px -50% 0px', threshold:0 });
+sections.forEach(s=>observer.observe(s));
+</script>
+</body>
+</html>

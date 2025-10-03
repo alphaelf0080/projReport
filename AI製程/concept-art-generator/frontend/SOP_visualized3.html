@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP：Slot Game 美術規格樣板建立流程</title>
+    <style>
+        :root {
+            --main-bg-color: #f8f9fa;
+            --content-bg-color: #ffffff;
+            --sidebar-bg-color: #e9ecef;
+            --text-color: #212529;
+            --heading-color: #007bff;
+            --border-color: #dee2e6;
+            --accent-color: #007bff;
+            --code-bg-color: #282c34;
+            --code-text-color: #abb2bf;
+            --panel-bg-color: #f0f0f0;
+            --layer-bg-color: #fff;
+            --layer-hover-bg: #e6f2ff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            background-color: var(--main-bg-color);
+            color: var(--text-color);
+            display: flex;
+        }
+        .sidebar {
+            width: 300px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background-color: var(--sidebar-bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            font-size: 1.2em;
+            color: var(--heading-color);
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li a {
+            display: block;
+            padding: 8px 10px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .sidebar li a:hover, .sidebar li a.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .content {
+            margin-left: 340px;
+            padding: 30px;
+            width: calc(100% - 340px);
+        }
+        section {
+            background-color: var(--content-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 25px;
+            padding: 25px;
+        }
+        h1, h2, h3, h4 {
+            color: var(--heading-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 {
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h4 { font-size: 1.2em; border-bottom-style: dashed; margin-top: 2em; }
+        h3::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+        h3.collapsed::after {
+            transform: rotate(-90deg);
+        }
+        .phase-content {
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+            max-height: 20000px; /* Large enough for content */
+            padding-top: 15px;
+        }
+        .phase-content.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        strong {
+            color: #333;
+        }
+        code {
+            font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+            background-color: rgba(0, 123, 255, 0.05);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: var(--code-bg-color);
+            color: var(--code-text-color);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: 1em;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 2em 0;
+        }
+
+        /* Visual Panel Styles */
+        .visual-panel {
+            background-color: var(--panel-bg-color);
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+            font-size: 13px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .layer-tree {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .layer-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            background-color: var(--layer-bg-color);
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .layer-row:hover { 
+            background-color: var(--layer-hover-bg);
+            transform: translateX(2px);
+        }
+        
+        .layer-group > .layer-row { 
+            font-weight: bold; 
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        
+        .layer-subgroup > .layer-row {
+            background-color: #f0f8ff;
+            border-left: 3px solid #17a2b8;
+            font-weight: 600;
+        }
+        
+        .layer-content {
+            margin-left: 20px;
+            border-left: 2px dashed #ddd;
+            padding-left: 15px;
+        }
+        
+        .layer-subcontent {
+            margin-left: 15px;
+            border-left: 1px dashed #ccc;
+            padding-left: 10px;
+        }
+        
+        .layer-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            flex-shrink: 0;
+        }
+        
+        .icon-group { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23007bff" d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2zm0-1h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H2a3 3 0 0 1-3-3V4a3 3 0 0 1 3-3z"/><path fill="%23007bff" d="M1 4a1 1 0 0 1 1-1h4.382a1 1 0 0 1 .707.293l.853.853a1 1 0 0 0 .708.293H14a1 1 0 0 1 1 1v1H1V4z"/></svg>'); }
+        .icon-subgroup { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%2317a2b8" d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-2zM2 2v1h12V2H2z"/><path fill="%2317a2b8" d="M2 5.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/></svg>'); }
+        .icon-layer { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236c757d" d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm1 0v10h12V3H2z"/></svg>'); }
+        .icon-fx { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23ffc107" d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path fill="%23ffc107" d="M6.271 5.055a.5.5 0 0 1 .52.26L8 7.25l1.209-1.935a.5.5 0 0 1 .52-.26c.21 0 .38.14.38.34 0 .09-.04.17-.1.23L8.85 6.77l1.16 1.14c.06.06.1.14.1.23 0 .2-.17.34-.38.34a.5.5 0 0 1-.52-.26L8 6.25 6.791 8.185a.5.5 0 0 1-.52.26.34.34 0 0 1-.38-.34c0-.09.04-.17.1-.23L7.15 6.73 5.99 5.59a.34.34 0 0 1-.1-.23c0-.2.17-.34.38-.34z"/></svg>'); }
+        .icon-mask { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="%239c27b0" stroke-width="2"/><path fill="%239c27b0" d="M8 1a7 7 0 0 0 0 14V1z"/></svg>'); }
+        .icon-inst { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23dc3545" d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3zm1 0v10h12V3H2z"/><path fill="%23dc3545" d="M5.5 6.5L8 4l2.5 2.5L8 9l-2.5-2.5z"/></svg>'); }
+        .icon-preview { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236c757d" d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path fill="%236c757d" d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>'); }
+        
+        .layer-name-tag { 
+            padding: 2px 6px; 
+            border-radius: 3px; 
+            color: #fff; 
+            margin-right: 4px; 
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .tag-type { background-color: #6c757d; }
+        .tag-name { color: #000; font-weight: bold; }
+        .tag-size { background-color: #17a2b8; }
+        .tag-lang { background-color: #28a745; }
+        .tag-state { background-color: #ffc107; color: #212529; }
+        .tag-special { background-color: #dc3545; }
+        .tag-bg { background-color: #007bff; }
+        .tag-symbol { background-color: #fd7e14; }
+        .tag-button { background-color: #198754; }
+        .tag-text { background-color: #e91e63; }
+        .tag-frame { background-color: #6f42c1; }
+        .tag-image { background-color: #20c997; }
+        
+        .z-index-indicator {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #495057;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+        }
+
+        /* AI Agent Integration Styles */
+        .ai-architecture-diagram {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .ai-component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .ai-component-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .ai-component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .ai-component-card h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .ai-workflow-step {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .ai-workflow-step h5 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        .ai-progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .ai-progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .ai-benefit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .ai-benefit-table th,
+        .ai-benefit-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .ai-benefit-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .ai-benefit-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .ai-improvement {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .ai-timeline {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .ai-timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .ai-timeline-quarter {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            margin-right: 15px;
+        }
+
+        .ai-code-sample {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .ai-json-key { color: #63b3ed; }
+        .ai-json-string { color: #68d391; }
+        .ai-json-number { color: #fbb6ce; }
+        .ai-json-boolean { color: #fbd38d; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>SOP 導航</h2>
+        <ul id="sidebar-nav">
+            <li><a href="#phase-0">階段 0：PSD 樣板自動產生器</a></li>
+            <li><a href="#phase-1">階段 1：檔案初始化與畫布設定</a></li>
+            <li><a href="#phase-2">階段 2：建立核心圖層群組結構</a></li>
+            <li><a href="#visual-example">視覺化圖層結構範例</a></li>
+            <li><a href="#phase-3">階段 3：定義圖層命名與元數據規範</a></li>
+            <li><a href="#phase-4">階段 4：建立佔位符與內容</a></li>
+            <li><a href="#phase-5">階段 5：維護與導出</a></li>
+            <li><a href="#phase-6">階段 6：導出圖層元數據供引擎使用</a></li>
+            <li><a href="#phase-7">階段 7：Tile Map (瓦片地圖) 資產建立</a></li>
+            <li><a href="#phase-8">階段 8：遊戲內程式效果定義</a></li>
+            <li><a href="#phase-9">階段 9：遊戲引擎遮罩定義</a></li>
+            <li><a href="#phase-10">階段 10：資產實例化與變形定義</a></li>
+            <li><hr style="margin: 15px 0; border-color: #ccc;"></li>
+            <li><a href="#ai-agent-integration">🤖 AI Agent 輔助整合方案</a></li>
+            <li><a href="#ai-system-architecture">📐 系統架構設計</a></li>
+            <li><a href="#ai-workflow-automation">⚙️ 工作流程自動化</a></li>
+            <li><a href="#ai-engine-integration">🎮 引擎整合適配</a></li>
+            <li><a href="#ai-monitoring-system">📊 監控與優化系統</a></li>
+            <li><a href="#ai-implementation-plan">🚀 實施計劃與路線圖</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <h1>SOP：Slot Game 美術規格樣板 (Photoshop) 建立流程</h1>
+        <p><strong>目標：</strong> 建立一個結構化、標準化的 Photoshop (<code>.psd</code>) 樣板檔案，作為所有靜態美術素材的設計與規格基準。此樣板將定義圖層組織、命名規則、尺寸邊界與語系，以利於團隊協作及後續的自動化素材導出。</p>
+        
+        <hr>
+
+        <!-- 新增：自動產生器流程 -->
+        <section id="phase-0">
+            <h3>階段 0：PSD 樣板自動產生器（Generator Pipeline）</h3>
+            <div class="phase-content">
+                <p><strong>目的：</strong> 以 <code>YAML</code> 規格 + 自動腳本一次性生成符合本 SOP 命名規範與階層結構的 <code>.psd</code> 樣板，降低手工建立時間與錯誤率。</p>
+                <h4>0.1 產出目標</h4>
+                <ul>
+                    <li>自動建立 Canvas / Guides / Groups / Placeholders / 指令圖層（FX / MASK / INST）</li>
+                    <li>自動套用命名格式（對應階段 3）並標記 9-Slice 參考線</li>
+                    <li>輸出 <code>layout.seed.json</code> 供後續 Phase 6 轉正式 <code>layout.json</code></li>
+                </ul>
+
+                <h4>0.2 規格檔 <code>psd_template_spec.yaml</code></h4>
+<pre><code>canvas:
+  width: 1920
+  height: 1080
+  dpi: 72
+  colorMode: RGB8
+
+guides:
+  safeArea: { x: 80, y: 60, width: 1760, height: 960 }
+  reels: [ { x: 360, y: 140, w: 1200, h: 800, cols: 5, rows: 3 } ]
+
+groups:
+  - name: Common_Interface
+    zBase: 200
+    children:
+      - type: FRAME
+        name: MainBorder
+        size: 1920x1080
+        lang: ALL
+      - type: FRAME
+        name: UIBackground
+        size: 1920x1080
+        lang: ALL
+      - type: FX
+        fx: DARKEN
+        param: 30
+  - name: UI_MainControls
+    zBase: 140
+    children:
+      - type: SUBGROUP
+        name: Buttons
+        children:
+          - type: BTN9
+            name: Spin
+            size: 200x80
+            lang: ALL
+            states: [Normal, Hover, Pressed]
+          - type: BTN
+            name: AutoSpin
+            size: 120x60
+            lang: ALL
+      - type: SUBGROUP
+        name: Info_Displays
+        children:
+          - type: PANEL9
+            name: BalanceDisplay
+            size: 200x50
+            lang: ALL
+
+symbols:
+  highPay: [King, Queen, Jack]
+  lowPay: [Ten, Nine]
+  special:
+    - { name: Wild, size: 256x256 }
+    - { name: Scatter, size: 256x256, fx: TINT, fxParam: FFD700 }
+</code></pre>
+                <p><strong>說明：</strong> <code>groups[].children[].type</code> 對應命名前綴，<code>states</code> 會展開為多圖層；<code>fx</code> 生成 [FX] 指令層；<code>size</code> 用於計算 placeholder rectangle。</p>
+
+                <h4>0.3 生成腳本核心步驟（Pseudo / Adobe UXP）</h4>
+<pre><code>async function buildPsd(spec) {
+  const doc = await app.documents.add({ width: spec.canvas.width, height: spec.canvas.height });
+  addGuides(spec.guides);
+  for (const g of spec.groups) {
+    const gLayer = await createGroup(g.name, g.zBase);
+    await processChildren(gLayer, g.children, g.zBase);
+  }
+  await generateSymbols(spec.symbols);
+  await exportSeedLayout(doc, 'layout.seed.json');
+}
+
+async function processChildren(parent, list, zBase){
+  for (const item of list){
+    if (item.type === 'SUBGROUP') {
+      const sub = await createGroup(item.name, zBase);
+      await processChildren(sub, item.children, zBase);
+    } else if (item.type.startsWith('BTN') || item.type.endsWith('9') || item.type === 'PANEL9') {
+      await createSlicesWithStates(parent, item); // 產生 Normal / Hover / Pressed
+      if (item.type.endsWith('9')) addNineSliceGuides(item);
+    } else if (item.type === 'FX') {
+      await createFxInstruction(parent, item.fx, item.param);
+    } else {
+      await createPlaceholderLayer(parent, item);
+    }
+  }
+}
+</code></pre>
+                <ul>
+                    <li><code>createPlaceholderLayer</code>: 建立矩形 + 命名 <code>TYPE_Name_Size_Lang[_State]</code></li>
+                    <li><code>createSlicesWithStates</code>: 迭代 states 產多層</li>
+                    <li><code>addNineSliceGuides</code>: 依固定邊距 (例如 20px) 加參考線</li>
+                    <li><code>createFxInstruction</code>: 生成 <code>[FX]_DARKEN_30</code> 空圖層（不匯出）</li>
+                    <li><code>exportSeedLayout</code>: 輸出初始 JSON（位置 / zIndex / type / group）</li>
+                </ul>
+
+                <h4>0.4 輸出 <code>layout.seed.json</code> 範例</h4>
+<pre><code>{
+  "canvas": { "w":1920, "h":1080 },
+  "layers": [
+    { "name":"BTN_Spin_200x80_ALL_Normal", "group":"UI_MainControls/Buttons", "z":142, "bounds": {"x":1560,"y":870,"w":200,"h":80} },
+    { "name":"BTN_Spin_200x80_ALL_Hover",  "group":"UI_MainControls/Buttons", "z":142, "variant":"hover" },
+    { "name":"[FX]_DARKEN_30", "group":"Common_Interface", "z":205, "kind":"fx", "fxType":"DARKEN", "value":30 },
+    { "name":"SYM_Wild_256x256_ALL", "group":"Symbols/Special_Symbols", "z":55, "fx":[{"type":"TINT","color":"#FFD700"}] }
+  ]
+}</code></pre>
+
+                <h4>0.5 CLI 整合（建議）</h4>
+<pre><code># 產生 PSD 樣板 + seed JSON
+yarn psdgen --spec psd_template_spec.yaml --out ./template/Slot_Game_Template.psd
+
+# 驗證命名規範與漏項
+yarn psdgen validate --spec psd_template_spec.yaml --psd ./template/Slot_Game_Template.psd
+
+# 重新生成 seed layout（修正後）
+yarn psdgen export-seed --psd ./template/Slot_Game_Template.psd --out ./data/layout.seed.json</code></pre>
+                <p>可搭配 Git Hook：若 <code>spec.yaml</code> 有變更 → 自動重生 seed JSON 並提醒設計更新 PSD。</p>
+
+                <h4>0.6 與後續階段關聯</h4>
+                <table class="ai-benefit-table" style="margin-top:10px;">
+                    <thead><tr><th>產出</th><th>供應給</th><th>用途</th><th>階段對應</th></tr></thead>
+                    <tbody>
+                        <tr><td>Slot_Game_Template.psd</td><td>設計 / AI Parser</td><td>視覺填充 / 結構基準</td><td>1 / 2 / 4</td></tr>
+                        <tr><td>layout.seed.json</td><td>導出腳本</td><td>初始定位 / zIndex 參考</td><td>6</td></tr>
+                        <tr><td>spec.yaml</td><td>自動化工具</td><td>變更 diff → 重建差異</td><td>全流程</td></tr>
+                    </tbody></table>
+
+                <h4>0.7 品質檢查（Generator）</h4>
+                <ul>
+                    <li><strong>命名一致性：</strong> Regex 驗證 <code>^[A-Z0-9]+_[A-Za-z0-9]+_\d+x\d+_([A-Z]+)(_[A-Za-z]+)?$</code></li>
+                    <li><strong>尺寸合理性：</strong> 不能超出 Canvas；9-Slice 內部區域 ≥ 8px</li>
+                    <li><strong>漏項檢測：</strong> spec 中列出但未生成 → 報告</li>
+                    <li><strong>重複圖層名稱：</strong> Hash Map 驗證唯一性</li>
+                </ul>
+
+                <h4>0.8 推薦後續迭代</h4>
+                <ol>
+                    <li>增量生成：對修改差異僅更新相關群組</li>
+                    <li>AI 提示：Spec 缺漏欄位時給互動建議</li>
+                    <li>整合翻譯占位（多語系自動複製 TXT 圖層）</li>
+                    <li>9-Slice 邊緣自動檢測（偵測不均勻像素）</li>
+                </ol>
+
+                <div style="margin-top:16px;padding:14px 18px;background:#e3f2fd;border-left:4px solid #1976d2;border-radius:6px;">
+                    <strong>精簡總結：</strong> 先寫 YAML → 執行 Generator → 得 PSD + seed JSON → 正式設計填充與 Phase 6 導出銜接。
+                </div>
+            </div>
+        </section>
+
+        <section id="phase-1">
+            <h3>階段 1：檔案初始化與畫布設定</h3>
+            <div class="phase-content">
+                <h4>1. 建立新檔案:</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在 Photoshop 中建立一個新的 <code>.psd</code> 檔案。</li>
+                    <li><strong>規格:</strong>
+                        <ul>
+                            <li><strong>畫布尺寸 (Canvas Size):</strong> 設定為遊戲的目標解析度，例如 <code>1920x1080</code> 像素。</li>
+                            <li><strong>解析度 (Resolution):</strong> <code>72</code> pixels/inch。</li>
+                            <li><strong>色彩模式 (Color Mode):</strong> <code>RGB Color</code>, <code>8-bit</code>。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>2. 設定參考線與網格 (Guides & Grid):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 建立全域參考線，標示出遊戲畫面的重要區域。</li>
+                    <li><strong>建議參考線:</strong>
+                        <ul>
+                            <li><strong>安全區域 (Safe Area):</strong> 定義在不同螢幕比例下內容保證可見的範圍。</li>
+                            <li><strong>Reel 區塊:</strong> 標示出 5x3 或其他規格的滾輪區域。</li>
+                            <li><strong>上方 UI 區:</strong> 標示 Jackpot、Logo 等資訊的區域。</li>
+                            <li><strong>主操作區 UI:</strong> 標示 Spin 按鈕、下注調整、餘額顯示等控制項的區域。</li>
+                        </ul>
+                    </li>
+                    <li><strong>目的:</strong> 確保所有 UI 元素在設計時都有一個對齊的基準。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-2">
+            <h3>階段 2：建立核心圖層群組結構</h3>
+            <div class="phase-content">
+                <h4>1. 建立主群組 (Top-Level Groups):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在圖層面板中，建立以下 11 個主要圖層群組。這是樣板的骨架。</li>
+                    <li><strong>群組列表:</strong>
+                        <ol>
+                            <li><code>介面公版</code> (Common_Interface)</li>
+                            <li><code>jackpot 公版</code> (Common_Jackpot)</li>
+                            <li><code>跑馬燈</code> (Marquee)</li>
+                            <li><code>主操作區UI</code> (UI_MainControls)</li>
+                            <li><code>上方UI</code> (UI_Top)</li>
+                            <li><code>base game 背景</code> (BG_BaseGame)</li>
+                            <li><code>free game 背景</code> (BG_FreeGame)</li>
+                            <li><code>符號</code> (Symbols)</li>
+                            <li><code>角色</code> (Characters)</li>
+                            <li><code>reel</code> (Reels)</li>
+                            <li><code>其他</code> (Misc)</li>
+                        </ol>
+                    </li>
+                </ul>
+                <h4>2. 建立子群組 (Sub-Groups):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 在主群組內建立更詳細的分類子群組，增加組織性。</li>
+                    <li><strong>範例:</strong>
+                        <ul>
+                            <li>在 <code>主操作區UI</code> 內建立 <code>Buttons</code>, <code>Info_Displays</code>, <code>Bet_Controls</code>。</li>
+                            <li>在 <code>符號</code> 內建立 <code>High_Pay</code>, <code>Low_Pay</code>, <code>Special_Symbols</code>。</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="visual-example">
+            <h3>視覺化圖層結構範例</h3>
+            <div class="phase-content">
+                <p>以下是一個完整的 Photoshop 圖層面板模擬，展示了本 SOP 中定義的所有圖層群組、子群組和特殊圖層的組織方式。採用垂直樹狀結構，清楚顯示階層關係和命名規範。</p>
+                
+                <div class="visual-panel">
+                    <div class="layer-tree">
+                        <!-- PSD 根目錄 -->
+                        <div class="layer-group">
+                            <div class="layer-row" style="position: relative;">
+                                <span class="layer-icon icon-group"></span>
+                                <strong>📁 Slot_Game_Template.psd (1920x1080)</strong>
+                                <span class="z-index-indicator">Root</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 1. 介面公版 -->
+                        <div class="layer-content">
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🏗️ 介面公版 (Common_Interface)</strong>
+                                    <span class="z-index-indicator">200+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">FRAME</span>
+                                        <span class="tag-name">MainBorder</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">FRAME</span>
+                                        <span class="tag-name">UIBackground</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-fx"></span>
+                                        <span class="layer-name-tag tag-special">[FX]</span>
+                                        <span class="tag-name">DARKEN_30</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 2. Jackpot 公版 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>💰 jackpot 公版 (Common_Jackpot)</strong>
+                                    <span class="z-index-indicator">180+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotTitle</span>
+                                        <span class="layer-name-tag tag-size">400x80</span>
+                                        <span class="layer-name-tag tag-lang">TC</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotTitle</span>
+                                        <span class="layer-name-tag tag-size">400x80</span>
+                                        <span class="layer-name-tag tag-lang">EN</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">JackpotAmount</span>
+                                        <span class="layer-name-tag tag-size">300x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 3. 跑馬燈 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>📢 跑馬燈 (Marquee)</strong>
+                                    <span class="z-index-indicator">160+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG9</span>
+                                        <span class="tag-name">MarqueeBG</span>
+                                        <span class="layer-name-tag tag-size">800x80</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-text">TXT</span>
+                                        <span class="tag-name">MarqueeText</span>
+                                        <span class="layer-name-tag tag-size">760x60</span>
+                                        <span class="layer-name-tag tag-lang">TC</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 4. 主操作區UI -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎮 主操作區UI (UI_MainControls)</strong>
+                                    <span class="z-index-indicator">140+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- Buttons 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🔘 Buttons</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Hover</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN9</span>
+                                                <span class="tag-name">Spin</span>
+                                                <span class="layer-name-tag tag-size">200x80</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Pressed</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN</span>
+                                                <span class="tag-name">AutoSpin</span>
+                                                <span class="layer-name-tag tag-size">120x60</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Info_Displays 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>📊 Info_Displays</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">PANEL9</span>
+                                                <span class="tag-name">BalanceDisplay</span>
+                                                <span class="layer-name-tag tag-size">200x50</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-text">TXT</span>
+                                                <span class="tag-name">Balance</span>
+                                                <span class="layer-name-tag tag-size">180x30</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bet_Controls 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎲 Bet_Controls</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-button">BTN</span>
+                                                <span class="tag-name">BetUp</span>
+                                                <span class="layer-name-tag tag-size">60x60</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                                <span class="layer-name-tag tag-state">Normal</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-inst"></span>
+                                                <span class="layer-name-tag tag-special">[INST]</span>
+                                                <span class="tag-name">BetDown_BetUp_FLIP_V</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 5. 上方UI -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>⬆️ 上方UI (UI_Top)</strong>
+                                    <span class="z-index-indicator">120+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">ICON</span>
+                                        <span class="tag-name">Logo</span>
+                                        <span class="layer-name-tag tag-size">150x80</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">ICON</span>
+                                        <span class="tag-name">WinAmount</span>
+                                        <span class="layer-name-tag tag-size">200x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-button">BTN</span>
+                                        <span class="tag-name">Settings</span>
+                                        <span class="layer-name-tag tag-size">60x60</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                        <span class="layer-name-tag tag-state">Normal</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 6. base game 背景 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🖼️ base game 背景 (BG_BaseGame)</strong>
+                                    <span class="z-index-indicator">10-20</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-fx"></span>
+                                        <span class="layer-name-tag tag-special">[FX]</span>
+                                        <span class="tag-name">DARKEN_70</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG</span>
+                                        <span class="tag-name">MainBackground</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">DecorationLeft</span>
+                                        <span class="layer-name-tag tag-size">300x800</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">DecorationRight</span>
+                                        <span class="layer-name-tag tag-size">300x800</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 7. free game 背景 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🌟 free game 背景 (BG_FreeGame)</strong>
+                                    <span class="z-index-indicator">15-25</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-bg">BG</span>
+                                        <span class="tag-name">FreeGameBG</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-image">IMG</span>
+                                        <span class="tag-name">FreeGameEffect</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 8. 符號 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎯 符號 (Symbols)</strong>
+                                    <span class="z-index-indicator">50-80</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- High_Pay 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>👑 High_Pay</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">King</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Queen</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Jack</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Low_Pay 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🔢 Low_Pay</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Ten</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Nine</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Special_Symbols 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>✨ Special_Symbols</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-fx"></span>
+                                                <span class="layer-name-tag tag-special">[FX]</span>
+                                                <span class="tag-name">TINT_FFD700</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Wild</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-symbol">SYM</span>
+                                                <span class="tag-name">Scatter</span>
+                                                <span class="layer-name-tag tag-size">256x256</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 9. 角色 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>👑 角色 (Characters)</strong>
+                                    <span class="z-index-indicator">60-90</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">SYM</span>
+                                        <span class="tag-name">Anubis</span>
+                                        <span class="layer-name-tag tag-size">400x600</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-symbol">SYM</span>
+                                        <span class="tag-name">Serpent</span>
+                                        <span class="layer-name-tag tag-size">350x500</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 10. reel -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>🎰 reel (Reels)</strong>
+                                    <span class="z-index-indicator">100+</span>
+                                </div>
+                                <div class="layer-content">
+                                    <!-- Reel_1_Content_Group 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎰 Reel_1_Content_Group</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-mask"></span>
+                                                <span class="layer-name-tag tag-special">[MASK]</span>
+                                                <span class="tag-name">Reel_1_Content_Group</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">FRAME</span>
+                                                <span class="tag-name">ReelBorder</span>
+                                                <span class="layer-name-tag tag-size">200x600</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Reel_2_Content_Group 子群組 -->
+                                    <div class="layer-subgroup">
+                                        <div class="layer-row">
+                                            <span class="layer-icon icon-subgroup"></span>
+                                            <strong>🎰 Reel_2_Content_Group</strong>
+                                        </div>
+                                        <div class="layer-subcontent">
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-mask"></span>
+                                                <span class="layer-name-tag tag-special">[MASK]</span>
+                                                <span class="tag-name">Reel_2_Content_Group</span>
+                                            </div>
+                                            <div class="layer-row">
+                                                <span class="layer-icon icon-layer"></span>
+                                                <span class="layer-name-tag tag-frame">FRAME</span>
+                                                <span class="tag-name">ReelBorder</span>
+                                                <span class="layer-name-tag tag-size">200x600</span>
+                                                <span class="layer-name-tag tag-lang">ALL</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 11. 其他 -->
+                            <div class="layer-group">
+                                <div class="layer-row" style="position: relative;">
+                                    <span class="layer-icon icon-group"></span>
+                                    <strong>📦 其他 (Misc)</strong>
+                                    <span class="z-index-indicator">0-10</span>
+                                </div>
+                                <div class="layer-content">
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-preview"></span>
+                                        <span class="layer-name-tag tag-special" style="background-color: #6c757d;">[PREVIEW]</span>
+                                        <span class="tag-name">Tilemap</span>
+                                    </div>
+                                    <div class="layer-row">
+                                        <span class="layer-icon icon-layer"></span>
+                                        <span class="layer-name-tag tag-frame">GUIDE</span>
+                                        <span class="tag-name">SafeArea</span>
+                                        <span class="layer-name-tag tag-size">1920x1080</span>
+                                        <span class="layer-name-tag tag-lang">ALL</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <h4 style="margin-top: 0; color: #1976d2;">🔍 圖層結構說明</h4>
+                    <ul style="margin-bottom: 0;">
+                        <li><strong>垂直樹狀結構：</strong>採用縮排方式清楚顯示群組階層關係</li>
+                        <li><strong>Z-Index 指示：</strong>右側數字表示該群組在遊戲中的渲染深度</li>
+                        <li><strong>特殊圖層標記：</strong>[FX]、[MASK]、[INST]、[PREVIEW] 等功能性圖層</li>
+                        <li><strong>命名規範：</strong>所有圖層嚴格遵循 [類型]_[名稱]_[尺寸]_[語系]_[狀態] 格式</li>
+                        <li><strong>子群組組織：</strong>複雜群組內部進一步細分為邏輯子群組</li>
+                        <li><strong>色彩編碼：</strong>不同類型的圖層使用不同顏色標籤便於識別</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase-3">
+            <h3>階段 3：定義圖層命名與元數據規範</h3>
+            <div class="phase-content">
+                <p>這是此 SOP 的核心。所有圖層都必須遵循此命名規則，以便 AI 或腳本能解析並自動處理。</p>
+                <h4>1. 命名結構:</h4>
+                <pre><code>[類型]_[名稱]_[尺寸]_[語系]_[狀態]</code></pre>
+                <h4>2. 欄位定義:</h4>
+                <ul>
+                    <li><code>[類型]</code>: 圖層資產的類別縮寫。
+                        <ul>
+                            <li><code>BG</code>: 背景 (Background)</li>
+                            <li><code>SYM</code>: 符號 (Symbol)</li>
+                            <li><code>BTN</code>: 按鈕 (Button)</li>
+                            <li><code>ICON</code>: 圖標 (Icon)</li>
+                            <li><code>FRAME</code>: 框體 (Frame)</li>
+                            <li><code>TXT</code>: 文字 (Text) - *若文字內容需本地化*</li>
+                            <li><code>IMG</code>: 裝飾性圖片 (Image)</li>
+                            <li><strong><code>BG9</code></strong>: 可九宮格縮放的背景 (9-Slice Background)</li>
+                            <li><strong><code>BTN9</code></strong>: 可九宮格縮放的按鈕 (9-Slice Button)</li>
+                            <li><strong><code>FRAME9</code></strong>: 可九宮格縮放的框體 (9-Slice Frame)</li>
+                            <li><strong><code>PANEL9</code></strong>: 可九宮格縮放的面板 (9-Slice Panel)</li>
+                        </ul>
+                    </li>
+                    <li><code>[名稱]</code>: 資產的具體英文或拼音名稱。 (e.g., <code>Spin</code>, <code>Wild</code>, <code>Anubis</code>)</li>
+                    <li><code>[尺寸]</code>: 該圖層內容的導出邊界，格式為 <code>寬x高</code> (e.g., <code>256x256</code>)。</li>
+                    <li><code>[語系]</code>: 定義此素材的語言屬性。 (e.g., <code>ALL</code>, <code>EN</code>, <code>TC</code>, <code>SC</code>)</li>
+                    <li><code>[狀態]</code>: (可選) 主要用於 UI 元素，定義其互動狀態。 (e.g., <code>Normal</code>, <code>Hover</code>, <code>Pressed</code>)</li>
+                </ul>
+                <h4>3. 命名範例:</h4>
+                <ul>
+                    <li>Spin 按鈕的正常狀態: <code>BTN_Spin_300x150_ALL_Normal</code></li>
+                    <li>一個可縮放的按鈕面板: <code>PANEL9_Default_128x128_ALL_Normal</code></li>
+                    <li>Wild 符號: <code>SYM_Wild_256x256_ALL</code></li>
+                    <li>需要翻譯的「贏得」文字標題: <code>TXT_WinTitle_400x100_TC</code></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-4">
+            <h3>階段 4：建立佔位符與內容</h3>
+            <div class="phase-content">
+                <h4>1. 建立佔位符圖層:</h4>
+                <ul>
+                    <li><strong>動作:</strong> 根據遊戲規格文件，在對應的群組內為<strong>每一個</strong>所需的美術資源建立一個圖層，並使用色塊或簡單形狀作為佔位符。</li>
+                    <li><strong>關鍵:</strong> 嚴格按照階段 3 的規範為每一個佔位符圖層命名。此時，<code>.psd</code> 檔案本身就是一份視覺化的規格與待辦清單。</li>
+                </ul>
+                <h4>2. 轉換為智慧型物件 (Smart Objects):</h4>
+                <ul>
+                    <li><strong>動作:</strong> 將每一個佔位符圖層轉換為「智慧型物件」。</li>
+                    <li><strong>目的:</strong>
+                        <ul>
+                            <li><strong>非破壞性編輯:</strong> 可以在不影響主文件佈局的情況下，獨立編輯每個素材。</li>
+                            <li><strong>易於替換:</strong> 未來 AI 生成或人工繪製的素材，可以直接更新智慧型物件的內容，尺寸和位置會自動對應。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>3. 定義九宮格 (9-Slice) 邊界:</h4>
+                <ul>
+                    <li><strong>對象:</strong> 所有 <code>[類型]</code> 結尾為 <code>9</code> 的圖層 (如 <code>BTN9</code>, <code>PANEL9</code>)。</li>
+                    <li><strong>動作:</strong> 使用 Photoshop 的 <strong>參考線 (Guides)</strong> 來定義九宮格的切割線。</li>
+                    <li><strong>執行步驟:</strong>
+                        <ol>
+                            <li>選中目標圖層（例如 <code>PANEL9_Default_128x128_ALL_Normal</code>）。</li>
+                            <li>從尺標拖曳出 <strong>兩條垂直參考線</strong> 和 <strong>兩條水平參考線</strong>。</li>
+                            <li>將這四條參考線放置在圖層內容上，用以框選出中間可拉伸的區域。四個角落的內容將保持原始尺寸，不會被拉伸變形。</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-5">
+            <h3>階段 5：維護與導出</h3>
+            <div class="phase-content">
+                <h4>1. 版本控制:</h4>
+                <ul>
+                    <li><strong>建議:</strong> 使用 Git LFS (Large File Storage) 或其他雲端同步工具對此核心 <code>.psd</code> 樣板進行版本控制，方便追蹤修改歷史。</li>
+                </ul>
+                <h4>2. 素材導出:</h4>
+                <ul>
+                    <li><strong>方法:</strong> 可利用 Photoshop 的「產生 -> 影像資產」功能，或搭配第三方腳本 (如 Adobe UXP Script)。</li>
+                    <li><strong>自動化基礎:</strong> 由於圖層已包含完整的命名元數據，可以輕易編寫腳本來讀取所有圖層，並根據其名稱自動導出為對應的檔名 (e.g., <code>BTN_Spin_Normal.png</code>) 和尺寸，存放到正確的資料夾。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-6">
+            <h3>階段 6：導出圖層元數據供引擎使用</h3>
+            <div class="phase-content">
+                <p><strong>目的：</strong> 自動化產出一份結構化的數據文件（建議為 JSON 格式），該文件包含每個美術資源在遊戲引擎中佈局、渲染所需的所有參數。</p>
+                <h4>1. 執行方式：Photoshop 腳本</h4>
+                <ul>
+                    <li><strong>動作：</strong> 此流程需要透過 Photoshop 腳本（建議使用 UXP 或 ExtendScript）來執行，導出為 <code>layout.json</code> 文件。</li>
+                </ul>
+                <h4>2. 腳本需提取的數據邏輯：</h4>
+                <ul>
+                    <li>遍歷圖層 (Iterate Layers)</li>
+                    <li>解析圖層名稱 (Parse Layer Name)</li>
+                    <li>讀取圖層屬性 (Read Layer Properties): 邊界範圍, 透明度, 混合模式。</li>
+                    <li>計算引擎用數據 (Calculate Engine Data): 引擎內座標, Z-Index, 九宮格邊界。</li>
+                </ul>
+                <h4>3. 產出 JSON 結構範例 (<code>layout.json</code>):</h4>
+                <pre><code>{
+  "scene_dimensions": { "width": 1920, "height": 1080 },
+  "assets": {
+    "PANEL9_Default_Normal": {
+      "source_image": "PANEL9_Default_128x128_ALL_Normal.png",
+      "size": { "width": 128, "height": 128 },
+      "bounds_in_canvas": { "x": 100, "y": 200, "width": 128, "height": 128 },
+      "z_index": 50,
+      "nine_slice_margins": { "left": 20, "top": 20, "right": 20, "bottom": 20 }
+    }
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-7">
+            <h3>階段 7：Tile Map (瓦片地圖) 資產建立</h3>
+            <div class="phase-content">
+                <p><strong>核心概念:</strong> Tileset (圖塊集) 在 Photoshop 中製作，而 Tilemap Data (地圖數據) 在專門的地圖編輯器中完成。</p>
+                <h4>1. Photoshop 中的 Tileset 建立流程:</h4>
+                <ol>
+                    <li><strong>建立 Tileset 專用檔案:</strong> 例如 <code>tileset_forest_128x128.psd</code>。</li>
+                    <li><strong>設定精確網格 (Grid):</strong> 網格間距設為圖塊尺寸。</li>
+                    <li><strong>繪製與組織圖塊:</strong> 每個圖塊一個圖層，對齊網格。</li>
+                    <li><strong>定義圖塊 ID (Tile ID):</strong> ID 由圖塊在網格中的位置決定。</li>
+                    <li><strong>導出 Tileset:</strong> 導出為一張單一的 <code>.png</code> 圖片。</li>
+                </ol>
+                <h4>2. 在主樣板中進行視覺預覽:</h4>
+                <ul>
+                    <li>在主 <code>.psd</code> 中建立一個名為 <code>[PREVIEW]_Tilemap</code> 的圖層群組來拼湊場景，此群組不會被導出。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="phase-8">
+            <h3>階段 8：遊戲內程式效果定義</h3>
+            <div class="phase-content">
+                <p><strong>原則：</strong> 「一份資源，多種呈現」，以節省包體大小。</p>
+                <h4>1. 定義方式：效果指令圖層</h4>
+                <p>使用一個特殊的**空圖層**作為指令載體，放置在目標圖層正上方。</p>
+                <p><strong>命名規範：</strong> <code>[FX]_[效果類型]_[參數]</code></p>
+                <ul>
+                    <li><code>[FX]</code>: 固定前綴。</li>
+                    <li><code>[效果類型]</code>: <code>DARKEN</code> (壓暗) 或 <code>TINT</code> (純色覆蓋)。</li>
+                    <li><code>[參數]</code>:
+                        <ul>
+                            <li><code>DARKEN</code>: 0-100 的不透明度。</li>
+                            <li><code>TINT</code>: 6位十六進制顏色碼 (e.g., <code>FF0000</code>)。</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li>壓暗背景: 在背景圖層上方建立空圖層，命名為 <code>[FX]_DARKEN_70</code>。</li>
+                    <li>Tint 符號: 在符號圖層上方建立空圖層，命名為 <code>[FX]_TINT_FF3300</code>。</li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p>導出腳本會在目標資產的數據中加入一個 <code>effects</code> 陣列。</p>
+                <pre><code>"SYM_Anubis": {
+  "...": "...",
+  "effects": [
+    { "type": "TINT", "color": "FF3300", "trigger": "on_character_hit" }
+  ]
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-9">
+            <h3>階段 9：遊戲引擎遮罩定義</h3>
+            <div class="phase-content">
+                <p><strong>應用場景：</strong> 滾輪內容裁切、非矩形點擊區域等。</p>
+                <h4>1. 定義方式：遮罩圖層系統</h4>
+                <p>使用一個獨立的、會被導出為灰階圖的圖層來定義遮罩。</p>
+                <p><strong>命名規範：</strong> <code>[MASK]_[目標名稱]</code></p>
+                <ul>
+                    <li><code>[MASK]</code>: 固定前綴。</li>
+                    <li><code>[目標名稱]</code>: 此遮罩要影響的圖層群組名稱。</li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li><strong>目標群組:</strong> <code>Reel_1_Content_Group</code></li>
+                    <li><strong>遮罩圖層名稱:</strong> <code>[MASK]_Reel_1_Content_Group</code></li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p><code>layout.json</code> 中會新增一個遮罩資源的定義。</p>
+                <pre><code>"Reel_1_Content_Group_Mask": {
+  "source_image": "MASK_Reel_1_Content_Group.png",
+  "type": "mask",
+  "applies_to": "Reel_1_Content_Group"
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="phase-10">
+            <h3>階段 10：資產實例化與變形定義</h3>
+            <div class="phase-content">
+                <p><strong>原則：</strong> 「一次繪製，多次使用」，適用於鏡射等對稱性資源。</p>
+                <h4>1. 定義方式：實例指令圖層</h4>
+                <p>使用一個佔位符圖層來代表一個引用其他資產內容的新物件。</p>
+                <p><strong>命名規範：</strong> <code>[INST]_[新資產名稱]_[來源資產名稱]_[變形]</code></p>
+                <ul>
+                    <li><code>[INST]</code>: 固定前綴，此圖層不會導出圖片。</li>
+                    <li><code>[新資產名稱]</code>: 新資產在 JSON 中的名字 (e.g., <code>ArrowRight</code>)。</li>
+                    <li><code>[來源資產名稱]</code>: 來源資產的名字 (e.g., <code>ArrowLeft</code>)。</li>
+                    <li><code>[變形]</code>: <code>FLIP_H</code> (水平鏡射) 或 <code>FLIP_V</code> (垂直鏡射)。</li>
+                </ul>
+                <h4>2. 範例:</h4>
+                <ul>
+                    <li><strong>來源圖層:</strong> <code>ICON_ArrowLeft_128x128_ALL</code></li>
+                    <li><strong>實例圖層:</strong> <code>[INST]_ArrowRight_ArrowLeft_FLIP_H</code></li>
+                </ul>
+                <h4>3. JSON 產出影響:</h4>
+                <p>新資產會複用來源資產的圖片，並額外記錄一個 <code>transform</code> 屬性。</p>
+                <pre><code>"ArrowRight": {
+  "source_image": "ICON_ArrowLeft_128x128_ALL.png",
+  "bounds_in_canvas": { "x": 1500, "y": 800, "width": 128, "height": 128 },
+  "transform": {
+    "flip_h": true,
+    "flip_v": false
+  }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- AI Agent 輔助整合方案 -->
+        <section id="ai-agent-integration">
+            <h3>🤖 AI Agent 輔助整合方案</h3>
+            <div class="phase-content">
+                <div class="ai-architecture-diagram">
+                    <h2>🎯 AI Agent 驅動的美術規格到前端引擎自動化流程</h2>
+                    <p>基於微服務架構，提供從美術規格書到前端引擎的端到端自動化解決方案</p>
+                </div>
+                
+                <p><strong>目標：</strong> 建立一個智能化的AI Agent系統，能夠自動解析美術規格書，並生成對應的前端引擎項目代碼，大幅減少人工轉換時間，提高工作效率和準確性。</p>
+                
+                <h4>1. 系統整體架構</h4>
+                <div class="ai-component-grid">
+                    <div class="ai-component-card">
+                        <h4>📋 規格解析 Agent</h4>
+                        <ul>
+                            <li>自動解析 PSD 文件結構</li>
+                            <li>提取圖層信息和命名規則</li>
+                            <li>生成標準化規格 JSON</li>
+                            <li>驗證規格完整性和一致性</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>🎮 引擎適配 Agent</h4>
+                        <ul>
+                            <li>Cocos Creator 項目生成</li>
+                            <li>Unity 項目模板創建</li>
+                            <li>通用格式轉換支持</li>
+                            <li>API 接口動態適配</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>📊 監控分析 Agent</h4>
+                        <ul>
+                            <li>實時性能監控</li>
+                            <li>資源使用分析</li>
+                            <li>錯誤檢測報告</li>
+                            <li>智能優化建議</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>🔄 工作流程 Agent</h4>
+                        <ul>
+                            <li>流程狀態智能管理</li>
+                            <li>任務調度與執行</li>
+                            <li>進度追踪報告</li>
+                            <li>異常處理與恢復</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4>2. 核心價值與效益</h4>
+                <table class="ai-benefit-table">
+                    <thead>
+                        <tr>
+                            <th>效益項目</th>
+                            <th>現況 (手動)</th>
+                            <th>AI Agent 後</th>
+                            <th>改善幅度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>專案設置時間</td>
+                            <td>2-4 小時</td>
+                            <td>5-10 分鐘</td>
+                            <td class="ai-improvement">↓ 90%</td>
+                        </tr>
+                        <tr>
+                            <td>錯誤率</td>
+                            <td>15-25%</td>
+                            <td>2-5%</td>
+                            <td class="ai-improvement">↓ 80%</td>
+                        </tr>
+                        <tr>
+                            <td>人力需求</td>
+                            <td>3-5 人</td>
+                            <td>1-2 人</td>
+                            <td class="ai-improvement">↓ 60%</td>
+                        </tr>
+                        <tr>
+                            <td>維護成本</td>
+                            <td>高</td>
+                            <td>低</td>
+                            <td class="ai-improvement">↓ 70%</td>
+                        </tr>
+                        <tr>
+                            <td>一致性</td>
+                            <td>中等</td>
+                            <td>高</td>
+                            <td class="ai-improvement">↑ 85%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="ai-system-architecture">
+            <h3>🏗️ 系統架構設計</h3>
+            <div class="phase-content">
+                <h4>1. 微服務架構組成</h4>
+                <div class="ai-code-sample">
+                    <pre><code>{
+  <span class="ai-json-key">"microservices"</span>: {
+    <span class="ai-json-key">"spec_parser_service"</span>: {
+      <span class="ai-json-key">"port"</span>: <span class="ai-json-number">8001</span>,
+      <span class="ai-json-key">"endpoints"</span>: [
+        <span class="ai-json-string">"/api/parse-psd"</span>,
+        <span class="ai-json-string">"/api/validate-spec"</span>,
+        <span class="ai-json-string">"/api/extract-assets"</span>
+      ],
+      <span class="ai-json-key">"capabilities"</span>: [
+        <span class="ai-json-string">"PSD解析"</span>,
+        <span class="ai-json-string">"圖層提取"</span>,
+        <span class="ai-json-string">"規格驗證"</span>
+      ]
+    },
+    <span class="ai-json-key">"cocos_adapter_service"</span>: {
+      <span class="ai-json-key">"port"</span>: <span class="ai-json-number">8002</span>,
+      <span class="ai-json-key">"endpoints"</span>: [
+        <span class="ai-json-string">"/api/generate-project"</span>,
+        <span class="ai-json-string">"/api/create-scenes"</span>,
+        <span class="ai-json-string">"/api/setup-animations"</span>
+      ],
+      <span class="ai-json-key">"capabilities"</span>: [
+        <span class="ai-json-string">"Cocos Creator 項目生成"</span>,
+        <span class="ai-json-string">"場景建立"</span>,
+        <span class="ai-json-string">"動畫設定"</span>
+      ]
+    },
+    <span class="ai-json-key">"unity_adapter_service"</span>: {
+      <span class="ai-json-key">"port"</span>: <span class="ai-json-number">8003</span>,
+      <span class="ai-json-key">"endpoints"</span>: [
+        <span class="ai-json-string">"/api/create-prefabs"</span>,
+        <span class="ai-json-string">"/api/setup-timeline"</span>,
+        <span class="ai-json-string">"/api/configure-ui"</span>
+      ],
+      <span class="ai-json-key">"capabilities"</span>: [
+        <span class="ai-json-string">"Unity Prefab 創建"</span>,
+        <span class="ai-json-string">"Timeline 設定"</span>,
+        <span class="ai-json-string">"UI 配置"</span>
+      ]
+    },
+    <span class="ai-json-key">"monitoring_service"</span>: {
+      <span class="ai-json-key">"port"</span>: <span class="ai-json-number">8004</span>,
+      <span class="ai-json-key">"endpoints"</span>: [
+        <span class="ai-json-string">"/api/performance-metrics"</span>,
+        <span class="ai-json-string">"/api/generate-report"</span>,
+        <span class="ai-json-string">"/api/optimization-tips"</span>
+      ],
+      <span class="ai-json-key">"capabilities"</span>: [
+        <span class="ai-json-string">"性能監控"</span>,
+        <span class="ai-json-string">"報告生成"</span>,
+        <span class="ai-json-string">"優化建議"</span>
+      ]
+    }
+  }
+}</code></pre>
+                </div>
+
+                <h4>2. 服務間通信協議</h4>
+                <div class="ai-component-grid">
+                    <div class="ai-component-card">
+                        <h4>🔗 API Gateway</h4>
+                        <ul>
+                            <li>統一請求路由</li>
+                            <li>身份驗證與授權</li>
+                            <li>請求限流與熔斷</li>
+                            <li>監控與日誌記錄</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>📨 消息隊列</h4>
+                        <ul>
+                            <li>異步任務處理</li>
+                            <li>事件驅動架構</li>
+                            <li>可靠性保證</li>
+                            <li>負載均衡分配</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>🗄️ 數據存儲</h4>
+                        <ul>
+                            <li>規格數據持久化</li>
+                            <li>項目配置管理</li>
+                            <li>版本控制支持</li>
+                            <li>備份與恢復機制</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>🔐 安全機制</h4>
+                        <ul>
+                            <li>JWT 令牌驗證</li>
+                            <li>RBAC 權限控制</li>
+                            <li>數據加密傳輸</li>
+                            <li>審計日誌追踪</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-workflow-automation">
+            <h3>⚙️ 工作流程自動化</h3>
+            <div class="phase-content">
+                <h4>1. 自動化工作流程步驟</h4>
+                
+                <div class="ai-workflow-step">
+                    <h5>步驟 1: 規格輸入與解析</h5>
+                    <ul>
+                        <li>上傳 PSD 文件到系統</li>
+                        <li>AI 自動解析圖層結構</li>
+                        <li>生成標準化規格 JSON</li>
+                        <li>驗證規格完整性</li>
+                    </ul>
+                    <div class="ai-progress-bar">
+                        <div class="ai-progress-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <div class="ai-workflow-step">
+                    <h5>步驟 2: 引擎選擇與適配</h5>
+                    <ul>
+                        <li>選擇目標遊戲引擎</li>
+                        <li>載入對應適配器</li>
+                        <li>配置引擎專用參數</li>
+                        <li>準備項目模板</li>
+                    </ul>
+                    <div class="ai-progress-bar">
+                        <div class="ai-progress-fill" style="width: 85%;"></div>
+                    </div>
+                </div>
+
+                <div class="ai-workflow-step">
+                    <h5>步驟 3: 項目代碼生成</h5>
+                    <ul>
+                        <li>生成引擎項目結構</li>
+                        <li>創建場景與預製件</li>
+                        <li>配置動畫與特效</li>
+                        <li>設定 UI 佈局</li>
+                    </ul>
+                    <div class="ai-progress-bar">
+                        <div class="ai-progress-fill" style="width: 70%;"></div>
+                    </div>
+                </div>
+
+                <div class="ai-workflow-step">
+                    <h5>步驟 4: 質量檢測與優化</h5>
+                    <ul>
+                        <li>自動測試生成項目</li>
+                        <li>性能分析與監控</li>
+                        <li>提供優化建議</li>
+                        <li>生成詳細報告</li>
+                    </ul>
+                    <div class="ai-progress-bar">
+                        <div class="ai-progress-fill" style="width: 40%;"></div>
+                    </div>
+                </div>
+
+                <h4>2. 智能決策算法</h4>
+                <div class="ai-code-sample">
+                    <pre><code>class AIWorkflowOrchestrator:
+    def __init__(self):
+        self.agents = {
+            'parser': SpecParserAgent(),
+            'cocos_adapter': CocosAdapterAgent(),
+            'unity_adapter': UnityAdapterAgent(),
+            'monitor': MonitoringAgent()
+        }
+    
+    async def process_art_spec(self, psd_file, target_engine):
+        # 1. 解析美術規格
+        spec_data = await self.agents['parser'].parse_psd(psd_file)
+        
+        # 2. 驗證規格完整性
+        validation_result = await self.agents['parser'].validate_spec(spec_data)
+        
+        # 3. 選擇適當的引擎適配器
+        adapter = self.agents[f'{target_engine}_adapter']
+        
+        # 4. 生成項目代碼
+        project_code = await adapter.generate_project(spec_data)
+        
+        # 5. 監控與優化
+        performance_report = await self.agents['monitor'].analyze_project(project_code)
+        
+        return {
+            'project_code': project_code,
+            'performance_report': performance_report,
+            'optimization_suggestions': performance_report.get_suggestions()
+        }</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-engine-integration">
+            <h3>🎮 引擎整合適配</h3>
+            <div class="phase-content">
+                <h4>1. Cocos Creator 適配器實現</h4>
+                <div class="ai-code-sample">
+                    <pre><code>class CocosCreatorAdapter:
+    def __init__(self):
+        self.project_template = "cocos_slot_template"
+        self.supported_versions = ["3.8.x", "3.7.x"]
+    
+    async def generate_project(self, spec_data):
+        project = {
+            "scenes": await self.create_scenes(spec_data),
+            "prefabs": await self.create_prefabs(spec_data),
+            "scripts": await self.generate_scripts(spec_data),
+            "animations": await self.setup_animations(spec_data)
+        }
+        return project</code></pre>
+                </div>
+
+                <h4>2. Unity 適配器實現</h4>
+                <div class="ai-code-sample">
+                    <pre><code>class UnityAdapter:
+    def __init__(self):
+        self.project_template = "unity_slot_template"
+        self.supported_versions = ["2023.3.x", "2022.3.x"]
+    
+    async def generate_project(self, spec_data):
+        project = {
+            "scenes": await self.create_scenes(spec_data),
+            "prefabs": await self.create_prefabs(spec_data),
+            "scripts": await self.generate_scripts(spec_data),
+            "timeline": await self.setup_timeline(spec_data)
+        }
+        return project</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-monitoring-system">
+            <h3>📊 監控與優化系統</h3>
+            <div class="phase-content">
+                <h4>1. 實時性能監控</h4>
+                <div class="ai-component-grid">
+                    <div class="ai-component-card">
+                        <h4>⚡ 性能指標</h4>
+                        <ul>
+                            <li>生成時間監控</li>
+                            <li>記憶體使用追踪</li>
+                            <li>CPU 負載分析</li>
+                            <li>網路延遲檢測</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="ai-component-card">
+                        <h4>🎯 質量評估</h4>
+                        <ul>
+                            <li>代碼質量分析</li>
+                            <li>結構合理性檢測</li>
+                            <li>命名規範驗證</li>
+                            <li>最佳實踐評分</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4>2. 自動化報告生成</h4>
+                <div class="ai-code-sample">
+                    <pre><code>{
+  <span class="ai-json-key">"project_analysis_report"</span>: {
+    <span class="ai-json-key">"generation_time"</span>: <span class="ai-json-string">"2024-10-03T14:30:00Z"</span>,
+    <span class="ai-json-key">"performance_metrics"</span>: {
+      <span class="ai-json-key">"total_generation_time"</span>: <span class="ai-json-string">"00:05:23"</span>,
+      <span class="ai-json-key">"success_rate"</span>: <span class="ai-json-string">"98.5%"</span>
+    },
+    <span class="ai-json-key">"quality_assessment"</span>: {
+      <span class="ai-json-key">"code_quality_score"</span>: <span class="ai-json-number">85</span>,
+      <span class="ai-json-key">"structure_score"</span>: <span class="ai-json-number">92</span>
+    }
+  }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-implementation-plan">
+            <h3>🚀 實施計劃與路線圖</h3>
+            <div class="phase-content">
+                <h4>1. 階段性實施計劃</h4>
+                <div class="ai-timeline">
+                    <div class="ai-timeline-item">
+                        <span class="ai-timeline-quarter">Q1 2024</span>
+                        <span><strong>核心 Agent 開發</strong> - 規格解析功能、基礎 API 接口、原型驗證</span>
+                    </div>
+                    <div class="ai-timeline-item">
+                        <span class="ai-timeline-quarter">Q2 2024</span>
+                        <span><strong>引擎適配器</strong> - Cocos Creator 整合、Unity 適配器、通用轉換器</span>
+                    </div>
+                    <div class="ai-timeline-item">
+                        <span class="ai-timeline-quarter">Q3 2024</span>
+                        <span><strong>監控與優化</strong> - 性能監控系統、自動優化建議、質量評估</span>
+                    </div>
+                    <div class="ai-timeline-item">
+                        <span class="ai-timeline-quarter">Q4 2024</span>
+                        <span><strong>智能化升級</strong> - AI 驅動優化、預測性維護、自適應調整</span>
+                    </div>
+                </div>
+
+                <h4>2. 投資回報分析</h4>
+                <table class="ai-benefit-table">
+                    <thead>
+                        <tr>
+                            <th>階段</th>
+                            <th>投資成本</th>
+                            <th>預期效益</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phase 1</td>
+                            <td>$50,000</td>
+                            <td>減少 50% 設置時間</td>
+                            <td class="ai-improvement">200%</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 2</td>
+                            <td>$80,000</td>
+                            <td>減少 75% 錯誤率</td>
+                            <td class="ai-improvement">350%</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 3</td>
+                            <td>$120,000</td>
+                            <td>完全自動化流程</td>
+                            <td class="ai-improvement">500%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; text-align: center;">
+                    <h3 style="margin-top: 0; border: none; color: white;">🎯 下一步行動計劃</h3>
+                    <ol style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <li>建立技術團隊與開發環境</li>
+                        <li>完成 MVP 原型開發與測試</li>
+                        <li>進行小規模試點驗證</li>
+                        <li>根據反饋迭代改進</li>
+                        <li>制定正式發布計劃</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.content section');
+            const navLinks = document.querySelectorAll('.sidebar a');
+
+            // Collapsible sections
+            document.querySelectorAll('.content h3').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    header.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+
+            // Sidebar active link on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === '#' + entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-100px 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>

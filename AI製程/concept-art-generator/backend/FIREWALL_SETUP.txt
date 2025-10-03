@@ -1,0 +1,44 @@
+# ================================================================
+# 防火牆設定指令 - 請以管理員身份執行
+# ================================================================
+
+# 方法 1：複製以下命令到管理員 PowerShell 執行
+# ================================================================
+
+# 刪除舊規則（如果存在）
+netsh advfirewall firewall delete rule name="Concept Art Backend 3010 In"
+netsh advfirewall firewall delete rule name="Concept Art Backend 3010 Out"
+
+# 添加輸入規則（允許外部連入 port 3010）
+netsh advfirewall firewall add rule name="Concept Art Backend 3010 In" dir=in action=allow protocol=TCP localport=3010 profile=any
+
+# 添加輸出規則（允許 port 3010 對外通訊）
+netsh advfirewall firewall add rule name="Concept Art Backend 3010 Out" dir=out action=allow protocol=TCP localport=3010 profile=any
+
+# 驗證規則是否成功添加
+netsh advfirewall firewall show rule name="Concept Art Backend 3010 In"
+
+# ================================================================
+# 方法 2：使用圖形界面
+# ================================================================
+
+# 1. 按 Win + R
+# 2. 輸入：wf.msc
+# 3. 點選「輸入規則」→「新增規則」
+# 4. 選擇「連接埠」→「TCP」→「特定本機連接埠」→ 輸入 3010
+# 5. 選擇「允許連線」
+# 6. 勾選所有設定檔（網域、私人、公用）
+# 7. 名稱：Concept Art Backend 3010 In
+
+# ================================================================
+# 驗證步驟
+# ================================================================
+
+# 檢查防火牆規則
+netsh advfirewall firewall show rule name=all | findstr 3010
+
+# 檢查 port 是否開啟
+netstat -ano | findstr :3010
+
+# 測試連線
+curl http://localhost:3010/api/health
